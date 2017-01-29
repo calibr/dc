@@ -37,8 +37,8 @@ class DB {
 
   function init() {
     $startTime = microtime(true);
-    $this->handle = mysql_connect($this->host, $this->login, $this->pass, true);
-    mysql_select_db($this->db, $this->handle);
+    $this->handle = \mysql_connect($this->host, $this->login, $this->pass, true);
+    \mysql_select_db($this->db, $this->handle);
     $this->q("SET NAMES UTF8MB4");
   }
 
@@ -90,7 +90,7 @@ class DB {
     $this->last_query = $q;
 
     $startTime = microtime(true);
-    $qr = mysql_query($q, $this->handle);
+    $qr = \mysql_query($q, $this->handle);
     $elapsedTime = microtime(true) - $startTime;
     if(defined("EVER_DB_PROFILE")) {
       print "\n--------\n";
@@ -100,18 +100,18 @@ class DB {
     }
     if(!$qr) {
       if(defined("EVER_MYSQL_ERRORS")) {
-        trigger_error(mysql_error($this->handle)." in $q");
+        trigger_error(\mysql_error($this->handle)." in $q");
       }
       //mysql_close($this->handle);
       //$this->init();
-      $qr = mysql_query($q, $this->handle);
+      $qr = \mysql_query($q, $this->handle);
     }
     return $qr;
   }
 
   function assoc($q, $params = array())
   {
-    $data = mysql_fetch_assoc($this->q($q, $params));
+    $data = \mysql_fetch_assoc($this->q($q, $params));
 
     return $data;
   }
@@ -121,7 +121,7 @@ class DB {
     $qr = $this->q($q, $params);
     if(!$qr)
       return false;
-    $r = @mysql_result($qr ,0);
+    $r = @\mysql_result($qr ,0);
 
     return $r;
   }
@@ -130,13 +130,13 @@ class DB {
 
     $qr = $this->q($q, $params);
     $data = array();
-    while($d = mysql_fetch_assoc($qr))
+    while($d = \mysql_fetch_assoc($qr))
       $data[] = $d;
 
     return $data;
   }
 
   function id() {
-    return mysql_insert_id($this->handle);
+    return \mysql_insert_id($this->handle);
   }
 }
