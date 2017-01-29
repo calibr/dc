@@ -1,6 +1,6 @@
 *.sublime-project
 *.sublime-workspace
 node_modules
-config.php
+/config.php
 bower_components
 .DS_Store
