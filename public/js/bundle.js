@@ -777,7 +777,8 @@ exports.default = new Dispatcher();
 "use strict";
 
 module.exports = new Framework7({
-  pushState: true
+  pushState: true,
+  swipeBackPage: false
 });
 module.exports.$ = Dom7;
 
@@ -1358,14 +1359,10 @@ var app = require("../../f7app");
 
 function prepareNutritionValue(value) {
   if (!value) {
-    value = 0;
+    return "";
   }
-  if (!/^\d+$/.test(value)) {
+  if (!/^[\d\.]+$/.test(value)) {
     return null;
-  }
-  value = parseInt(value);
-  if (value > 100) {
-    value = 100;
   }
   return value;
 }
@@ -1431,10 +1428,10 @@ var AddDishPage = function (_React$Component) {
 
     _this.state = {
       title: "",
-      carbs: 0,
-      proteins: 0,
-      fats: 0,
-      gi: 0
+      carbs: "",
+      proteins: "",
+      fats: "",
+      gi: ""
     };
     return _this;
   }

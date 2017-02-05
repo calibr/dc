@@ -54,7 +54,7 @@ class Dish {
     self::checkInputDish($dish);
     DB::inst()->q(
       "INSERT INTO `dishes`
-      SET `title` = #s, `carbs` = #d, `proteins` = #d, `fats` = #d, `gi` = #d", [
+      SET `title` = #s, `carbs` = #s, `proteins` = #s, `fats` = #s, `gi` = #s", [
         $dish["title"], $dish["carbs"], $dish["proteins"], $dish["fats"], $dish["gi"]
       ]
     );
@@ -69,7 +69,7 @@ class Dish {
     self::checkInputDish($dish);
     DB::inst()->q(
       "UPDATE `dishes`
-      SET `title` = #s, `carbs` = #d, `proteins` = #d, `fats` = #d, `gi` = #d
+      SET `title` = #s, `carbs` = #s, `proteins` = #s, `fats` = #s, `gi` = #s
       WHERE `id` = #d", [
         $dish["title"], $dish["carbs"], $dish["proteins"], $dish["fats"], $dish["gi"], $id
       ]

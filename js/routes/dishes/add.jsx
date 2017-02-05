@@ -7,14 +7,10 @@ import DishStore from "../../stores/Dish.jsx";
 
 function prepareNutritionValue(value) {
   if(!value) {
-    value = 0;
+    return "";
   }
-  if(!/^\d+$/.test(value)) {
+  if(!/^[\d\.]+$/.test(value)) {
     return null;
-  }
-  value = parseInt(value);
-  if(value > 100) {
-    value = 100;
   }
   return value;
 }
@@ -24,10 +20,10 @@ class AddDishPage extends React.Component {
     super();
     this.state = {
       title: "",
-      carbs: 0,
-      proteins: 0,
-      fats: 0,
-      gi: 0
+      carbs: "",
+      proteins: "",
+      fats: "",
+      gi: ""
     };
   }
   componentWillMount() {
