@@ -25,3 +25,8 @@ export function sortDishes(dishes, order) {
   });
   return dishes;
 }
+
+export function getCarbsInServing(dish, weight) {
+  var carbsin1gram = dish.carbs/100;
+  return Math.round(carbsin1gram * weight * 100)/100;
+}

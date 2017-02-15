@@ -355,6 +355,19 @@ $(document).on("tab:show", function (event) {
   _navigator2.default.navigate("/" + viewName);
 });
 
+$(document).on('page:beforeremove', function (event) {
+  if (event.detail) {
+    var name = event.detail.page.name;
+    if (name && name.indexOf("smart-select-") === 0) {
+      setTimeout(function () {
+        // make sure that transition is ended, because sometimes navbar just disappears after returning from
+        // smart select
+        $(".navbar-inner").removeClass("navbar-from-center-to-left");
+      }, 0);
+    }
+  }
+});
+
 /*
 views.forEach(function(v) {
   var view = app.addView(v.container, {
@@ -1888,6 +1901,10 @@ var _LoadingBox2 = _interopRequireDefault(_LoadingBox);
 
 var _dishes = require("../../util/dishes.jsx");
 
+var _bu = require("../../util/bu.jsx");
+
+var _calc = require("../../util/calc.jsx");
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -1898,6 +1915,19 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 var React = require("react");
 var app = require("../../f7app");
+var $ = app.$;
+
+function calcBu(dishId, weight) {
+  var dish = _Dish2.default.getById(dishId);
+  var carbs = (0, _dishes.getCarbsInServing)(dish, weight);
+  return (0, _bu.carbsToBu)(carbs);
+}
+
+function calcWeightByBu(dishId, bu) {
+  var dish = _Dish2.default.getById(dishId);
+  var carbsin1gram = dish.carbs / 100;
+  return (0, _calc.round)(bu * (0, _bu.buToCarbs)(1) / carbsin1gram);
+}
 
 var AddServingPage = function (_React$Component) {
   _inherits(AddServingPage, _React$Component);
@@ -1924,20 +1954,55 @@ var AddServingPage = function (_React$Component) {
     };
 
     _this.onWeightFieldChange = function (event) {
-      var value = parseInt(event.target.value);
-      if (!value) {
-        value = 0;
-      }
-      _this.setState({
+      var value = event.target.value;
+      value = value.replace(/[^0-9\.]/g, "");
+      var updateState = {
         weight: value
+      };
+      if (_this.state.dish_id) {
+        updateState.weightBu = calcBu(_this.state.dish_id, value);
+      }
+      _this.setState(updateState);
+    };
+
+    _this.onWeightBuFieldChange = function (event) {
+      var value = event.target.value;
+      value = value.replace(/[^0-9\.]/g, "");
+      var updateState = {
+        weightBu: value
+      };
+      if (_this.state.dish_id) {
+        updateState.weight = calcWeightByBu(_this.state.dish_id, value);
+      }
+      _this.setState(updateState);
+    };
+
+    _this.onDishChange = function () {
+      var dishId = parseInt($("#add-serving-form [name=dish_id]").val());
+      var updateState = {
+        dish_id: dishId
+      };
+      if (_this.state.weight && !_this.state.weightBu) {
+        updateState.weightBu = calcBu(dishId, _this.state.weight);
+      }
+      if (!_this.state.weight && _this.state.weightBu) {
+        updateState.weight = calcWeightByBu(dishId, _this.state.weightBu);
+      }
+      _this.setState(updateState);
+    };
+
+    _this.onUnitChange = function (unit) {
+      _this.setState({
+        unit: unit
       });
     };
 
     _this.state = {
       dishes: _Dish2.default.getDishes(),
       dish_id: null,
-      weight: 0,
-      settings: _Settings2.default.getSettings()
+      weight: "",
+      settings: _Settings2.default.getSettings(),
+      unit: "gram"
     };
     return _this;
   }
@@ -1948,6 +2013,10 @@ var AddServingPage = function (_React$Component) {
       if (this.props.id) {
         this.state.serving = _Serving2.default.getById(this.props.id);
         this.state.weight = this.state.serving.weight;
+        if (this.state.serving && this.state.serving.dish_id) {
+          this.state.dish_id = this.state.serving.dish_id;
+          this.state.weightBu = calcBu(this.state.dish_id, this.state.weight);
+        }
       }
       if (!this.state.dishes) {
         (0, _actions.loadDishes)();
@@ -2020,6 +2089,37 @@ var AddServingPage = function (_React$Component) {
           groupDishes
         ));
       }
+      var info = null;
+      if (this.state.dish_id && this.state.weight) {
+        var dish = _Dish2.default.getById(this.state.dish_id);
+        var carbs = (0, _dishes.getCarbsInServing)(dish, this.state.weight);
+        var bu = (0, _bu.carbsToBu)(carbs);
+        if (this.state.unit === "gram") {
+          info = React.createElement(
+            "div",
+            { className: "text-center" },
+            "\u0412 \u043F\u043E\u0440\u0446\u0438\u0438 \u0441\u043E\u0434\u0435\u0440\u0436\u0438\u0442\u0441\u044F ",
+            React.createElement(
+              "strong",
+              null,
+              bu
+            ),
+            " \u0425\u0415"
+          );
+        } else {
+          info = React.createElement(
+            "div",
+            { className: "text-center" },
+            "\u0412\u0435\u0441 \u043F\u043E\u0440\u0446\u0438\u0438 ",
+            React.createElement(
+              "strong",
+              null,
+              this.state.weight
+            ),
+            " \u0433\u0440\u0430\u043C"
+          );
+        }
+      }
       return React.createElement(
         "div",
         { className: "page-content" },
@@ -2040,7 +2140,11 @@ var AddServingPage = function (_React$Component) {
                   "data-back-text": "\u041D\u0430\u0437\u0430\u0434" },
                 React.createElement(
                   "select",
-                  { name: "dish_id", defaultValue: this.state.serving ? this.state.serving.dish_id : "" },
+                  {
+                    onChange: this.onDishChange,
+                    name: "dish_id",
+                    defaultValue: this.state.serving ? this.state.serving.dish_id : ""
+                  },
                   React.createElement("option", { disabled: true }),
                   dishesOptions
                 ),
@@ -2068,6 +2172,38 @@ var AddServingPage = function (_React$Component) {
                 { className: "item-content" },
                 React.createElement(
                   "div",
+                  { className: "item-inner text-center" },
+                  React.createElement(
+                    "p",
+                    { className: "buttons-row margin-auto width-50-perc" },
+                    React.createElement(
+                      "a",
+                      { href: "#",
+                        value: this.state.weight,
+                        className: "button " + (this.state.unit == "gram" ? "active" : ""),
+                        onClick: this.onUnitChange.bind(this, "gram") },
+                      "\u0413\u0440\u0430\u043C\u043C\u044B"
+                    ),
+                    React.createElement(
+                      "a",
+                      { href: "#",
+                        value: this.state.weightBu,
+                        className: "button " + (this.state.unit == "bu" ? "active" : ""),
+                        onClick: this.onUnitChange.bind(this, "bu") },
+                      "\u0425\u043B\u0435\u0431\u043D\u044B\u0435 \u0435\u0434\u0438\u043D\u0438\u0446\u044B"
+                    )
+                  )
+                )
+              )
+            ),
+            React.createElement(
+              "li",
+              { className: this.state.unit === "gram" ? "" : "display-none" },
+              React.createElement(
+                "div",
+                { className: "item-content" },
+                React.createElement(
+                  "div",
                   { className: "item-inner" },
                   React.createElement(
                     "div",
@@ -2077,16 +2213,42 @@ var AddServingPage = function (_React$Component) {
                   React.createElement(
                     "div",
                     { className: "item-input" },
-                    React.createElement("input", { value: this.state.weight, type: "number",
+                    React.createElement("input", { value: this.state.weight, type: "text",
                       name: "weight",
                       onChange: this.onWeightFieldChange,
                       placeholder: "\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u0432\u0435\u0441 (\u0433\u0440\u0430\u043C\u043C\u044B)" })
                   )
                 )
               )
+            ),
+            React.createElement(
+              "li",
+              { className: this.state.unit === "bu" ? "" : "display-none" },
+              React.createElement(
+                "div",
+                { className: "item-content" },
+                React.createElement(
+                  "div",
+                  { className: "item-inner" },
+                  React.createElement(
+                    "div",
+                    { className: "item-title label" },
+                    "\u0425\u0415"
+                  ),
+                  React.createElement(
+                    "div",
+                    { className: "item-input" },
+                    React.createElement("input", { value: this.state.weightBu, type: "text",
+                      name: "weightBu",
+                      onChange: this.onWeightBuFieldChange,
+                      placeholder: "\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u043D\u0443\u0436\u043D\u043E\u0435 \u043A\u043E\u043B\u0438\u0447\u0435\u0441\u0442\u0432\u043E \u0425\u0415" })
+                  )
+                )
+              )
             )
           )
-        )
+        ),
+        info
       );
     }
   }]);
@@ -2174,7 +2336,7 @@ module.exports = {
   navbar: AddServingPageNavbar
 };
 
-},{"../../actions/actions.jsx":1,"../../components/LoadingBox.jsx":5,"../../f7app":8,"../../navigator.jsx":9,"../../stores/Dish.jsx":16,"../../stores/Meal.jsx":17,"../../stores/Serving.jsx":18,"../../stores/Settings.jsx":19,"../../util/dishes.jsx":23,"react":203}],15:[function(require,module,exports){
+},{"../../actions/actions.jsx":1,"../../components/LoadingBox.jsx":5,"../../f7app":8,"../../navigator.jsx":9,"../../stores/Dish.jsx":16,"../../stores/Meal.jsx":17,"../../stores/Serving.jsx":18,"../../stores/Settings.jsx":19,"../../util/bu.jsx":20,"../../util/calc.jsx":21,"../../util/dishes.jsx":23,"react":203}],15:[function(require,module,exports){
 "use strict";
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -2808,9 +2970,16 @@ exports.default = new SettingsStore();
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.buToCarbs = buToCarbs;
 exports.carbsToBu = carbsToBu;
+var gramsInBu = 12;
+
+function buToCarbs(bu) {
+  return gramsInBu * bu;
+}
+
 function carbsToBu(carbs) {
-  var bu = carbs / 12;
+  var bu = carbs / gramsInBu;
   return Math.round(bu * 100) / 100;
 };
 
@@ -2821,12 +2990,17 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.calc = calc;
+exports.round = round;
 
 var _bu = require("./bu.jsx");
 
 function calc(carbs, k) {
   return Math.round((0, _bu.carbsToBu)(carbs) * k * 10) / 10;
 };
+
+function round(value) {
+  return Math.round(value * 100) / 100;
+}
 
 },{"./bu.jsx":20}],22:[function(require,module,exports){
 "use strict";
@@ -2855,6 +3029,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.sortDishes = sortDishes;
+exports.getCarbsInServing = getCarbsInServing;
 function sortDishes(dishes, order) {
   order = order.split(":");
   function compare(v1, v2) {
@@ -2879,6 +3054,11 @@ function sortDishes(dishes, order) {
     return cmp;
   });
   return dishes;
+}
+
+function getCarbsInServing(dish, weight) {
+  var carbsin1gram = dish.carbs / 100;
+  return Math.round(carbsin1gram * weight * 100) / 100;
 }
 
 },{}],24:[function(require,module,exports){

@@ -1,5 +1,6 @@
 var React = require("react");
 var app = require("../../f7app");
+var $ = app.$;
 
 import navigator from "../../navigator.jsx";
 import {loadDishes, addServing, updateServing, fetchSettings} from "../../actions/actions.jsx";
@@ -8,7 +9,21 @@ import ServingStore from "../../stores/Serving.jsx";
 import Settings from "../../stores/Settings.jsx";
 import MealStore from "../../stores/Meal.jsx";
 import LoadingBox from "../../components/LoadingBox.jsx";
-import {sortDishes} from "../../util/dishes.jsx";
+import {sortDishes, getCarbsInServing} from "../../util/dishes.jsx";
+import {carbsToBu, buToCarbs} from "../../util/bu.jsx";
+import {round} from "../../util/calc.jsx";
+
+function calcBu(dishId, weight) {
+  var dish = DishStore.getById(dishId);
+  var carbs = getCarbsInServing(dish, weight);
+  return carbsToBu(carbs);
+}
+
+function calcWeightByBu(dishId, bu) {
+  var dish = DishStore.getById(dishId);
+  var carbsin1gram = dish.carbs/100;
+  return round(bu * buToCarbs(1)/carbsin1gram);
+}
 
 class AddServingPage extends React.Component {
   constructor() {
@@ -16,14 +31,19 @@ class AddServingPage extends React.Component {
     this.state = {
       dishes: DishStore.getDishes(),
       dish_id: null,
-      weight: 0,
-      settings: Settings.getSettings()
+      weight: "",
+      settings: Settings.getSettings(),
+      unit: "gram"
     };
   }
   componentWillMount() {
     if(this.props.id) {
       this.state.serving = ServingStore.getById(this.props.id);
       this.state.weight = this.state.serving.weight;
+      if(this.state.serving && this.state.serving.dish_id) {
+        this.state.dish_id = this.state.serving.dish_id;
+        this.state.weightBu = calcBu(this.state.dish_id, this.state.weight);
+      }
     }
     if(!this.state.dishes) {
       loadDishes();
@@ -56,13 +76,44 @@ class AddServingPage extends React.Component {
     });
   }
   onWeightFieldChange = (event) => {
-    var value = parseInt(event.target.value);
-    if(!value) {
-      value = 0;
-    }
-    this.setState({
+    var value = event.target.value;
+    value = value.replace(/[^0-9\.]/g, "");
+    var updateState = {
       weight: value
-    });
+    };
+    if(this.state.dish_id) {
+      updateState.weightBu = calcBu(this.state.dish_id, value);
+    }
+    this.setState(updateState);
+  }
+  onWeightBuFieldChange = (event) => {
+    var value = event.target.value;
+    value = value.replace(/[^0-9\.]/g, "");
+    var updateState = {
+      weightBu: value
+    };
+    if(this.state.dish_id) {
+      updateState.weight = calcWeightByBu(this.state.dish_id, value);
+    }
+    this.setState(updateState);
+  }
+  onDishChange = () => {
+    var dishId =  parseInt($("#add-serving-form [name=dish_id]").val());
+    var updateState = {
+      dish_id: dishId
+    };
+    if(this.state.weight && !this.state.weightBu) {
+      updateState.weightBu = calcBu(dishId, this.state.weight);
+    }
+    if(!this.state.weight && this.state.weightBu) {
+      updateState.weight = calcWeightByBu(dishId, this.state.weightBu);
+    }
+    this.setState(updateState);
+  }
+  onUnitChange = (unit) => {
+    this.setState({
+      unit
+    })
   }
   render() {
     if(!this.state.dishes || !this.state.settings) {
@@ -93,6 +144,22 @@ class AddServingPage extends React.Component {
     if(groupDishes.length) {
       dishesOptions.push(<optgroup label={currentLetter}>{groupDishes}</optgroup>);
     }
+    var info = null;
+    if(this.state.dish_id && this.state.weight) {
+      var dish = DishStore.getById(this.state.dish_id);
+      var carbs = getCarbsInServing(dish, this.state.weight);
+      var bu = carbsToBu(carbs);
+      if(this.state.unit === "gram") {
+        info = <div className="text-center">
+          В порции содержится <strong>{bu}</strong> ХЕ
+        </div>;
+      }
+      else {
+        info = <div className="text-center">
+          Вес порции <strong>{this.state.weight}</strong> грам
+        </div>;
+      }
+    }
     return <div className="page-content">
       <div className="list-block" id="add-serving-form">
         <ul>
@@ -101,7 +168,11 @@ class AddServingPage extends React.Component {
               data-back-on-select="true" data-searchbar="true"
               data-searchbar-placeholder="Поиск"
               data-back-text="Назад">
-              <select name="dish_id" defaultValue={this.state.serving ? this.state.serving.dish_id : ""}>
+              <select
+                onChange={this.onDishChange}
+                name="dish_id"
+                defaultValue={this.state.serving ? this.state.serving.dish_id : ""}
+              >
                 <option disabled></option>
                 {dishesOptions}
               </select>
@@ -115,10 +186,26 @@ class AddServingPage extends React.Component {
           </li>
           <li>
             <div className="item-content">
+              <div className="item-inner text-center">
+                <p className="buttons-row margin-auto width-50-perc">
+                  <a href="#"
+                    value={this.state.weight}
+                    className={"button " + (this.state.unit == "gram" ? "active" : "")}
+                    onClick={this.onUnitChange.bind(this, "gram")}>Граммы</a>
+                  <a href="#"
+                    value={this.state.weightBu}
+                    className={"button " + (this.state.unit == "bu" ? "active" : "")}
+                    onClick={this.onUnitChange.bind(this, "bu")}>Хлебные единицы</a>
+                </p>
+              </div>
+            </div>
+          </li>
+          <li className={this.state.unit === "gram" ? "" : "display-none"}>
+            <div className="item-content">
               <div className="item-inner">
                 <div className="item-title label">Вес</div>
                 <div className="item-input">
-                  <input value={this.state.weight} type="number"
+                  <input value={this.state.weight} type="text"
                     name="weight"
                     onChange={this.onWeightFieldChange}
                     placeholder="Введите вес (граммы)"/>
@@ -126,8 +213,23 @@ class AddServingPage extends React.Component {
               </div>
             </div>
           </li>
+          <li className={this.state.unit === "bu" ? "" : "display-none"}>
+            <div className="item-content">
+              <div className="item-inner">
+                <div className="item-title label">ХЕ</div>
+                <div className="item-input">
+                  <input value={this.state.weightBu} type="text"
+                    name="weightBu"
+                    onChange={this.onWeightBuFieldChange}
+                    placeholder="Введите нужное количество ХЕ"/>
+                </div>
+              </div>
+            </div>
+          </li>
         </ul>
       </div>
+
+      {info}
     </div>;
   }
 }

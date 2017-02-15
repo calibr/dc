@@ -50,6 +50,19 @@ $(document).on("tab:show", (event) => {
   navigator.navigate("/" + viewName);
 });
 
+$(document).on('page:beforeremove', (event) => {
+  if(event.detail) {
+    var name = event.detail.page.name;
+    if(name && name.indexOf("smart-select-") === 0) {
+      setTimeout(function() {
+        // make sure that transition is ended, because sometimes navbar just disappears after returning from
+        // smart select
+        $(".navbar-inner").removeClass("navbar-from-center-to-left");
+      }, 0);
+    }
+  }
+});
+
 /*
 views.forEach(function(v) {
   var view = app.addView(v.container, {

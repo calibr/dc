@@ -39,3 +39,15 @@
 .serving-list-item .badge {
   margin-right: 5px;
 }
+
+.margin-auto {
+  margin: auto;
+}
+
+.width-50-perc {
+  width: 50%;
+}
+
+.display-none {
+  display: none;
+}

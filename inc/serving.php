@@ -45,7 +45,7 @@ class Serving {
     }
     DB::inst()->q(
       "INSERT INTO `servings`
-      SET `add_date` = NOW(), `dish_id` = #d, `meal_id` = #d, `weight` = #d", [
+      SET `add_date` = NOW(), `dish_id` = #d, `meal_id` = #d, `weight` = #s", [
         $serving["dish_id"],
         $serving["meal_id"],
         $serving["weight"]
@@ -64,7 +64,7 @@ class Serving {
     }
     DB::inst()->q(
       "UPDATE `servings`
-      SET `dish_id` = #d, `weight` = #d
+      SET `dish_id` = #d, `weight` = #s
       WHERE `id` = #d", [
         $serving["dish_id"], $serving["weight"], $id
       ]
