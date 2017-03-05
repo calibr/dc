@@ -21,6 +21,10 @@ class DishesPopover extends React.Component {
     navigator.navigate("/dishes/add");
     app.closeModal();
   };
+  onAddComplexDish = () => {
+    navigator.navigate("/dishes/addComplex");
+    app.closeModal();
+  };
   render() {
     return <ul>
       <li><a href="#" className="list-button item-link" onClick={this.onOrderCarbsAsc}>
@@ -34,6 +38,9 @@ class DishesPopover extends React.Component {
       </a></li>
       <li><a href="#" className="list-button item-link color-green" onClick={this.onAddDish}>
         Добавить Блюдо
+      </a></li>
+      <li><a href="#" className="list-button item-link color-green" onClick={this.onAddComplexDish}>
+        Добавить Сложное Блюдо
       </a></li>
     </ul>;
   }

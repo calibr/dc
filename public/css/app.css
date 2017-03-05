@@ -51,3 +51,28 @@
 .display-none {
   display: none;
 }
+
+.list-block.sub-dish {
+  margin: 15px 0px;
+}
+
+.list-block.sub-dish .delete {
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 10px;
+}
+
+.sub-dish .head {
+  padding: 10px;
+}
+
+.sub-dish .title {
+  font-weight: bold;
+}
+
+.navbar-on-left {
+  /* fix transition select dish in complex dish to complex dish enter menu
+     without following code comple dish page navbar disappeared
+   */
+  opacity: 0;
+}

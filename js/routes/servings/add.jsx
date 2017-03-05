@@ -139,7 +139,9 @@ class AddServingPage extends React.Component {
         currentLetter = dishLetter;
         groupDishes = [];
       }
-      groupDishes.push(<option key={dish.id} value={dish.id}>{dish.title} ({dish.carbs})</option>);
+      groupDishes.push(<option key={dish.id} value={dish.id}>
+        {dish.title} ({dish.carbs})
+      </option>);
     });
     if(groupDishes.length) {
       dishesOptions.push(<optgroup label={currentLetter}>{groupDishes}</optgroup>);

@@ -20,7 +20,7 @@ export var loadDishes = function() {
   });
 };
 
-export var addDish = function(data) {
+export var addDish = function(data, opts = {}) {
   var formData = new FormData();
   for(let k in data) {
     formData.append(k, data[k]);
@@ -33,7 +33,8 @@ export var addDish = function(data) {
   }).then((responseData) => {
     Dispatcher.dispatch({
       eventName: "dishes.added",
-      dish: responseData
+      dish: responseData,
+      tag: opts.tag
     });
   });
 };

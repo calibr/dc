@@ -24,6 +24,7 @@
     "whatwg-fetch": "^2.0.1"
   },
   "dependencies": {
-    "url-pattern": "^1.0.3"
+    "url-pattern": "^1.0.3",
+    "uuid": "^3.0.1"
   }
 }

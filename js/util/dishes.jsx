@@ -30,3 +30,13 @@ export function getCarbsInServing(dish, weight) {
   var carbsin1gram = dish.carbs/100;
   return Math.round(carbsin1gram * weight * 100)/100;
 }
+
+export function getFatsInServing(dish, weight) {
+  var in1gram = dish.fats/100;
+  return Math.round(in1gram * weight * 100)/100;
+}
+
+export function getProteinsInServing(dish, weight) {
+  var in1gram = dish.proteins/100;
+  return Math.round(in1gram * weight * 100)/100;
+}

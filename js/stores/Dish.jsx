@@ -32,6 +32,9 @@ class DishStore extends EventEmitter {
     }
     else if(payload.eventName === "dishes.added") {
       this.dishes.push(payload.dish);
+      this.emit("added", {
+        tag: payload.tag
+      });
       this.emit("change");
     }
     else if(payload.eventName === "dishes.updated") {
