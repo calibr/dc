@@ -1,6 +1,6 @@
 function jsDate(date) {
   if(typeof date === "string") {
-    date = new Date(date)
+    date = new Date(date + " +0000")
   }
   return date
 }
