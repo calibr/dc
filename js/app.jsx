@@ -19,6 +19,10 @@ var settingsView = app.addView("#settings-view", {
   dynamicNavbar: true
 });
 settingsView.name = "settings";
+var historyView = app.addView("#history-view", {
+  dynamicNavbar: true
+});
+historyView.name = "history";
 
 // extending framework7 app
 app.getActiveView = () => {
@@ -31,6 +35,9 @@ app.getActiveView = () => {
   }
   if(activeA.getAttribute("href") === "#settings-view") {
     return settingsView;
+  }
+  if(activeA.getAttribute("href") === "#history-view") {
+    return historyView;
   }
 };
 app.getViewByName = (name) => {

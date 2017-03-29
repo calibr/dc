@@ -7,6 +7,18 @@ class Meal {
   public $date;
   public $date_end;
   public $active;
+  public $servings = null;
+
+  private static function _initMeal($row, $getServings = false) {
+    $meal = new Meal();
+    foreach($row as $k => $v) {
+      $meal->{$k} = $v;
+    }
+    if($getServings) {
+      $meal->servings = Serving::getForMeal($meal->id);
+    }
+    return $meal;
+  }
 
   public static function getActive() {
     $rows = DB::inst()->to_array("select * from meals where `active` = 1");
@@ -32,6 +44,27 @@ class Meal {
       $meal->{$k} = $v;
     }
     return $meal;
+  }
+
+  public static function getAll($params) {
+    $query = "
+      SELECT
+        *
+      FROM
+        `meals`
+      WHERE
+        `active` = 0
+      ORDER BY
+        `id` DESC
+      LIMIT #d, #d
+    ";
+    $rows = DB::inst()->to_array($query, [$params["offset"], $params["limit"]]);
+    $meals = [];
+    foreach($rows as $row) {
+      $meal = self::_initMeal($row, true);
+      $meals[] = $meal;
+    }
+    return $meals;
   }
 
   public static function end($id) {

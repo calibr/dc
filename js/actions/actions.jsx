@@ -3,6 +3,14 @@ import Dispatcher from "../dispatcher.jsx";
 
 const ROOT = "/diab";
 
+function buildQuery(query) {
+  var arr = [];
+  for(var key in query) {
+    arr.push(key + "=" + encodeURIComponent(query[key]))
+  }
+  return arr.join("&")
+}
+
 var loadingDishes = false;
 export var loadDishes = function() {
   if(loadingDishes) {
@@ -66,6 +74,26 @@ export var setDishOrder = function(field, direction) {
 };
 
 // meals
+
+export var loadMeals = function(options = {}) {
+  var offset = options.offset || 0
+  var limit = options.limit || 30
+  var query = buildQuery({
+    offset,
+    limit
+  });
+  fetch(ROOT + "/meals.php?a=fetch&" + query).then((response) => {
+    fetchingActiveMeal = false;
+    return response.json();
+  }).then((data) => {
+    Dispatcher.dispatch({
+      eventName: "meals.list",
+      meals: data,
+      offset,
+      limit
+    });
+  });
+}
 
 var fetchingActiveMeal = false;
 export var fetchActiveMeal = function() {

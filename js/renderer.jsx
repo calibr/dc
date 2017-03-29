@@ -12,7 +12,8 @@ var routes = {
   "/dishes/:id": require("./routes/dishes/add.jsx"),
   "/calc/servings/add": require("./routes/servings/add.jsx"),
   "/calc/servings/:id": require("./routes/servings/add.jsx"),
-  "/settings": require("./routes/settings/main.jsx")
+  "/settings": require("./routes/settings/main.jsx"),
+  "/history": require("./routes/history/main.jsx"),
 };
 
 $(document).on('pageBeforeInit', function (e) {

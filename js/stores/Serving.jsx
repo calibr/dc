@@ -6,7 +6,7 @@ class ServingStore extends EventEmitter {
     super();
     this.byMeal = {};
     this.byId = {};
-    Dispatcher.register(this.dispatch.bind(this));
+    this.dispatchToken = Dispatcher.register(this.dispatch.bind(this));
   }
   getForMeal(mealId) {
     if(!this.byMeal[mealId]) {
@@ -60,6 +60,21 @@ class ServingStore extends EventEmitter {
         this.byMeal[payload.params.meal_id] = [];
       }
       this.emit("change");
+    }
+    else if(payload.eventName === "meals.list") {
+      // check if servings are returned in meals response
+      let anyServingAdded = false
+      for(let meal of payload.meals) {
+        if(meal.servings && Array.isArray(meal.servings)) {
+          for(let serving of meal.servings) {
+            anyServingAdded = true
+            this._add(serving)
+          }
+        }
+      }
+      if(anyServingAdded) {
+        this.emit('change')
+      }
     }
   }
 }
