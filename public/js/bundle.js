@@ -3766,7 +3766,11 @@ var MealStore = function (_EventEmitter) {
   _createClass(MealStore, [{
     key: "_add",
     value: function _add(meal) {
-      this._byId[meal.id] = meal;
+      if (meal) {
+        this._byId[meal.id] = meal;
+      } else {
+        console.info('Trying to add empty meal, prevented');
+      }
     }
   }, {
     key: "getById",

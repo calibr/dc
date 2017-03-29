@@ -9,7 +9,12 @@ class MealStore extends EventEmitter {
     this.dispatchToken = Dispatcher.register(this.dispatch.bind(this))
   }
   _add(meal) {
-    this._byId[meal.id] = meal
+    if(meal) {
+      this._byId[meal.id] = meal
+    }
+    else {
+      console.info('Trying to add empty meal, prevented')
+    }
   }
   getById(id) {
     return this._byId[id]
