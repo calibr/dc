@@ -12,11 +12,19 @@ class MealHistoryListItem extends React.Component {
     var meal = Meal.getById(mealId)
     var servings = Serving.getForMeal(mealId)
     var carbs = 0
+    var servingsRows = []
     if(servings) {
       for(let serving of servings) {
         var dish = Dish.getById(serving.dish_id)
         if(dish) {
-          carbs += getCarbsInServing(dish, serving.weight)
+          let carbsInServing = getCarbsInServing(dish, serving.weight)
+          carbs += carbsInServing
+          servingsRows.push(<tr key={"serving-" + serving.id}>
+            <td>{dish.title}</td>
+            <td>{serving.weight} г.</td>
+            <td>{carbsInServing} г.</td>
+            <td>{carbsToBu(carbsInServing)} ХЕ</td>
+          </tr>)
         }
         else {
           // can't calculate actual carbs amount, don't display it
@@ -26,7 +34,7 @@ class MealHistoryListItem extends React.Component {
       }
     }
 
-    return <li>
+    return <li className="accordion-item">
       <a onClick={this.props.onClick} className="item-content item-link">
         <div className="item-inner">
           <div className="item-title">
@@ -35,6 +43,23 @@ class MealHistoryListItem extends React.Component {
           <div className="item-after"><span className="badge">{carbsToBu(carbs)} ХЕ</span></div>
         </div>
       </a>
+      <div className="accordion-item-content">
+        <div className="content-block">
+          <table>
+            <thead>
+              <tr>
+                <th>Блюдо</th>
+                <th>Вес порции</th>
+                <th>Углеводов в порции</th>
+                <th>ХЕ в порции</th>
+              </tr>
+            </thead>
+            <tbody>
+              {servingsRows}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </li>;
   }
 }

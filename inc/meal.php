@@ -12,6 +12,9 @@ class Meal {
   private static function _initMeal($row, $getServings = false) {
     $meal = new Meal();
     foreach($row as $k => $v) {
+      if($k === "date" || $k === "date_end") {
+        $v = Util::outDate($v);
+      }
       $meal->{$k} = $v;
     }
     if($getServings) {

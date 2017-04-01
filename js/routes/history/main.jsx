@@ -56,29 +56,32 @@ class HistoryMainPage extends React.Component {
     var currentList = []
     function buildCurrentList() {
       if(currentList.length) {
-        lists.push(<div>
+        lists.push(<div key={"list-" + lastYearMonth}>
           <div className="month-head">{lastYearMonth}</div>
-          <ul>
-            {currentList}
-          </ul>
+          <div className="list-block accordion-list">
+            <ul>
+              {currentList}
+            </ul>
+          </div>
         </div>)
       }
     }
     this.state.mealsIds.forEach(mealId => {
       var meal = Meal.getById(mealId)
       var yearMonth = visibleMonthYearDay(meal.date)
+      if(!lastYearMonth) {
+        lastYearMonth = yearMonth
+      }
       if(yearMonth !== lastYearMonth) {
         buildCurrentList()
         lastYearMonth = yearMonth
-        mealListItems.push(<li key={yearMonth}>{yearMonth}</li>)
+        currentList = []
       }
       currentList.push(<MealHistoryListItem key={mealId} mealId={mealId}/>)
     })
     buildCurrentList()
     return <div className="page-content history-content">
-      <div className="list-block">
-        {lists}
-      </div>
+      {lists}
     </div>;
   }
 }

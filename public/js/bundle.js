@@ -725,6 +725,7 @@ var MealHistoryListItem = function (_React$Component) {
       var meal = _Meal2.default.getById(mealId);
       var servings = _Serving2.default.getForMeal(mealId);
       var carbs = 0;
+      var servingsRows = [];
       if (servings) {
         var _iteratorNormalCompletion = true;
         var _didIteratorError = false;
@@ -736,7 +737,35 @@ var MealHistoryListItem = function (_React$Component) {
 
             var dish = _Dish2.default.getById(serving.dish_id);
             if (dish) {
-              carbs += (0, _dishes.getCarbsInServing)(dish, serving.weight);
+              var carbsInServing = (0, _dishes.getCarbsInServing)(dish, serving.weight);
+              carbs += carbsInServing;
+              servingsRows.push(React.createElement(
+                'tr',
+                { key: "serving-" + serving.id },
+                React.createElement(
+                  'td',
+                  null,
+                  dish.title
+                ),
+                React.createElement(
+                  'td',
+                  null,
+                  serving.weight,
+                  ' \u0433.'
+                ),
+                React.createElement(
+                  'td',
+                  null,
+                  carbsInServing,
+                  ' \u0433.'
+                ),
+                React.createElement(
+                  'td',
+                  null,
+                  (0, _bu.carbsToBu)(carbsInServing),
+                  ' \u0425\u0415'
+                )
+              ));
             } else {
               // can't calculate actual carbs amount, don't display it
               carbs = 0;
@@ -761,7 +790,7 @@ var MealHistoryListItem = function (_React$Component) {
 
       return React.createElement(
         'li',
-        null,
+        { className: 'accordion-item' },
         React.createElement(
           'a',
           { onClick: this.props.onClick, className: 'item-content item-link' },
@@ -785,6 +814,51 @@ var MealHistoryListItem = function (_React$Component) {
                 { className: 'badge' },
                 (0, _bu.carbsToBu)(carbs),
                 ' \u0425\u0415'
+              )
+            )
+          )
+        ),
+        React.createElement(
+          'div',
+          { className: 'accordion-item-content' },
+          React.createElement(
+            'div',
+            { className: 'content-block' },
+            React.createElement(
+              'table',
+              null,
+              React.createElement(
+                'thead',
+                null,
+                React.createElement(
+                  'tr',
+                  null,
+                  React.createElement(
+                    'th',
+                    null,
+                    '\u0411\u043B\u044E\u0434\u043E'
+                  ),
+                  React.createElement(
+                    'th',
+                    null,
+                    '\u0412\u0435\u0441 \u043F\u043E\u0440\u0446\u0438\u0438'
+                  ),
+                  React.createElement(
+                    'th',
+                    null,
+                    '\u0423\u0433\u043B\u0435\u0432\u043E\u0434\u043E\u0432 \u0432 \u043F\u043E\u0440\u0446\u0438\u0438'
+                  ),
+                  React.createElement(
+                    'th',
+                    null,
+                    '\u0425\u0415 \u0432 \u043F\u043E\u0440\u0446\u0438\u0438'
+                  )
+                )
+              ),
+              React.createElement(
+                'tbody',
+                null,
+                servingsRows
               )
             )
           )
@@ -2791,16 +2865,20 @@ var HistoryMainPage = function (_React$Component) {
         if (currentList.length) {
           lists.push(React.createElement(
             "div",
-            null,
+            { key: "list-" + lastYearMonth },
             React.createElement(
               "div",
               { className: "month-head" },
               lastYearMonth
             ),
             React.createElement(
-              "ul",
-              null,
-              currentList
+              "div",
+              { className: "list-block accordion-list" },
+              React.createElement(
+                "ul",
+                null,
+                currentList
+              )
             )
           ));
         }
@@ -2808,14 +2886,13 @@ var HistoryMainPage = function (_React$Component) {
       this.state.mealsIds.forEach(function (mealId) {
         var meal = _Meal2.default.getById(mealId);
         var yearMonth = (0, _date.visibleMonthYearDay)(meal.date);
+        if (!lastYearMonth) {
+          lastYearMonth = yearMonth;
+        }
         if (yearMonth !== lastYearMonth) {
           buildCurrentList();
           lastYearMonth = yearMonth;
-          mealListItems.push(React.createElement(
-            "li",
-            { key: yearMonth },
-            yearMonth
-          ));
+          currentList = [];
         }
         currentList.push(React.createElement(_MealHistoryListItem2.default, { key: mealId, mealId: mealId }));
       });
@@ -2823,11 +2900,7 @@ var HistoryMainPage = function (_React$Component) {
       return React.createElement(
         "div",
         { className: "page-content history-content" },
-        React.createElement(
-          "div",
-          { className: "list-block" },
-          lists
-        )
+        lists
       );
     }
   }]);
@@ -4280,7 +4353,7 @@ exports.visibleMonthYearDay = visibleMonthYearDay;
 exports.visible = visible;
 exports.visibleTime = visibleTime;
 function jsDate(date) {
-  if (typeof date === "string") {
+  if (typeof date === "string" || typeof date === "number") {
     date = new Date(date);
   }
   return date;

@@ -1,5 +1,5 @@
 function jsDate(date) {
-  if(typeof date === "string") {
+  if(typeof date === "string" || typeof date === "number") {
     date = new Date(date)
   }
   return date
