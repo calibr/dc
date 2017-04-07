@@ -29,6 +29,11 @@ class ServingListItem extends React.Component {
       this.props.onDelete();
     }
   }
+  onSwipeOutAte = () => {
+    if(this.props.onAte) {
+      this.props.onAte();
+    }
+  }
   onDishChange = () => {
     this.setState({
       dish: Dish.getById(this.props.serving.dish_id)
@@ -69,6 +74,7 @@ class ServingListItem extends React.Component {
       </div>
       <div className="swipeout-actions-left">
         <a href="#" onClick={this.onSwipeOutDelete} className="bg-red">Удалить</a>
+        <a href="#" onClick={this.onSwipeOutAte} className="bg-blue">{this.props.ateText || "Съел"}</a>
       </div>
     </li>;
   }

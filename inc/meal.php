@@ -71,8 +71,26 @@ class Meal {
   }
 
   public static function end($id) {
-    DB::inst()->q("update meals set `active` = 0, `date_end` = NOW() where `id` = #d", [$id]);
-    return self::get($id);
+    $servings = Serving::getForMeal($id);
+    if($servings) {
+      $eatDates = array_map(function($s) {
+        return $s->eat_date;
+      }, $servings);
+      $eatDates = array_filter($eatDates);
+      $date = "`date`";
+      $date_end = "NOW()";
+      if($eatDates) {
+        $date = "'".date("Y-m-d H:i:s", round(min($eatDates)/1000))."'";
+        $date_end = "'".date("Y-m-d H:i:s", round(max($eatDates)/1000))."'";
+      }
+      DB::inst()->q("update meals set `active` = 0, `date_end` = $date_end, `date` = $date where `id` = #d", [$id]);
+      $res = self::get($id);
+    }
+    else {
+      $res = null;
+      DB::inst()->q("delete from `meals` where `id` = #d", [$id]);
+    }
+    return $res;
   }
 
   public static function setCoef($id, $coef) {

@@ -408,46 +408,6 @@ $(document).on('page:beforeremove', function (event) {
   }
 });
 
-/*
-views.forEach(function(v) {
-  var view = app.addView(v.container, {
-    dynamicNavbar: true,
-    domCache: true
-  });
-  view.components = v.components;
-});
-
-function renderCurrentView() {
-  var view = app.getCurrentView();
-  view.components.forEach(function(comp) {
-    ReactDom.render(
-      <comp.component view={view}/>,
-      document.querySelector(comp.container)
-    );
-  });
-}
-
-renderCurrentView();
-
-$(document).on("tab:show", function() {
-  renderCurrentView();
-});
-*/
-
-/*
-var newPageContent = '<div class="page" data-page="my-page">' +
-                        '<div class="page-content">' +
-                          '<p>Here comes new page</p>' +
-                        '</div>' +
-                      '</div>';
-*/
-
-/*console.log(app.getCurrentView());
-app.getCurrentView().router.load({
-  content: newPageContent,
-  animatePages: false
-);*/
-
 },{"./f7app":10,"./navigator.jsx":11,"./renderer.jsx":12,"react":209,"react-dom":58}],3:[function(require,module,exports){
 "use strict";
 
@@ -920,6 +880,12 @@ var ServingListItem = function (_React$Component) {
       }
     };
 
+    _this.onSwipeOutAte = function () {
+      if (_this.props.onAte) {
+        _this.props.onAte();
+      }
+    };
+
     _this.onDishChange = function () {
       _this.setState({
         dish: _Dish2.default.getById(_this.props.serving.dish_id)
@@ -1017,6 +983,11 @@ var ServingListItem = function (_React$Component) {
             "a",
             { href: "#", onClick: this.onSwipeOutDelete, className: "bg-red" },
             "\u0423\u0434\u0430\u043B\u0438\u0442\u044C"
+          ),
+          React.createElement(
+            "a",
+            { href: "#", onClick: this.onSwipeOutAte, className: "bg-blue" },
+            this.props.ateText || "Съел"
           )
         )
       );
@@ -1195,11 +1166,18 @@ exports.default = new Dispatcher();
 },{"flux":54}],10:[function(require,module,exports){
 "use strict";
 
-module.exports = new Framework7({
-  pushState: true,
-  swipeBackPage: false
+var app = new Framework7({
+	pushState: true,
+	swipeBackPage: false
 });
-module.exports.$ = Dom7;
+app.closeSwipeout = function () {
+	if (app.swipeoutOpenedEl) {
+		app.swipeoutClose(app.swipeoutOpenedEl);
+	}
+};
+app.$ = Dom7;
+
+module.exports = app;
 
 },{}],11:[function(require,module,exports){
 "use strict";
@@ -1409,6 +1387,21 @@ var CalcMainPage = function (_React$Component) {
 
     _this.onServingDelete = function (serving) {
       (0, _actions.deleteServing)(serving.id);
+      app.closeSwipeout();
+    };
+
+    _this.onServingAte = function (serving) {
+      (0, _actions.updateServing)(serving.id, {
+        eaten: true
+      });
+      app.closeSwipeout();
+    };
+
+    _this.onServingDidntEat = function (serving) {
+      (0, _actions.updateServing)(serving.id, {
+        eaten: false
+      });
+      app.closeSwipeout();
     };
 
     _this.onMealEnd = function () {
@@ -1492,12 +1485,25 @@ var CalcMainPage = function (_React$Component) {
         );
       }
 
-      var servingsElems = this.state.servings.map(function (serving) {
-        return React.createElement(_ServingListItem2.default, {
-          onClick: _this2.onServingClick.bind(_this2, serving),
-          onDelete: _this2.onServingDelete.bind(_this2, serving),
-          key: serving.id, serving: serving });
+      var servingsToEat = [];
+      var servingsEaten = [];
+      this.state.servings.forEach(function (serving) {
+        if (serving.eat_date) {
+          servingsEaten.push(React.createElement(_ServingListItem2.default, {
+            onClick: _this2.onServingClick.bind(_this2, serving),
+            onDelete: _this2.onServingDelete.bind(_this2, serving),
+            onAte: _this2.onServingDidntEat.bind(_this2, serving),
+            ateText: "\u041D\u0435 \u0441\u044A\u0435\u043B",
+            key: serving.id, serving: serving }));
+        } else {
+          servingsToEat.push(React.createElement(_ServingListItem2.default, {
+            onClick: _this2.onServingClick.bind(_this2, serving),
+            onDelete: _this2.onServingDelete.bind(_this2, serving),
+            onAte: _this2.onServingAte.bind(_this2, serving),
+            key: serving.id, serving: serving }));
+        }
       });
+
       var carbs = this.state.servings.reduce(function (prev, serving) {
         var dish = _Dish2.default.getById(serving.dish_id);
         return dish.carbs * serving.weight / 100 + prev;
@@ -1507,18 +1513,36 @@ var CalcMainPage = function (_React$Component) {
       return React.createElement(
         "div",
         { className: "page-content" },
-        servingsElems.length ? React.createElement(
+        servingsToEat.length ? React.createElement(
+          "div",
+          { className: "list-block" },
+          React.createElement(
+            "ul",
+            null,
+            servingsToEat
+          )
+        ) : null,
+        servingsEaten.length ? React.createElement(
           "div",
           null,
           React.createElement(
             "div",
-            { className: "list-block" },
+            { className: "content-block-title" },
+            "\u0421\u044A\u0435\u0434\u0435\u043D\u043E:"
+          ),
+          React.createElement(
+            "div",
+            { className: "list-block servings-eaten" },
             React.createElement(
               "ul",
               null,
-              servingsElems
+              servingsEaten
             )
-          ),
+          )
+        ) : null,
+        this.state.servings.length ? React.createElement(
+          "div",
+          null,
           React.createElement(
             "div",
             { className: "content-block" },
@@ -3150,7 +3174,7 @@ var AddServingPage = function (_React$Component) {
       var groupDishes = [];
       dishes.forEach(function (dish) {
         var newGroup = false;
-        var dishLetter = dish.title[0].toLowerCase();
+        var dishLetter = dish.title.trim()[0].toLowerCase();
         if (!currentLetter) {
           newGroup = true;
         }
@@ -3161,7 +3185,7 @@ var AddServingPage = function (_React$Component) {
           if (currentLetter) {
             dishesOptions.push(React.createElement(
               "optgroup",
-              { label: currentLetter.toUpperCase() },
+              { key: "letter-" + currentLetter.toUpperCase(), label: currentLetter.toUpperCase() },
               groupDishes
             ));
           }
@@ -3180,7 +3204,7 @@ var AddServingPage = function (_React$Component) {
       if (groupDishes.length) {
         dishesOptions.push(React.createElement(
           "optgroup",
-          { label: currentLetter },
+          { key: "letter-" + currentLetter.toUpperCase(), label: currentLetter },
           groupDishes
         ));
       }

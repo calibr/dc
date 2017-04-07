@@ -6,7 +6,8 @@ import Dish from "../../stores/Dish.jsx";
 import Settings from "../../stores/Settings.jsx";
 import Serving from "../../stores/Serving.jsx";
 import {
-  fetchActiveMeal, createMeal, fetchServings, loadDishes, deleteServing, endMeal, fetchSettings, setMealCoef
+  fetchActiveMeal, createMeal, fetchServings, loadDishes, deleteServing,
+  endMeal, fetchSettings, setMealCoef, updateServing
 } from "../../actions/actions.jsx";
 import LoadingBox from "../../components/LoadingBox.jsx";
 import navigator from "../../navigator.jsx";
@@ -81,6 +82,19 @@ class CalcMainPage extends React.Component {
   }
   onServingDelete = (serving) => {
     deleteServing(serving.id);
+    app.closeSwipeout()
+  }
+  onServingAte = (serving) => {
+    updateServing(serving.id, {
+      eaten: true
+    });
+    app.closeSwipeout()
+  }
+  onServingDidntEat = (serving) => {
+    updateServing(serving.id, {
+      eaten: false
+    });
+    app.closeSwipeout()
   }
   onMealEnd = () => {
     endMeal(this.state.activeMeal.id);
@@ -108,24 +122,50 @@ class CalcMainPage extends React.Component {
       </div>;
     }
 
-    var servingsElems = this.state.servings.map(serving => {
-      return <ServingListItem
-        onClick={this.onServingClick.bind(this, serving)}
-        onDelete={this.onServingDelete.bind(this, serving)}
-        key={serving.id} serving={serving}/>;
-    });
+    var servingsToEat = []
+    var servingsEaten = []
+    this.state.servings.forEach(serving => {
+      if(serving.eat_date) {
+        servingsEaten.push(<ServingListItem
+          onClick={this.onServingClick.bind(this, serving)}
+          onDelete={this.onServingDelete.bind(this, serving)}
+          onAte={this.onServingDidntEat.bind(this, serving)}
+          ateText="Не съел"
+          key={serving.id} serving={serving}/>)
+      }
+      else {
+        servingsToEat.push(<ServingListItem
+          onClick={this.onServingClick.bind(this, serving)}
+          onDelete={this.onServingDelete.bind(this, serving)}
+          onAte={this.onServingAte.bind(this, serving)}
+          key={serving.id} serving={serving}/>)
+      }
+    })
+
     var carbs = this.state.servings.reduce((prev, serving) => {
       var dish = Dish.getById(serving.dish_id);
       return dish.carbs * serving.weight/100 + prev;
-    }, 0);
-    var dose = calc(carbs, this.state.activeMeal.coef);
-    var totalBu = carbsToBu(carbs);
+    }, 0)
+    var dose = calc(carbs, this.state.activeMeal.coef)
+    var totalBu = carbsToBu(carbs)
     return <div className="page-content">
-      {servingsElems.length ?
+      {servingsToEat.length ?
+        <div className="list-block">
+          <ul>{servingsToEat}</ul>
+        </div>
+        : null
+      }
+      {servingsEaten.length ?
         <div>
-          <div className="list-block">
-            <ul>{servingsElems}</ul>
+          <div className="content-block-title">Съедено:</div>
+          <div className="list-block servings-eaten">
+            <ul>{servingsEaten}</ul>
           </div>
+        </div>
+        : null
+      }
+      {this.state.servings.length ?
+        <div>
           <div className="content-block">
             <div className="insulin-dose">Доза инсулина: {dose}</div>
             <div className="text-center">Всего ХЕ: {totalBu}</div>

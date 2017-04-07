@@ -82,3 +82,7 @@
   font-size: 22px;
   margin-top: 5px;
 }
+
+.list-block.servings-eaten li {
+  opacity: 0.4;
+}

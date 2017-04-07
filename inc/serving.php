@@ -13,6 +13,9 @@ class Serving {
   private static function fromRow($row) {
     $serving = new Serving();
     foreach($row as $k => $v) {
+      if($k === "add_date" || $k === "eat_date") {
+        $v = Util::outDate($v);
+      }
       $serving->{$k} = $v;
     }
     return $serving;
@@ -27,16 +30,17 @@ class Serving {
     return $res;
   }
 
+  public static function countForMeal($id) {
+    $cnt = DB::inst()->first("select count(*) from servings where `meal_id` = #d", [$id]);
+    return $cnt;
+  }
+
   public static function get($id) {
     $rows = DB::inst()->to_array("select * from servings where `id` = #d", [$id]);
     if(!$rows) {
       return null;
     }
     return self::fromRow($rows[0]);
-  }
-
-  public static function eat($id) {
-    DB::inst()->to_array("update servings set `eat` = 1 where `id` = #d", [$id]);
   }
 
   public static function add($serving) {
@@ -59,16 +63,39 @@ class Serving {
   }
 
   public static function update($id, $serving) {
-    if(empty($serving["dish_id"])) {
-      throw new \Exception("dish_id is required");
+    if(isset($serving["dish_id"]) && isset($serving["weight"])) {
+      DB::inst()->q(
+        "UPDATE `servings`
+        SET `dish_id` = #d, `weight` = #s
+        WHERE `id` = #d", [
+          $serving["dish_id"], $serving["weight"], $id
+        ]
+      );
     }
-    DB::inst()->q(
-      "UPDATE `servings`
-      SET `dish_id` = #d, `weight` = #s
-      WHERE `id` = #d", [
-        $serving["dish_id"], $serving["weight"], $id
-      ]
-    );
+    if(isset($serving["eaten"])) {
+      if($serving["eaten"] === "true") {
+        $serving["eaten"] = true;
+      }
+      if($serving["eaten"] === "false") {
+        $serving["eaten"] = false;
+      }
+      if($serving["eaten"]) {
+        $value = "NOW()";
+      }
+      else {
+        $value = "NULL";
+      }
+      DB::inst()->q("
+        UPDATE
+          `servings`
+        SET
+          `eat_date` = $value
+        WHERE
+          `id` = #d
+      ", [
+          $id
+      ]);
+    }
     return self::get($id);
   }
 

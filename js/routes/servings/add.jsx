@@ -125,7 +125,7 @@ class AddServingPage extends React.Component {
     var groupDishes = [];
     dishes.forEach((dish) => {
       let newGroup = false;
-      let dishLetter = dish.title[0].toLowerCase();
+      let dishLetter = dish.title.trim()[0].toLowerCase();
       if(!currentLetter) {
         newGroup = true;
       }
@@ -134,7 +134,7 @@ class AddServingPage extends React.Component {
       }
       if(newGroup) {
         if(currentLetter) {
-          dishesOptions.push(<optgroup label={currentLetter.toUpperCase()}>{groupDishes}</optgroup>);
+          dishesOptions.push(<optgroup key={"letter-" + currentLetter.toUpperCase()} label={currentLetter.toUpperCase()}>{groupDishes}</optgroup>);
         }
         currentLetter = dishLetter;
         groupDishes = [];
@@ -144,7 +144,7 @@ class AddServingPage extends React.Component {
       </option>);
     });
     if(groupDishes.length) {
-      dishesOptions.push(<optgroup label={currentLetter}>{groupDishes}</optgroup>);
+      dishesOptions.push(<optgroup key={"letter-" + currentLetter.toUpperCase()} label={currentLetter}>{groupDishes}</optgroup>);
     }
     var info = null;
     if(this.state.dish_id && this.state.weight) {
