@@ -103,17 +103,15 @@ class CalcMainPage extends React.Component {
     if(this.state.servings.length) {
       var uneaten = this.state.servings.filter(s => !s.eat_date)
       if(uneaten.length) {
-        app.confirm(
+        return app.confirm(
           'В списке имеются не съеденные блюда, для улучшения качества истории желательно помечать все блюда как съеденные или удалять не съеденные, хотите закончить еду?',
           'Важно!', function() {
             end()
           }
         )
       }
-      else {
-        end()
-      }
     }
+    end()
   }
   render() {
     if(typeof this.state.activeMeal === "undefined" || !this.state.settings) {
