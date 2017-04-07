@@ -97,7 +97,23 @@ class CalcMainPage extends React.Component {
     app.closeSwipeout()
   }
   onMealEnd = () => {
-    endMeal(this.state.activeMeal.id);
+    var end = () => {
+      endMeal(this.state.activeMeal.id);
+    }
+    if(this.state.servings.length) {
+      var uneaten = this.state.servings.filter(s => !s.eat_date)
+      if(uneaten.length) {
+        app.confirm(
+          'В списке имеются не съеденные блюда, для улучшения качества истории желательно помечать все блюда как съеденные или удалять не съеденные, хотите закончить еду?',
+          'Важно!', function() {
+            end()
+          }
+        )
+      }
+      else {
+        end()
+      }
+    }
   }
   render() {
     if(typeof this.state.activeMeal === "undefined" || !this.state.settings) {

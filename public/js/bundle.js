@@ -1405,7 +1405,21 @@ var CalcMainPage = function (_React$Component) {
     };
 
     _this.onMealEnd = function () {
-      (0, _actions.endMeal)(_this.state.activeMeal.id);
+      var end = function end() {
+        (0, _actions.endMeal)(_this.state.activeMeal.id);
+      };
+      if (_this.state.servings.length) {
+        var uneaten = _this.state.servings.filter(function (s) {
+          return !s.eat_date;
+        });
+        if (uneaten.length) {
+          app.confirm('В списке имеются не съеденные блюда, для улучшения качества истории желательно помечать все блюда как съеденные или удалять не съеденные, хотите закончить еду?', 'Важно!', function () {
+            end();
+          });
+        } else {
+          end();
+        }
+      }
     };
 
     return _this;
