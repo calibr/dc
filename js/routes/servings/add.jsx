@@ -5,13 +5,15 @@ var $ = app.$;
 import navigator from "../../navigator.jsx";
 import {loadDishes, addServing, updateServing, fetchSettings} from "../../actions/actions.jsx";
 import DishStore from "../../stores/Dish.jsx";
+import DishPickStore from "../../stores/DishPick.jsx";
 import ServingStore from "../../stores/Serving.jsx";
 import Settings from "../../stores/Settings.jsx";
 import MealStore from "../../stores/Meal.jsx";
 import LoadingBox from "../../components/LoadingBox.jsx";
-import {sortDishes, getCarbsInServing} from "../../util/dishes.jsx";
+import {sortDishes, getCarbsInServing, nameFull as dishNameFull} from "../../util/dishes.jsx";
 import {carbsToBu, buToCarbs} from "../../util/bu.jsx";
 import {round} from "../../util/calc.jsx";
+import {display as displayDishPicker} from '../../actions/dishPicker.jsx'
 
 function calcBu(dishId, weight) {
   var dish = DishStore.getById(dishId);
@@ -54,11 +56,13 @@ class AddServingPage extends React.Component {
   }
   componentDidMount() {
     DishStore.addListener("change", this.onDishesChange);
+    DishPickStore.addListener("pick", this.onDishPicked);
     ServingStore.addListener("change", this.onServingsChange);
     Settings.addListener("change", this.onSettingsChange);
   }
   componentWillUnmount() {
     DishStore.removeListener("change", this.onDishesChange);
+    DishPickStore.removeListener("pick", this.onDishPicked);
     ServingStore.removeListener("change", this.onServingsChange);
     Settings.addListener("change", this.onSettingsChange);
   }
@@ -67,8 +71,25 @@ class AddServingPage extends React.Component {
       dishes: DishStore.getDishes()
     });
   }
+  onDishPicked = () => {
+    console.log("PICKED", DishPickStore.getDishId())
+    var dishId = DishPickStore.getDishId()
+    var updateState = {
+      dish_id: dishId
+    };
+    if(this.state.weight && !this.state.weightBu) {
+      updateState.weightBu = calcBu(dishId, this.state.weight);
+    }
+    if(!this.state.weight && this.state.weightBu) {
+      updateState.weight = calcWeightByBu(dishId, this.state.weightBu);
+    }
+    this.setState(updateState);
+  }
+  onStartPickDish = () => {
+    displayDishPicker()
+  }
   onServingsChange = () => {
-    navigator.navigate("/calc");
+    navigator.navigate("/calc")
   }
   onSettingsChange = () => {
     this.setState({
@@ -97,19 +118,6 @@ class AddServingPage extends React.Component {
     }
     this.setState(updateState);
   }
-  onDishChange = () => {
-    var dishId =  parseInt($("#add-serving-form [name=dish_id]").val());
-    var updateState = {
-      dish_id: dishId
-    };
-    if(this.state.weight && !this.state.weightBu) {
-      updateState.weightBu = calcBu(dishId, this.state.weight);
-    }
-    if(!this.state.weight && this.state.weightBu) {
-      updateState.weight = calcWeightByBu(dishId, this.state.weightBu);
-    }
-    this.setState(updateState);
-  }
   onUnitChange = (unit) => {
     this.setState({
       unit
@@ -119,11 +127,18 @@ class AddServingPage extends React.Component {
     if(!this.state.dishes || !this.state.settings) {
       return <div className="page-content"><LoadingBox/></div>
     }
+    var dish = null
+    if(this.state.dish_id) {
+      dish = DishStore.getById(this.state.dish_id)
+    }
     var dishes = sortDishes(this.state.dishes, this.state.settings["dish-order"]);
     var dishesOptions = [];
     var currentLetter = "";
     var groupDishes = [];
     dishes.forEach((dish) => {
+      if(dish.deleted) {
+        return
+      }
       let newGroup = false;
       let dishLetter = dish.title.trim()[0].toLowerCase();
       if(!currentLetter) {
@@ -164,24 +179,14 @@ class AddServingPage extends React.Component {
     }
     return <div className="page-content">
       <div className="list-block" id="add-serving-form">
+        <input type="hidden" name="dish_id" value={this.state.dish_id}/>
         <ul>
           <li>
-            <a href="#" className="item-link smart-select"
-              data-back-on-select="true" data-searchbar="true"
-              data-searchbar-placeholder="Поиск"
-              data-back-text="Назад">
-              <select
-                onChange={this.onDishChange}
-                name="dish_id"
-                defaultValue={this.state.serving ? this.state.serving.dish_id : ""}
-              >
-                <option disabled></option>
-                {dishesOptions}
-              </select>
+            <a href="#" className="item-link" onClick={this.onStartPickDish}>
               <div className="item-content">
                 <div className="item-inner">
-                  <div className="item-title">Блюдо</div>
-                  <div className="item-after"></div>
+                  <div className="item-title label">Блюдо</div>
+                  <div className="item-after">{dish ? dishNameFull(dish) : "Выберите блюдо"}</div>
                 </div>
               </div>
             </a>

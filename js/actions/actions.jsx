@@ -65,6 +65,17 @@ export var updateDish = function(id, data) {
   });
 };
 
+export var deleteDish = function(id) {
+  fetch(ROOT + "/dishes.php?a=delete&id=" + id, {
+    method: "POST"
+  }).then((response) => {
+    Dispatcher.dispatch({
+      eventName: "dishes.deleted",
+      id: id
+    });
+  });
+};
+
 export var setDishOrder = function(field, direction) {
   setSetting("dish-order", field + ":" + direction);
   Dispatcher.dispatch({

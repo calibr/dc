@@ -48,6 +48,12 @@ app.getViewByName = (name) => {
   }
 };
 
+
+setTimeout(() => {
+  //document.querySelector('[href="#dishes-view"]').click()
+  //navigator.navigate('/calc/pick')
+}, 1000)
+
 // initial navigation
 navigator.navigate("/calc");
 //navigator.navigate("/dishes");

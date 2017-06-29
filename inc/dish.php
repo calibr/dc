@@ -11,6 +11,7 @@ class Dish {
   public $gi;
   public $is_complex;
   public $complex_data;
+  public $deleted;
 
   private static function checkInputDish($dish) {
     if(empty($dish["title"])) {
@@ -32,6 +33,7 @@ class Dish {
     foreach($rows as $row) {
       $dish = new Dish();
       $row["is_complex"] = !empty($row["complex_data"]);
+      $row["deleted"] = boolval($row["deleted"]);
       unset($row["complex_data"]);
       foreach($row as $k => $v) {
         $dish->{$k} = $v;
@@ -49,6 +51,7 @@ class Dish {
     $dish = new Dish();
     $row = $rows[0];
     $row["is_complex"] = !empty($row["complex_data"]);
+    $row["deleted"] = boolval($row["deleted"]);
     foreach($row as $k => $v) {
       $dish->{$k} = $v;
     }
@@ -59,7 +62,8 @@ class Dish {
     self::checkInputDish($dish);
     DB::inst()->q(
       "INSERT INTO `dishes`
-      SET `title` = #s, `carbs` = #s, `proteins` = #s, `fats` = #s, `gi` = #s, `complex_data` = #s", [
+      SET `date` = NOW(), `title` = #s, `carbs` = #s,
+      `proteins` = #s, `fats` = #s, `gi` = #s, `complex_data` = #s", [
         $dish["title"], $dish["carbs"], $dish["proteins"],
         $dish["fats"], $dish["gi"], isset($dish["complex_data"]) ? $dish["complex_data"] : ""
       ]
@@ -81,5 +85,24 @@ class Dish {
       ]
     );
     return self::get($id);
+  }
+
+  public static function delete($id) {
+    DB::inst()->q(
+      "DELETE FROM `dishes`
+      WHERE `id` = #d", [
+        $id
+      ]
+    );
+  }
+
+  public static function markDelete($id) {
+    DB::inst()->q(
+      "UPDATE `dishes`
+      SET `deleted` = 1
+      WHERE `id` = #d", [
+        $id
+      ]
+    );
   }
 }

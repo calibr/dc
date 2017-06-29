@@ -1,7 +1,9 @@
+import {visibleRel} from './date.jsx'
+
 export function sortDishes(dishes, order) {
   order = order.split(":");
   function compare(v1, v2) {
-    if(order[0] == "title") {
+    if(order[0] == "title" || order[0] == "date") {
       v1 = v1.toLowerCase().trim();
       v2 = v2.toLowerCase().trim();
       if(v1 > v2) {
@@ -39,4 +41,12 @@ export function getFatsInServing(dish, weight) {
 export function getProteinsInServing(dish, weight) {
   var in1gram = dish.proteins/100;
   return Math.round(in1gram * weight * 100)/100;
+}
+
+export function nameFull(dish) {
+  var title = dish.title + "(" + dish.carbs + ")"
+  if(dish.is_complex) {
+    title += ' 🍕 ' + visibleRel(dish.date)
+  }
+  return title
 }

@@ -2,6 +2,7 @@ var app = require("./f7app");
 
 var navigator = {
   navigate: (url) => {
+    console.log('Navigate to', url)
     var parts = url.split("/");
     var viewName = parts[1];
     var view = app.getViewByName(viewName);
@@ -12,7 +13,12 @@ var navigator = {
     view.router.load({
       url: "page.html?url=" + url,
       animatePages: false
-    });
+    })
+  },
+  back: () => {
+    app.getCurrentView().router.back({
+      animatePages: true
+    })
   }
 };
 

@@ -17,6 +17,10 @@ class DishesPopover extends React.Component {
     setDishOrder("title", "asc");
     app.closeModal();
   };
+  onOrderDate = () => {
+    setDishOrder("date", "desc");
+    app.closeModal();
+  };
   onAddDish = () => {
     navigator.navigate("/dishes/add");
     app.closeModal();
@@ -26,6 +30,12 @@ class DishesPopover extends React.Component {
     app.closeModal();
   };
   render() {
+    var addDishButton = <li><a href="#" className="list-button item-link color-green" onClick={this.onAddDish}>
+        Добавить Блюдо
+      </a></li>;
+    var addComplexDishButton = <li><a href="#" className="list-button item-link color-green" onClick={this.onAddComplexDish}>
+        Добавить Сложное Блюдо
+      </a></li>
     return <ul>
       <li><a href="#" className="list-button item-link" onClick={this.onOrderCarbsAsc}>
         Сортировка Углеводы возрастание
@@ -36,13 +46,19 @@ class DishesPopover extends React.Component {
       <li><a href="#" className="list-button item-link" onClick={this.onOrderAlphabet}>
         Сортировка по Алафвиту
       </a></li>
-      <li><a href="#" className="list-button item-link color-green" onClick={this.onAddDish}>
-        Добавить Блюдо
+      <li><a href="#" className="list-button item-link" onClick={this.onOrderDate}>
+        Сортировка по Дате
       </a></li>
-      <li><a href="#" className="list-button item-link color-green" onClick={this.onAddComplexDish}>
-        Добавить Сложное Блюдо
-      </a></li>
+      {!this.disableAdd ? addDishButton : null}
+      {!this.disableAdd ? addComplexDishButton : null}
     </ul>;
+  }
+}
+
+export class DishesPopoverShort extends DishesPopover {
+  constructor() {
+    super()
+    this.disableAdd = true
   }
 }
 

@@ -3,10 +3,12 @@ import ReactDOM from 'react-dom';
 import Dish from "../stores/Dish.jsx";
 import {loadDishes} from "../actions/actions.jsx";
 import {carbsToBu} from "../util/bu.jsx";
+import AbstractSwipeOut from './AbstractSwipeOut.jsx'
 
-var $ = require("../f7app").$;
+var $ = require("../f7app").$
+var app = require("../f7app")
 
-class ServingListItem extends React.Component {
+class ServingListItem extends AbstractSwipeOut {
   constructor() {
     super();
   }
@@ -38,22 +40,6 @@ class ServingListItem extends React.Component {
     this.setState({
       dish: Dish.getById(this.props.serving.dish_id)
     });
-  }
-  onClick = () => {
-    setTimeout(() => {
-      var el = ReactDOM.findDOMNode(this);
-      var transform = getComputedStyle(el.querySelector(".swipeout-content")).transform;
-      var allowClick = true;
-      var match = transform.match(/matrix\([0-9\.]+, [0-9\.]+, [0-9\.]+, [0-9\.]+, (.+?), [0-9\.]+\)/);
-      if(match) {
-        if(match[1] > 20) {
-          allowClick = false;
-        }
-      }
-      if(allowClick) {
-        this.props.onClick();
-      }
-    }, 100);
   }
   render() {
     var serving = this.props.serving;

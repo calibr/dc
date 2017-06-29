@@ -16,4 +16,7 @@ switch($_GET["a"]) {
   case "update":
     print json_encode(Dish::update($_GET["id"], $_POST));
   break;
+  case "delete":
+    print Dish::markDelete($_GET["id"]);
+  break;
 }

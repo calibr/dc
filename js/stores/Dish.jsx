@@ -46,9 +46,26 @@ class DishStore extends EventEmitter {
       }
       this.emit("change");
     }
+    else if(payload.eventName === "dishes.deleted") {
+      let index = -1
+      for(let i = 0; i != this.dishes.length; i++) {
+        if(this.dishes[i].id == payload.id) {
+          index = i
+          break;
+        }
+      }
+      if(index >= 0) {
+        this.dishes.splice(index, 1)
+      }
+      this.emit("change");
+    }
     else if(payload.eventName === "dishes.setOrder") {
       this.order = payload.order;
       this.emit("change-order");
+    }
+    // should be in DishPicker store?
+    else if(payload.eventName === "dishes.picked") {
+      this.emit("pick", payload.id);
     }
   }
 }

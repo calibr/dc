@@ -86,3 +86,8 @@
 .list-block.servings-eaten li {
   opacity: 0.4;
 }
+
+.extra-title {
+  color: #aaa;
+  font-size: 0.8em;
+}

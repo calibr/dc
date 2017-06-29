@@ -1,7 +1,7 @@
 import {carbsToBu} from "./bu.jsx";
 
 export function calc(carbs, k) {
-  return Math.round(carbsToBu(carbs) * k * 10)/10;
+  return Math.round(carbsToBu(carbs) * k * 20)/20;
 };
 
 export function round(value) {

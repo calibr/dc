@@ -6,6 +6,7 @@ var UrlPattern = require("url-pattern");
 
 var routes = {
   "/calc": require("./routes/calc/main.jsx"),
+  "/calc/pick": require("./routes/calc/pick.jsx"),
   "/dishes": require("./routes/dishes/main.jsx"),
   "/dishes/addComplex": require("./routes/dishes/addComplex.jsx"),
   "/dishes/add": require("./routes/dishes/add.jsx"),

@@ -3,6 +3,7 @@
 namespace Diab;
 
 date_default_timezone_set('UTC');
+error_reporting(E_ALL & ~E_DEPRECATED);
 
 include __DIR__."/config.php";
 include __DIR__."/db.php";

@@ -4,13 +4,14 @@ var React = require("react");
 import DishStore from "../../stores/Dish.jsx";
 import Settings from "../../stores/Settings.jsx";
 import {loadDishes, fetchSettings, deleteDish} from "../../actions/actions.jsx";
+import {pickDish} from "../../actions/dishPicker.jsx";
 import LoadingBox from "../../components/LoadingBox.jsx";
+import {DishesPopoverShort} from "../../components/DishesPopover.jsx";
 import DishListItem from "../../components/DishListItem.jsx";
-import DishesPopover from "../../components/DishesPopover.jsx";
 import navigator from "../../navigator.jsx";
 import {sortDishes} from "../../util/dishes.jsx";
 
-class DishesMainPage extends React.Component {
+class DishesPickPage extends React.Component {
   constructor() {
     super();
     this.state = {
@@ -27,6 +28,8 @@ class DishesMainPage extends React.Component {
     if(!this.state.settings) {
       fetchSettings();
     }
+    this.searchInput.focus()
+    console.log(this.searchInput)
   }
   componentWillUnmount() {
     DishStore.removeListener("change", this.onDishesAvailable);
@@ -43,11 +46,7 @@ class DishesMainPage extends React.Component {
     });
   }
   onDishClicked = (dish) => {
-    navigator.navigate("/dishes/" + dish.id);
-  }
-  onDishDelete = (dish) => {
-    deleteDish(dish.id)
-    app.closeSwipeout()
+    pickDish(dish.id)
   }
   render() {
     var dishesElems;
@@ -60,23 +59,38 @@ class DishesMainPage extends React.Component {
         return <DishListItem
           key={dish.id}
           dish={dish}
-          onDelete={this.onDishDelete.bind(null, dish)}
           onClick={this.onDishClicked.bind(null, dish)}/>;
       })
     }
     return <div className="page-content">
+      <form className="searchbar searchbar-init" data-search-list="#dish-list-to-pick" data-search-in=".item-title">
+        <div className="searchbar-input">
+          <input ref={(input) => { this.searchInput = input; }} type="search" placeholder="Поиск"/>
+          <a href="#" className="searchbar-clear"></a>
+        </div>
+        <a href="#" className="searchbar-cancel">Cancel</a>
+      </form>
       <div className="list-block">
-        {this.state.dishes ? <ul>{dishesElems}</ul> : <LoadingBox/>}
+        {this.state.dishes ? <ul id="dish-list-to-pick">{dishesElems}</ul> : <LoadingBox/>}
       </div>
     </div>
   }
 }
 
-class DishesMainPageNavBar extends React.Component {
+class DishesPickPageNavBar extends React.Component {
+  onBackClick() {
+    navigator.navigate("/calc");
+  }
   render() {
     return <div className="navbar">
       <div className="navbar-inner">
-        <div className="center sliding">Блюда</div>
+        <div className="left">
+          <a href="#" className="link" onClick={this.onBackClick}>
+            <i className="icon icon-back"></i>
+            <span>Назад</span>
+          </a>
+        </div>
+        <div className="center sliding">Выбор Блюда</div>
         <div className="right">
           <a href="#" className="link open-popover" data-popover=".popover-dishes">
             <i className="icon icon-bars"></i>
@@ -88,11 +102,11 @@ class DishesMainPageNavBar extends React.Component {
 }
 
 module.exports = {
-  page: DishesMainPage,
-  navbar: DishesMainPageNavBar,
+  page: DishesPickPage,
+  navbar: DishesPickPageNavBar,
   custom: [
     {
-      component: DishesPopover,
+      component: DishesPopoverShort,
       container: "#dishes-popover-content"
     }
   ]
