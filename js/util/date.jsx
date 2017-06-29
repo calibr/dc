@@ -1,6 +1,8 @@
+import moment from 'moment'
+
 function jsDate(date) {
   if(typeof date === "string" || typeof date === "number") {
-    date = new Date(date)
+    date = moment(date).toDate()
   }
   return date
 }
