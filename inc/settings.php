@@ -42,4 +42,17 @@ class Settings {
     ";
     DB::inst()->q($query);
   }
+
+  public static function delete($k) {
+    if(!is_array($k)) {
+      $k = [$k];
+    }
+    $query = "
+      DELETE FROM
+        `settings`
+      WHERE
+        `name` IN ('".implode("','", array_map('mysql_escape_string', $k))."')
+    ";
+    DB::inst()->q($query);
+  }
 }

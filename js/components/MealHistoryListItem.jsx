@@ -38,7 +38,7 @@ class MealHistoryListItem extends React.Component {
       <a onClick={this.props.onClick} className="item-content item-link">
         <div className="item-inner">
           <div className="item-title">
-            {getVisibleTime(meal.date)} - {getVisibleTime(meal.date_end)}, Коэффициент {meal.coef}
+            {getVisibleTime(meal.date)} - {getVisibleTime(meal.date_end)}, K = {meal.coef}
           </div>
           <div className="item-after"><span className="badge">{carbsToBu(carbs)} ХЕ</span></div>
         </div>

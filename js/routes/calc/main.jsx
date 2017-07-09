@@ -13,8 +13,9 @@ import LoadingBox from "../../components/LoadingBox.jsx";
 import navigator from "../../navigator.jsx";
 import ServingListItem from "../../components/ServingListItem.jsx";
 import {calc} from "../../util/calc.jsx";
-import {getCurrentCoefName} from "../../util/coef.jsx";
+import {getCurrentCoefName, unpack as unpackCoef, pack as packCoef} from "../../util/coef.jsx";
 import {carbsToBu} from "../../util/bu.jsx";
+import {hour2} from '../../util/date.jsx'
 
 class CalcMainPage extends React.Component {
   constructor() {
@@ -269,27 +270,26 @@ class SelectCoefPopover extends React.Component {
     if(!this.state.settings) {
       return null;
     }
+    var coefs = []
+    for(let setting in this.state.settings) {
+      let coef = unpackCoef(setting)
+      if(coef) {
+        coef.k = this.state.settings[setting]
+        coefs.push(coef)
+      }
+    }
+    coefs.sort((c1, c2) => {
+      return c1.from - c2.from
+    })
+
+    let coefElems = coefs.map(coef => <li key={packCoef(coef.from, coef.to)}><a href="#"
+        className="list-button item-link"
+        onClick={this.onSelectCoef.bind(this, coef.k)}>
+        С {hour2(coef.from)} по {hour2(coef.to)} ({coef.k})
+      </a></li>)
+
     return <ul>
-      <li><a href="#"
-        className="list-button item-link"
-        onClick={this.onSelectCoef.bind(this, this.state.settings["morning-coef"])}>
-        Утренний коэффициент ({this.state.settings["morning-coef"]})
-      </a></li>
-      <li><a href="#"
-        className="list-button item-link"
-        onClick={this.onSelectCoef.bind(this, this.state.settings["day-coef"])}>
-        Дневной коэффициент ({this.state.settings["day-coef"]})
-      </a></li>
-      <li><a href="#"
-        className="list-button item-link"
-        onClick={this.onSelectCoef.bind(this, this.state.settings["evening-coef"])}>
-        Вечерний коэффициент ({this.state.settings["evening-coef"]})
-      </a></li>
-      <li><a href="#"
-        className="list-button item-link"
-        onClick={this.onSelectCoef.bind(this, this.state.settings["night-coef"])}>
-        Ночной коэффициент ({this.state.settings["night-coef"]})
-      </a></li>
+      {coefElems}
     </ul>;
   }
 }

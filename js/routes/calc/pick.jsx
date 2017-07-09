@@ -29,7 +29,6 @@ class DishesPickPage extends React.Component {
       fetchSettings();
     }
     this.searchInput.focus()
-    console.log(this.searchInput)
   }
   componentWillUnmount() {
     DishStore.removeListener("change", this.onDishesAvailable);
@@ -92,7 +91,7 @@ class DishesPickPageNavBar extends React.Component {
         </div>
         <div className="center sliding">Выбор Блюда</div>
         <div className="right">
-          <a href="#" className="link open-popover" data-popover=".popover-dishes">
+          <a href="#" className="link open-popover" data-popover=".popover-pick">
             <i className="icon icon-bars"></i>
           </a>
         </div>
@@ -107,7 +106,7 @@ module.exports = {
   custom: [
     {
       component: DishesPopoverShort,
-      container: "#dishes-popover-content"
+      container: "#pick-popover-content"
     }
   ]
 };

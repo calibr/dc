@@ -20,6 +20,9 @@ export function sortDishes(dishes, order) {
   }
   dishes.sort((d1, d2) => {
     var cmp = compare(d1[order[0]], d2[order[0]]);
+    if(cmp === 0) {
+      cmp = compare(d1.id, d2.id);
+    }
     if(order[1] === "desc") {
       cmp = -cmp;
     }

@@ -5,16 +5,39 @@ import Settings from "../../stores/Settings.jsx";
 import {
   fetchSettings, saveSettings
 } from "../../actions/actions.jsx";
+import {setValue as setSetting, deleteValue as delSetting} from '../../actions/settings.jsx'
 import LoadingBox from "../../components/LoadingBox.jsx";
+import SettingsCoef from "../../components/SettingsCoef.jsx";
 import navigator from "../../navigator.jsx";
+import {pack as packCoef, unpack as unpackCoef} from '../../util/coef.jsx'
+import {hour2} from '../../util/date.jsx'
+import {listenCoefModal, unListenCoefModal} from './coefModal.jsx'
 
 class SettingsMainPage extends React.Component {
   constructor() {
     super();
   }
+  getCoefs(settings) {
+    var coefs = []
+    if(!settings) {
+      return coefs
+    }
+    for(let setting in settings) {
+      let coef = unpackCoef(setting)
+      if(coef) {
+        coef.k = settings[setting]
+        coefs.push(coef)
+      }
+    }
+    coefs.sort((c1, c2) => {
+      return c1.from - c2.from
+    })
+    return coefs
+  }
   componentWillMount() {
     this.state = {
-      settings: Settings.getSettings()
+      settings: Settings.getSettings(),
+      coefs: this.getCoefs(Settings.getSettings())
     };
     if(!this.state.settings) {
       fetchSettings();
@@ -25,9 +48,139 @@ class SettingsMainPage extends React.Component {
     Settings.removeListener("change", this.onSettingsChange);
   }
   onSettingsChange = () => {
+    var settings = Settings.getSettings()
     this.setState({
-      settings: Settings.getSettings()
+      settings,
+      coefs: this.getCoefs(settings)
     });
+  }
+  optimizeCoefs = (coefs) => {
+    var result = []
+    for(let coef of coefs) {
+      coef._l = coef.to - coef.from
+    }
+    coefs.sort((k1, k2) => k1._l - k2._l)
+
+    function getInHour(hour) {
+      for(let coef of coefs) {
+        if(hour >= coef.from && hour < coef.to) {
+          return coef
+        }
+      }
+      return null
+    }
+
+    for(let h = 0; h <= 23; h++) {
+      let coef = getInHour(h)
+      if(coef) {
+        result.push({
+          from: h,
+          to: h + 1,
+          k: coef.k
+        })
+      }
+    }
+
+    if(result.length) {
+      let curCoef = result[0]
+      let resultPrepared = []
+      for(let coef of result) {
+        if(coef.k === curCoef.k) {
+          curCoef.to = coef.to
+        }
+        else {
+          resultPrepared.push(curCoef)
+          curCoef = coef
+        }
+      }
+      resultPrepared.push(curCoef)
+      result = resultPrepared
+      if(result[0].from != 0) {
+        result[0].from = 0
+      }
+      if(result[result.length - 1].to != 24) {
+        result[result.length - 1].to = 24
+      }
+    }
+
+    return result
+  }
+  insertCoef = (from, to, k) => {
+    var coefs = this.state.coefs
+    let deleteCoefsNames = coefs.map(coef => packCoef(coef.from, coef.to))
+    coefs.push({from, to, k})
+    coefs = this.optimizeCoefs(coefs)
+    var dataToSave = {}
+    for(let coef of coefs) {
+      let key = packCoef(coef.from, coef.to)
+      dataToSave[key] = coef.k
+    }
+    dataToSave['___delete'] = JSON.stringify(deleteCoefsNames)
+    saveSettings(dataToSave)
+  }
+  onCoefDelete = (coef) => {
+    app.closeSwipeout()
+    var coefs = this.state.coefs
+    if(coefs.length === 1) {
+      return app.alert('Нельзя удалить последний коэффициент', 'Ошибка')
+    }
+    let deleteCoefsNames = coefs.map(coef => packCoef(coef.from, coef.to))
+    let idx = coefs.indexOf(coef)
+    if(idx < 0) {
+      return
+    }
+    coefs.splice(idx, 1)
+    coefs = this.optimizeCoefs(coefs)
+    var dataToSave = {}
+    for(let coef of coefs) {
+      let key = packCoef(coef.from, coef.to)
+      dataToSave[key] = coef.k
+    }
+    dataToSave['___delete'] = JSON.stringify(deleteCoefsNames)
+    saveSettings(dataToSave)
+  }
+  onCoefValueChange = (coef, value) => {
+    setSetting(packCoef(coef.from, coef.to), value)
+  }
+  addCoef = () => {
+    var hoursOptions = []
+    for(let h = 0; h <= 24; h++) {
+      hoursOptions.push('<option value="' + h + '">' + hour2(h) + '</option>')
+    }
+    hoursOptions = hoursOptions.join('')
+    var modal = app.modal({
+      title: 'Добавление нового коэффициента',
+      text: 'Введите час начала и окончания действия коэффициента',
+      afterText: `<div class="input-field modal-input-double">
+          С:<br>
+          <select id="coef-start-hour" class="modal-text-input">${hoursOptions}</select>
+        </div>
+        <div class="input-field modal-input-double">
+          По:<br>
+          <select id="coef-end-hour" class="modal-text-input">${hoursOptions}</select>
+        </div>
+      `,
+      onClick: () => {
+        unListenCoefModal()
+      },
+      buttons: [
+        {
+          text: 'Добавить',
+          bold: true,
+          onClick: () => {
+            this.insertCoef(
+              parseInt(app.$('#coef-start-hour').val()),
+              parseInt(app.$('#coef-end-hour').val()),
+              1
+            )
+          }
+        },
+        {
+          text: 'Отменить'
+        }
+      ]
+    })
+    listenCoefModal(this.state.coefs)
   }
   render() {
     if(!this.state.settings) {
@@ -35,59 +188,27 @@ class SettingsMainPage extends React.Component {
         <LoadingBox/>
       </div>;
     }
+
+    var coefElems = this.state.coefs.map(coef => <SettingsCoef
+      key={coef.from + "|" + coef.to}
+      coef={coef}
+      onDelete={this.onCoefDelete.bind(this, coef)}
+      onValueChange={this.onCoefValueChange.bind(this, coef)}
+    />)
+
     return <div className="page-content">
-      <div className="content-block-title">Коэффициенты</div>
+      <div className="content-block-title">Коэффициенты ХЕ/unit</div>
       <div className="list-block" id="settings-form">
-        <ul>
-          <li>
-            <div className="item-content">
-              <div className="item-inner">
-                <div className="item-title label">Утренний коэффициент</div>
-                <div className="item-input">
-                  <input
-                    defaultValue={this.state.settings["morning-coef"]}
-                    name="morning-coef" type="text" placeholder="Введите значение"/>
-                </div>
-              </div>
-            </div>
-          </li>
-          <li>
-            <div className="item-content">
-              <div className="item-inner">
-                <div className="item-title label">Дневной коэффициент</div>
-                <div className="item-input">
-                  <input
-                    defaultValue={this.state.settings["day-coef"]}
-                    name="day-coef" type="text" placeholder="Введите значение"/>
-                </div>
-              </div>
-            </div>
-          </li>
-          <li>
-            <div className="item-content">
-              <div className="item-inner">
-                <div className="item-title label">Вечерний коэффициент</div>
-                <div className="item-input">
-                  <input
-                    defaultValue={this.state.settings["evening-coef"]}
-                    name="evening-coef" type="text" placeholder="Введите значение"/>
-                </div>
-              </div>
-            </div>
-          </li>
-          <li>
-            <div className="item-content">
-              <div className="item-inner">
-                <div className="item-title label">Ночной коэффициент</div>
-                <div className="item-input">
-                  <input
-                    defaultValue={this.state.settings["night-coef"]}
-                    name="night-coef" type="text" placeholder="Введите значение"/>
-                </div>
-              </div>
-            </div>
-          </li>
-        </ul>
+        {
+          coefElems.length ? <ul>{coefElems}</ul>
+          :
+          <div className="text-center">Ни один коэффициент не задан</div>
+        }
+      </div>
+      <div className="content-block text-center">
+        <a href="#" className="button button-fill color-green" onClick={this.addCoef}>
+          Добавить коэффициент
+        </a>
       </div>
     </div>;
   }
@@ -114,12 +235,14 @@ class SettingsMainPageNavBar extends React.Component {
     }
   }
   render() {
+    /*
+          <a href="#" className="button button-fill color-green" onClick={this.onSettingsSave}>
+          Сохранить
+        </a>
+     */
     return <div className="navbar-wrapper">
       <div className="center sliding">Настройки</div>
       <div className="right">
-        <a href="#" className="button button-fill color-green" onClick={this.onSettingsSave}>
-          Сохранить
-        </a>
       </div>
     </div>
   }

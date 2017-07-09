@@ -3,8 +3,16 @@ var app = require("../f7app");
 
 import navigator from "../navigator.jsx";
 import {setDishOrder} from "../actions/actions.jsx";
+import Dish from '../stores/Dish.jsx'
+import Settings from "../stores/Settings.jsx";
 
 class DishesPopover extends React.Component {
+  constructor() {
+    super()
+    this.state = {
+      settings: Settings.getSettings()
+    }
+  }
   onOrderCarbsAsc = () => {
     setDishOrder("carbs", "asc");
     app.closeModal();
@@ -29,7 +37,19 @@ class DishesPopover extends React.Component {
     navigator.navigate("/dishes/addComplex");
     app.closeModal();
   };
+  onSettingsChange = () => {
+    this.setState({
+      settings: Settings.getSettings()
+    });
+  }
+  componentDidMount() {
+    Settings.on("change", this.onSettingsChange);
+  }
+  componentWillUnmount() {
+    Settings.removeListener("change", this.onSettingsChange);
+  }
   render() {
+    var orderStr = this.state.settings["dish-order"]
     var addDishButton = <li><a href="#" className="list-button item-link color-green" onClick={this.onAddDish}>
         Добавить Блюдо
       </a></li>;
@@ -38,16 +58,16 @@ class DishesPopover extends React.Component {
       </a></li>
     return <ul>
       <li><a href="#" className="list-button item-link" onClick={this.onOrderCarbsAsc}>
-        Сортировка Углеводы возрастание
+        {orderStr === 'carbs:asc' ? '✓' : ''} Сорт. Углеводы возрастание
       </a></li>
       <li><a href="#" className="list-button item-link" onClick={this.onOrderCarbsDesc}>
-        Сортировка Углеводы убывание
+        {orderStr === 'carbs:desc' ? '✓' : ''} Сорт. Углеводы убывание
       </a></li>
       <li><a href="#" className="list-button item-link" onClick={this.onOrderAlphabet}>
-        Сортировка по Алафвиту
+        {orderStr === 'title:asc' ? '✓' : ''} Сорт. по Алафвиту
       </a></li>
       <li><a href="#" className="list-button item-link" onClick={this.onOrderDate}>
-        Сортировка по Дате
+        {orderStr === 'date:desc' ? '✓' : ''} Сорт. по Дате
       </a></li>
       {!this.disableAdd ? addDishButton : null}
       {!this.disableAdd ? addComplexDishButton : null}

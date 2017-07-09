@@ -4,6 +4,7 @@ var React = require("react");
 import MealHistory from "../../stores/MealHistory.jsx";
 import Dish from "../../stores/Dish.jsx";
 import Meal from "../../stores/Meal.jsx";
+import Serving from "../../stores/Serving.jsx";
 import {
   loadDishes, loadMeals
 } from "../../actions/actions.jsx";
@@ -11,6 +12,8 @@ import LoadingBox from "../../components/LoadingBox.jsx";
 import navigator from "../../navigator.jsx";
 import MealHistoryListItem from '../../components/MealHistoryListItem.jsx'
 import {visibleMonthYearDay} from '../../util/date.jsx'
+import {getCarbsInServing} from '../../util/dishes.jsx'
+import {carbsToBu} from '../../util/bu.jsx'
 
 class HistoryMainPage extends React.Component {
   constructor() {
@@ -44,6 +47,22 @@ class HistoryMainPage extends React.Component {
       mealsIds: MealHistory.getIds()
     });
   }
+  totalCarbsForMeal = (mealId) => {
+    let carbs = 0
+    var servings = Serving.getForMeal(mealId)
+    if(!servings) {
+      return carbs
+    }
+    for(let serving of servings) {
+      let dish = Dish.getById(serving.dish_id)
+      if(!dish) {
+        continue
+      }
+      let carbsInServing = getCarbsInServing(dish, serving.weight)
+      carbs += carbsInServing
+    }
+    return carbs
+  }
   render() {
     if(!this.state.mealsIds || !this.state.dishes) {
       return <div className="page-content">
@@ -58,6 +77,7 @@ class HistoryMainPage extends React.Component {
       if(currentList.length) {
         lists.push(<div key={"list-" + lastYearMonth}>
           <div className="month-head">{lastYearMonth}</div>
+          <div className="month-head-2">Всего ХЕ <strong>{carbsToBu(dayCarbs)}</strong></div>
           <div className="list-block accordion-list">
             <ul>
               {currentList}
@@ -66,6 +86,7 @@ class HistoryMainPage extends React.Component {
         </div>)
       }
     }
+    let dayCarbs = 0
     this.state.mealsIds.forEach(mealId => {
       var meal = Meal.getById(mealId)
       var yearMonth = visibleMonthYearDay(meal.date)
@@ -76,7 +97,9 @@ class HistoryMainPage extends React.Component {
         buildCurrentList()
         lastYearMonth = yearMonth
         currentList = []
+        dayCarbs = 0
       }
+      dayCarbs += this.totalCarbsForMeal(mealId)
       currentList.push(<MealHistoryListItem key={mealId} mealId={mealId}/>)
     })
     buildCurrentList()

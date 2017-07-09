@@ -105,3 +105,11 @@ export function visibleRel(date) {
     return visible(date)
   }
 }
+
+export function hour2(hour) {
+  hour = hour.toString()
+  if(hour.length < 2) {
+    hour = '0' + hour
+  }
+  return hour
+}

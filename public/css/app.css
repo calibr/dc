@@ -82,6 +82,9 @@
   font-size: 22px;
   margin-top: 5px;
 }
+.history-content .month-head-2 {
+  text-align: center;
+}
 
 .list-block.servings-eaten li {
   opacity: 0.4;
@@ -90,4 +93,12 @@
 .extra-title {
   color: #aaa;
   font-size: 0.8em;
+}
+
+
+/*add coef dialog*/
+#coef-start-hour, #coef-end-hour {
+  padding: 10px;
+  margin: 3px;
+  min-width: 200px;
 }

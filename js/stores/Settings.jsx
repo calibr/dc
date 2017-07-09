@@ -24,6 +24,14 @@ class SettingsStore extends EventEmitter {
       this.settings = payload.settings;
       this.emit("change");
     }
+    if(payload.eventName === "settings.set") {
+      this.settings = payload.settings;
+      this.emit("change", {name: payload.name});
+    }
+    if(payload.eventName === "settings.delete") {
+      this.settings = payload.settings;
+      this.emit("change", {name: payload.name});
+    }
   }
 }
 
