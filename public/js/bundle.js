@@ -1782,8 +1782,10 @@ var CalcMainPage = function (_React$Component) {
     };
 
     _this.onCreateMeal = function () {
+      var coefs = (0, _coef.getCoefsFromSettings)(_this.state.settings);
+      var k = (0, _coef.getCurrentCoef)(coefs);
       (0, _actions.createMeal)({
-        coef: _this.state.settings[(0, _coef.getCurrentCoefName)()]
+        coef: k
       });
     };
 
@@ -5418,25 +5420,45 @@ function round(value) {
 }
 
 },{"./bu.jsx":33}],35:[function(require,module,exports){
-"use strict";
+'use strict';
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.getCurrentCoefName = getCurrentCoefName;
+exports.getCurrentCoef = getCurrentCoef;
 exports.unpack = unpack;
 exports.pack = pack;
-function getCurrentCoefName() {
+exports.getCoefsFromSettings = getCoefsFromSettings;
+function getCurrentCoef(coefs) {
   var h = new Date().getHours();
-  if (h >= 0 && h < 6) {
-    return "night-coef";
-  } else if (h >= 6 && h < 12) {
-    return "morning-coef";
-  } else if (h >= 12 && h < 18) {
-    return "day-coef";
-  } else if (h >= 18) {
-    return "evening-coef";
+  var _iteratorNormalCompletion = true;
+  var _didIteratorError = false;
+  var _iteratorError = undefined;
+
+  try {
+    for (var _iterator = coefs[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+      var coef = _step.value;
+
+      if (h >= coef.from && h < coef.to) {
+        return coef.k;
+      }
+    }
+  } catch (err) {
+    _didIteratorError = true;
+    _iteratorError = err;
+  } finally {
+    try {
+      if (!_iteratorNormalCompletion && _iterator.return) {
+        _iterator.return();
+      }
+    } finally {
+      if (_didIteratorError) {
+        throw _iteratorError;
+      }
+    }
   }
+
+  return null;
 }
 
 function unpack(value) {
@@ -5460,6 +5482,18 @@ function pack(fromValue, toValue) {
     throw new Error('bad packing for coef ' + toValue + ' is illegal to value');
   }
   return 'coef_' + fromValue + '|' + toValue;
+}
+
+function getCoefsFromSettings(settings) {
+  var result = [];
+  for (var name in settings) {
+    var coef = unpack(name);
+    if (coef) {
+      coef.k = settings[name];
+      result.push(coef);
+    }
+  }
+  return result;
 }
 
 },{}],36:[function(require,module,exports){

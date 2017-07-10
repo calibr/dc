@@ -1,17 +1,11 @@
-export function getCurrentCoefName() {
+export function getCurrentCoef(coefs) {
   var h = new Date().getHours();
-  if(h >= 0 && h < 6) {
-    return "night-coef";
+  for(let coef of coefs) {
+    if(h >= coef.from && h < coef.to) {
+      return coef.k
+    }
   }
-  else if(h >= 6 && h < 12) {
-    return "morning-coef";
-  }
-  else if(h >= 12 && h < 18) {
-    return "day-coef";
-  }
-  else if(h >= 18) {
-    return "evening-coef";
-  }
+  return null
 }
 
 export function unpack(value) {
@@ -35,4 +29,16 @@ export function pack(fromValue, toValue) {
     throw new Error('bad packing for coef ' + toValue + ' is illegal to value')
   }
   return 'coef_' + fromValue + '|' + toValue
+}
+
+export function getCoefsFromSettings(settings) {
+  let result = []
+  for(let name in settings) {
+    let coef = unpack(name)
+    if(coef) {
+      coef.k = settings[name]
+      result.push(coef)
+    }
+  }
+  return result
 }

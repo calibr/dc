@@ -13,7 +13,10 @@ import LoadingBox from "../../components/LoadingBox.jsx";
 import navigator from "../../navigator.jsx";
 import ServingListItem from "../../components/ServingListItem.jsx";
 import {calc} from "../../util/calc.jsx";
-import {getCurrentCoefName, unpack as unpackCoef, pack as packCoef} from "../../util/coef.jsx";
+import {
+  getCurrentCoef, unpack as unpackCoef, pack as packCoef,
+  getCoefsFromSettings
+} from "../../util/coef.jsx";
 import {carbsToBu} from "../../util/bu.jsx";
 import {hour2} from '../../util/date.jsx'
 
@@ -74,8 +77,10 @@ class CalcMainPage extends React.Component {
     });
   }
   onCreateMeal = () => {
+    let coefs = getCoefsFromSettings(this.state.settings)
+    let k = getCurrentCoef(coefs)
     createMeal({
-      coef: this.state.settings[getCurrentCoefName()]
+      coef: k
     });
   }
   onServingClick = (serving) => {
