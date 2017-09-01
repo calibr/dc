@@ -44,8 +44,8 @@ class DishesPickPage extends React.Component {
     this.searchInput.focus()
     app.searchbar('#dish-picker-search-bar', {
       customSearch: true,
-      onSearch: function() {
-        return false
+      onSearch: () => {
+        this.onSearchChangeDebounced()
       }
     })
   }
@@ -115,7 +115,6 @@ class DishesPickPage extends React.Component {
       <form id="dish-picker-search-bar" className="searchbar searchbar-init">
         <div className="searchbar-input">
           <input
-            onChange={this.onSearchChangeDebounced}
             ref={(input) => { this.searchInput = input; }} type="search" placeholder="Поиск"/>
           <a href="#" className="searchbar-clear"></a>
         </div>

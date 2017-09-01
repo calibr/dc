@@ -2329,6 +2329,8 @@ var DishesPickPage = function (_React$Component) {
   _createClass(DishesPickPage, [{
     key: "componentDidMount",
     value: function componentDidMount() {
+      var _this2 = this;
+
       _Dish2.default.on("change", this.onDishesAvailable);
       _Settings2.default.on("change", this.onSettingsChange);
       if (!_Dish2.default.getDishes()) {
@@ -2341,7 +2343,7 @@ var DishesPickPage = function (_React$Component) {
       app.searchbar('#dish-picker-search-bar', {
         customSearch: true,
         onSearch: function onSearch() {
-          return false;
+          _this2.onSearchChangeDebounced();
         }
       });
     }
@@ -2397,7 +2399,7 @@ var DishesPickPage = function (_React$Component) {
   }, {
     key: "render",
     value: function render() {
-      var _this2 = this;
+      var _this3 = this;
 
       var dishesContainer = null;
       if (this.state.dishes) {
@@ -2421,9 +2423,8 @@ var DishesPickPage = function (_React$Component) {
             "div",
             { className: "searchbar-input" },
             React.createElement("input", {
-              onChange: this.onSearchChangeDebounced,
               ref: function ref(input) {
-                _this2.searchInput = input;
+                _this3.searchInput = input;
               }, type: "search", placeholder: "\u041F\u043E\u0438\u0441\u043A" }),
             React.createElement("a", { href: "#", className: "searchbar-clear" })
           ),
