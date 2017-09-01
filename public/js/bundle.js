@@ -2457,7 +2457,7 @@ var DishesPickPageNavBar = function (_React$Component2) {
   _createClass(DishesPickPageNavBar, [{
     key: "onBackClick",
     value: function onBackClick() {
-      _navigator2.default.navigate("/calc");
+      _navigator2.default.back();
     }
   }, {
     key: "render",

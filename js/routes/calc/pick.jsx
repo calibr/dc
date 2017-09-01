@@ -130,7 +130,7 @@ class DishesPickPage extends React.Component {
 
 class DishesPickPageNavBar extends React.Component {
   onBackClick() {
-    navigator.navigate("/calc");
+    navigator.back()
   }
   render() {
     return <div className="navbar">
