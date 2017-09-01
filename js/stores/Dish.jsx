@@ -6,6 +6,7 @@ class DishStore extends EventEmitter {
   constructor() {
     super();
     this.order = ["carbs", "asc"];
+    this.idMap = new Map()
     Dispatcher.register(this.dispatch.bind(this));
   }
   getDishes() {
@@ -18,20 +19,24 @@ class DishStore extends EventEmitter {
     if(!this.dishes) {
       return null;
     }
-    for(let dish of this.dishes) {
-      if(dish.id == id) {
-        return dish;
-      }
+    if(typeof id !== 'string') {
+      id = id.toString()
     }
-    return null;
+    return this.idMap.get(id)
   }
   dispatch(payload) {
     if(payload.eventName === "dishes.list") {
       this.dishes = payload.dishes;
+      // rebuild map totally
+      this.idMap.clear()
+      for(let dish of this.dishes) {
+        this.idMap.set(dish.id, dish)
+      }
       this.emit("change");
     }
     else if(payload.eventName === "dishes.added") {
       this.dishes.push(payload.dish);
+      this.idMap.set(payload.dish.id, payload.dish)
       this.emit("added", {
         tag: payload.tag
       });
@@ -44,6 +49,7 @@ class DishStore extends EventEmitter {
           break;
         }
       }
+      this.idMap.set(payload.dish.id, payload.dish)
       this.emit("change");
     }
     else if(payload.eventName === "dishes.deleted") {
@@ -57,6 +63,7 @@ class DishStore extends EventEmitter {
       if(index >= 0) {
         this.dishes.splice(index, 1)
       }
+      this.idMap.delete(payload.id)
       this.emit("change");
     }
     else if(payload.eventName === "dishes.setOrder") {

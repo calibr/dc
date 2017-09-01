@@ -24,7 +24,9 @@
     "whatwg-fetch": "^2.0.1"
   },
   "dependencies": {
+    "escape-string-regexp": "^1.0.5",
     "moment": "^2.18.1",
+    "react-list": "^0.8.7",
     "url-pattern": "^1.0.3",
     "uuid": "^3.0.1"
   }

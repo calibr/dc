@@ -10,6 +10,7 @@ import {sortDishes, getCarbsInServing, getProteinsInServing, getFatsInServing} f
 import LoadingBox from "../../components/LoadingBox.jsx";
 import SubDish from "../../components/SubDish.jsx";
 import {round} from "../../util/calc.jsx";
+import {display as displayDishPicker} from '../../actions/dishPicker.jsx'
 
 class AddComplexDishPage extends React.Component {
   constructor() {
@@ -83,49 +84,13 @@ class AddComplexDishPage extends React.Component {
       return <div className="page-content"><LoadingBox/></div>
     }
     var dishes = sortDishes(this.state.dishes, this.state.settings["dish-order"]);
-    var dishesOptions = [];
-    var currentLetter = "";
-    var groupDishes = [];
-    dishes.forEach((dish) => {
-      let newGroup = false;
-      let dishTitle = dish.title.trim();
-      let dishLetter = dishTitle[0].toLowerCase();
-      if(!currentLetter) {
-        newGroup = true;
-      }
-      if(dishLetter != currentLetter) {
-        newGroup = true;
-      }
-      if(newGroup) {
-        if(currentLetter) {
-          dishesOptions.push(<optgroup
-            key={currentLetter} label={currentLetter.toUpperCase()}>{groupDishes}</optgroup>);
-        }
-        currentLetter = dishLetter;
-        groupDishes = [];
-      }
-      groupDishes.push(<option key={dish.id} value={dish.id}>{dish.title} ({dish.carbs})</option>);
-    });
-    if(groupDishes.length) {
-      dishesOptions.push(<optgroup key={currentLetter} label={currentLetter.toUpperCase()}>{groupDishes}</optgroup>);
-    }
     var info = null;
-    /*
-    if(this.state.dish_id && this.state.weight) {
-      var dish = DishStore.getById(this.state.dish_id);
-      var carbs = getCarbsInServing(dish, this.state.weight);
-      var bu = carbsToBu(carbs);
-      info = <div className="text-center">
-        В порции содержится <strong>{bu}</strong> ХЕ
-      </div>;
-    }*/
     var subDishesElems = [];
     for(let i = 0; i != this.state.subDishes.length; i++) {
       let subDish = this.state.subDishes[i];
       let subDishElem = <SubDish
         key={"subdish_" + subDish.uuid}
         title={"Ингредиент \#" + (i + 1)}
-        dishesOptions={dishesOptions}
         dishId={subDish.dishId}
         weight={subDish.weight}
         onChange={this.onSubDishChange.bind(this, i)}

@@ -102,3 +102,8 @@
   margin: 3px;
   min-width: 200px;
 }
+
+/* add some margin after the last list item */
+ul.list-bottom-margin li:last-child {
+  margin-bottom: 100px;
+}

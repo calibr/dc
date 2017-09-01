@@ -10,14 +10,27 @@ import {DishesPopoverShort} from "../../components/DishesPopover.jsx";
 import DishListItem from "../../components/DishListItem.jsx";
 import navigator from "../../navigator.jsx";
 import {sortDishes} from "../../util/dishes.jsx";
+import ReactList from 'react-list';
+import _ from 'lodash'
+import escapeRegexp from 'escape-string-regexp'
+
+function buildState() {
+  let settings = Settings.getSettings()
+  let dishes = DishStore.getDishes()
+  let dishesSorted = dishes && settings && sortDishes(dishes, settings["dish-order"])
+  return {
+    dishes,
+    dishOrder: settings['dish-order'],
+    dishesSorted,
+    dishesDisplayList: dishesSorted
+  }
+}
 
 class DishesPickPage extends React.Component {
   constructor() {
     super();
-    this.state = {
-      dishes: DishStore.getDishes(),
-      settings: Settings.getSettings()
-    };
+    this.state = buildState()
+    this.onSearchChangeDebounced = _.debounce(this.onSearchChange.bind(this), 200)
   }
   componentDidMount() {
     DishStore.on("change", this.onDishesAvailable);
@@ -29,48 +42,87 @@ class DishesPickPage extends React.Component {
       fetchSettings();
     }
     this.searchInput.focus()
+    app.searchbar('#dish-picker-search-bar', {
+      customSearch: true,
+      onSearch: function() {
+        return false
+      }
+    })
   }
   componentWillUnmount() {
     DishStore.removeListener("change", this.onDishesAvailable);
     Settings.removeListener("change", this.onSettingsChange);
   }
   onDishesAvailable = () => {
-    this.setState({
-      dishes: DishStore.getDishes()
-    });
+    this.setState(buildState());
   }
   onSettingsChange = () => {
-    this.setState({
-      settings: Settings.getSettings()
-    });
+    let settings = Settings.getSettings()
+    if(settings['dish-order'] === this.state.dishOrder) {
+      // ignore settings change, it didn't affect dish order
+      return
+    }
+    this.setState(buildState())
   }
   onDishClicked = (dish) => {
     pickDish(dish.id)
   }
-  render() {
-    var dishesElems;
-    if(this.state.dishes && this.state.settings) {
-      let dishes = sortDishes(this.state.dishes, this.state.settings["dish-order"]);
-      dishesElems = dishes.map((dish) => {
-        if(dish.deleted) {
-          return null
+  onSearchChange() {
+    let dishesDisplayList = this.state.dishesSorted
+    let query = this.searchInput.value.trim()
+    query = escapeRegexp(query)
+    query = query.replace(/\s+/, "\\s+")
+    let regexp = new RegExp('(?:^|\\s)' + query, 'i')
+    if(query) {
+      // filter dishes by query
+      dishesDisplayList = []
+      for(let dish of this.state.dishesSorted) {
+        if(regexp.test(dish.title)) {
+          dishesDisplayList.push(dish)
         }
-        return <DishListItem
-          key={dish.id}
-          dish={dish}
-          onClick={this.onDishClicked.bind(null, dish)}/>;
-      })
+      }
     }
+    this.setState({
+      query,
+      dishesDisplayList
+    })
+  }
+  renderListItem = (index, key) => {
+    let dish = this.state.dishesDisplayList[index]
+    return <DishListItem
+      key={dish.id}
+      dish={dish}
+      onClick={this.onDishClicked.bind(null, dish)}/>;
+  }
+  renderList = (items, ref) => {
+    return <ul className="list-bottom-margin" id="dish-list-to-pick" ref={ref}>{items}</ul>
+  }
+  render() {
+    let dishesContainer = null
+    if(this.state.dishes) {
+      dishesContainer = <ReactList
+        itemRenderer={this.renderListItem}
+        itemsRenderer={this.renderList}
+        length={this.state.dishesDisplayList.length}
+        type='simple'
+      />
+    }
+    else {
+      dishesContainer = <LoadingBox/>
+    }
+
     return <div className="page-content">
-      <form className="searchbar searchbar-init" data-search-list="#dish-list-to-pick" data-search-in=".item-title">
+      <form id="dish-picker-search-bar" className="searchbar searchbar-init">
         <div className="searchbar-input">
-          <input ref={(input) => { this.searchInput = input; }} type="search" placeholder="Поиск"/>
+          <input
+            onChange={this.onSearchChangeDebounced}
+            ref={(input) => { this.searchInput = input; }} type="search" placeholder="Поиск"/>
           <a href="#" className="searchbar-clear"></a>
         </div>
-        <a href="#" className="searchbar-cancel">Cancel</a>
+        <a href="#" className="searchbar-cancel">Отмена</a>
       </form>
       <div className="list-block">
-        {this.state.dishes ? <ul id="dish-list-to-pick">{dishesElems}</ul> : <LoadingBox/>}
+        {dishesContainer}
       </div>
     </div>
   }

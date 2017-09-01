@@ -9,14 +9,23 @@ import DishListItem from "../../components/DishListItem.jsx";
 import DishesPopover from "../../components/DishesPopover.jsx";
 import navigator from "../../navigator.jsx";
 import {sortDishes} from "../../util/dishes.jsx";
+import ReactList from 'react-list';
+
+function buildState() {
+  let settings = Settings.getSettings()
+  let dishes = DishStore.getDishes()
+  let dishesSorted = dishes && sortDishes(dishes, settings["dish-order"])
+  return {
+    dishes,
+    dishOrder: settings["dish-order"],
+    dishesSorted
+  }
+}
 
 class DishesMainPage extends React.Component {
   constructor() {
     super();
-    this.state = {
-      dishes: DishStore.getDishes(),
-      settings: Settings.getSettings()
-    };
+    this.state = buildState()
   }
   componentDidMount() {
     DishStore.on("change", this.onDishesAvailable);
@@ -33,14 +42,15 @@ class DishesMainPage extends React.Component {
     Settings.removeListener("change", this.onSettingsChange);
   }
   onDishesAvailable = () => {
-    this.setState({
-      dishes: DishStore.getDishes()
-    });
+    this.setState(buildState());
   }
   onSettingsChange = () => {
-    this.setState({
-      settings: Settings.getSettings()
-    });
+    let settings = Settings.getSettings()
+    if(settings['dish-order'] === this.state.dishOrder) {
+      // dishOrder wasn't changed
+      return
+    }
+    this.setState(buildState())
   }
   onDishClicked = (dish) => {
     navigator.navigate("/dishes/" + dish.id);
@@ -49,24 +59,29 @@ class DishesMainPage extends React.Component {
     deleteDish(dish.id)
     app.closeSwipeout()
   }
+  renderListItem = (index, key) => {
+    let dish = this.state.dishesSorted[index]
+    return <DishListItem
+      key={dish.id}
+      dish={dish}
+      onDelete={this.onDishDelete.bind(null, dish)}
+      onClick={this.onDishClicked.bind(null, dish)}/>;
+  }
+  renderList = (items, ref) => {
+    return <ul className="list-bottom-margin" ref={ref}>{items}</ul>
+  }
   render() {
     var dishesElems;
-    if(this.state.dishes && this.state.settings) {
-      let dishes = sortDishes(this.state.dishes, this.state.settings["dish-order"]);
-      dishesElems = dishes.map((dish) => {
-        if(dish.deleted) {
-          return null
-        }
-        return <DishListItem
-          key={dish.id}
-          dish={dish}
-          onDelete={this.onDishDelete.bind(null, dish)}
-          onClick={this.onDishClicked.bind(null, dish)}/>;
-      })
-    }
     return <div className="page-content">
       <div className="list-block">
-        {this.state.dishes ? <ul>{dishesElems}</ul> : <LoadingBox/>}
+        {this.state.dishes ?
+          <ReactList
+            itemRenderer={this.renderListItem}
+            itemsRenderer={this.renderList}
+            length={this.state.dishesSorted.length}
+            type='simple'
+          />
+         : <LoadingBox/>}
       </div>
     </div>
   }

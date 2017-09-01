@@ -10,18 +10,19 @@ export var pickDish = function(id) {
   else {
     navigator.back()
   }
-  console.log('dispt')
   Dispatcher.dispatch({
     eventName: "dishPicker.picked",
     id: id
   })
-  console.log('disptched')
 }
 
-export var display = function(returnTo) {
-  navigator.navigate('/calc/pick')
+export var display = function(opts) {
+  opts = opts || {}
+  opts.view = opts.view || 'calc'
+  navigator.navigate('/' + opts.view + '/pick')
   Dispatcher.dispatch({
     eventName: "dishPicker.display",
-    returnTo
+    returnTo: opts.returnTo,
+    tag: opts.tag
   })
 }

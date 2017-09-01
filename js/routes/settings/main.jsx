@@ -12,10 +12,12 @@ import navigator from "../../navigator.jsx";
 import {pack as packCoef, unpack as unpackCoef} from '../../util/coef.jsx'
 import {hour2} from '../../util/date.jsx'
 import {listenCoefModal, unListenCoefModal} from './coefModal.jsx'
+import _ from 'lodash'
 
 class SettingsMainPage extends React.Component {
   constructor() {
-    super();
+    super()
+    this.onCoefValueChangeDebounced = _.debounce(this.onCoefValueChange.bind(this), 300)
   }
   getCoefs(settings) {
     var coefs = []
@@ -193,7 +195,7 @@ class SettingsMainPage extends React.Component {
       key={coef.from + "|" + coef.to}
       coef={coef}
       onDelete={this.onCoefDelete.bind(this, coef)}
-      onValueChange={this.onCoefValueChange.bind(this, coef)}
+      onValueChange={this.onCoefValueChangeDebounced.bind(this, coef)}
     />)
 
     return <div className="page-content">

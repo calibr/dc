@@ -6,6 +6,7 @@ class DishPickStore extends EventEmitter {
     super();
     this.returnTo = null
     this.dishId = null
+    this.tag = null
     Dispatcher.register(this.dispatch.bind(this));
   }
   getReturnTo() {
@@ -17,6 +18,7 @@ class DishPickStore extends EventEmitter {
   dispatch(payload) {
     if(payload.eventName === "dishPicker.display") {
       this.returnTo = payload.returnTo
+      this.tag = payload.tag
       this.emit("display");
     }
     else if(payload.eventName === "dishPicker.picked") {

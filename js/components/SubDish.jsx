@@ -1,13 +1,36 @@
 var React = require("react");
 var ReactDOM = require("react-dom");
 
+import DishStore from "../stores/Dish.jsx";
+import DishPickStore from "../stores/DishPick.jsx";
+import {display as displayDishPicker} from '../actions/dishPicker.jsx'
+import {sortDishes, getCarbsInServing, nameFull as dishNameFull} from "../util/dishes.jsx";
+const uuidV4 = require('uuid/v4');
+
 class SubDish extends React.Component {
   constructor() {
     super();
+    this.pickTag = null
     this.state = {
       dishId: 0,
       weight: 0
     };
+  }
+  componentDidMount() {
+    DishPickStore.on('pick', this.onDishPicked)
+  }
+  componentWillUnmount() {
+    DishPickStore.removeListener('pick', this.onDishPicked)
+  }
+  onDishPicked = () => {
+    var dishId = DishPickStore.getDishId()
+    if(this.pickTag === DishPickStore.tag) {
+      var updateState = {
+        dishId
+      }
+      this.setState(updateState)
+      this.fireOnChange()
+    }
   }
   onWeightFieldChange = (event) => {
     var value = event.target.value;
@@ -18,12 +41,12 @@ class SubDish extends React.Component {
     this.setState(updateState);
     this.fireOnChange();
   }
-  onDishChange = (event) => {
-    var dishId = ReactDOM.findDOMNode(this).querySelector(".dishId").value;
-    this.setState({
-      dishId
-    });
-    this.fireOnChange();
+  onStartPickDish = () => {
+    this.pickTag = uuidV4()
+    displayDishPicker({
+      view: 'dishes',
+      tag: this.pickTag
+    })
   }
   fireOnChange = () => {
     setTimeout(() => {
@@ -34,6 +57,7 @@ class SubDish extends React.Component {
     }, 0);
   }
   render() {
+    let dish = DishStore.getById(this.props.dishId || this.state.dishId)
     return <div className="list-block sub-dish">
       <div className="head">
         <span className="title">{this.props.title}</span>
@@ -41,23 +65,12 @@ class SubDish extends React.Component {
       </div>
       <ul>
         <li>
-          <a href="#" className="item-link smart-select"
-            data-back-on-select="true" data-searchbar="true"
-            data-searchbar-placeholder="Поиск"
-            data-back-text="Назад">
-            <select
-              className="dishId"
-              onChange={this.onDishChange}
-              defaultValue={this.props.dishId}
-              name="sub_dish_id"
-            >
-              <option disabled></option>
-              {this.props.dishesOptions}
-            </select>
+          <input type="hidden" className="dishId" value={dish ? dish.id : 0}/>
+          <a href="#" className="item-link" onClick={this.onStartPickDish}>
             <div className="item-content">
               <div className="item-inner">
-                <div className="item-title">Блюдо</div>
-                <div className="item-after"></div>
+                <div className="item-title label">Блюдо</div>
+                <div className="item-after">{dish ? dishNameFull(dish) : "Выберите блюдо"}</div>
               </div>
             </div>
           </a>

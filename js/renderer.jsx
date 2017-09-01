@@ -9,6 +9,7 @@ var routes = {
   "/calc/pick": require("./routes/calc/pick.jsx"),
   "/dishes": require("./routes/dishes/main.jsx"),
   "/dishes/addComplex": require("./routes/dishes/addComplex.jsx"),
+  "/dishes/pick": require("./routes/dishes/pick.jsx"),
   "/dishes/add": require("./routes/dishes/add.jsx"),
   "/dishes/:id": require("./routes/dishes/add.jsx"),
   "/calc/servings/add": require("./routes/servings/add.jsx"),
