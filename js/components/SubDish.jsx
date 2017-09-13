@@ -3,17 +3,17 @@ var ReactDOM = require("react-dom");
 
 import DishStore from "../stores/Dish.jsx";
 import DishPickStore from "../stores/DishPick.jsx";
-import {display as displayDishPicker} from '../actions/dishPicker.jsx'
+import {displayDishPicker} from '../actions/addComplexDish.jsx'
 import {sortDishes, getCarbsInServing, nameFull as dishNameFull} from "../util/dishes.jsx";
 const uuidV4 = require('uuid/v4');
 
 class SubDish extends React.Component {
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
     this.pickTag = null
     this.state = {
-      dishId: 0,
-      weight: 0
+      dishId: props.dishId || 0,
+      weight: props.weight || 0
     };
   }
   componentDidMount() {
@@ -43,10 +43,7 @@ class SubDish extends React.Component {
   }
   onStartPickDish = () => {
     this.pickTag = uuidV4()
-    displayDishPicker({
-      view: 'dishes',
-      tag: this.pickTag
-    })
+    displayDishPicker(this.props.uuid)
   }
   fireOnChange = () => {
     setTimeout(() => {

@@ -5,7 +5,7 @@ var $ = app.$;
 import navigator from "../../navigator.jsx";
 import {loadDishes, addServing, updateServing, fetchSettings} from "../../actions/actions.jsx";
 import DishStore from "../../stores/Dish.jsx";
-import DishPickStore from "../../stores/DishPick.jsx";
+import AddServingStore from "../../stores/AddServing.jsx";
 import ServingStore from "../../stores/Serving.jsx";
 import Settings from "../../stores/Settings.jsx";
 import MealStore from "../../stores/Meal.jsx";
@@ -13,40 +13,26 @@ import LoadingBox from "../../components/LoadingBox.jsx";
 import {sortDishes, getCarbsInServing, nameFull as dishNameFull} from "../../util/dishes.jsx";
 import {carbsToBu, buToCarbs} from "../../util/bu.jsx";
 import {round} from "../../util/calc.jsx";
-import {display as displayDishPicker} from '../../actions/dishPicker.jsx'
+import {displayDishPicker, unitChange, weightChange, weightBuChange} from '../../actions/addServing.jsx'
 
-function calcBu(dishId, weight) {
-  var dish = DishStore.getById(dishId);
-  var carbs = getCarbsInServing(dish, weight);
-  return carbsToBu(carbs);
-}
-
-function calcWeightByBu(dishId, bu) {
-  var dish = DishStore.getById(dishId);
-  var carbsin1gram = dish.carbs/100;
-  return round(bu * buToCarbs(1)/carbsin1gram);
+function getActualState() {
+  return {
+    dishes: DishStore.getDishes(),
+    dish_id: AddServingStore.dishId,
+    weight: AddServingStore.weight,
+    weightBu: AddServingStore.weightBu,
+    settings: Settings.getSettings(),
+    unit: AddServingStore.unit,
+    serving: AddServingStore.serving
+  }
 }
 
 class AddServingPage extends React.Component {
   constructor() {
-    super();
-    this.state = {
-      dishes: DishStore.getDishes(),
-      dish_id: null,
-      weight: "",
-      settings: Settings.getSettings(),
-      unit: "gram"
-    };
+    super()
+    this.state = getActualState()
   }
   componentWillMount() {
-    if(this.props.id) {
-      this.state.serving = ServingStore.getById(this.props.id);
-      this.state.weight = this.state.serving.weight;
-      if(this.state.serving && this.state.serving.dish_id) {
-        this.state.dish_id = this.state.serving.dish_id;
-        this.state.weightBu = calcBu(this.state.dish_id, this.state.weight);
-      }
-    }
     if(!this.state.dishes) {
       loadDishes();
     }
@@ -55,34 +41,24 @@ class AddServingPage extends React.Component {
     }
   }
   componentDidMount() {
+    AddServingStore.addListener("change", this.onServingChange);
     DishStore.addListener("change", this.onDishesChange);
-    DishPickStore.addListener("pick", this.onDishPicked);
     ServingStore.addListener("change", this.onServingsChange);
     Settings.addListener("change", this.onSettingsChange);
   }
   componentWillUnmount() {
+    AddServingStore.removeListener("change", this.onServingChange);
     DishStore.removeListener("change", this.onDishesChange);
-    DishPickStore.removeListener("pick", this.onDishPicked);
     ServingStore.removeListener("change", this.onServingsChange);
-    Settings.addListener("change", this.onSettingsChange);
+    Settings.removeListener("change", this.onSettingsChange);
   }
   onDishesChange = () => {
     this.setState({
       dishes: DishStore.getDishes()
     });
   }
-  onDishPicked = () => {
-    var dishId = DishPickStore.getDishId()
-    var updateState = {
-      dish_id: dishId
-    };
-    if(this.state.weight && !this.state.weightBu) {
-      updateState.weightBu = calcBu(dishId, this.state.weight);
-    }
-    if(!this.state.weight && this.state.weightBu) {
-      updateState.weight = calcWeightByBu(dishId, this.state.weightBu);
-    }
-    this.setState(updateState);
+  onServingChange = () => {
+    this.setState(getActualState())
   }
   onStartPickDish = () => {
     displayDishPicker()
@@ -98,29 +74,15 @@ class AddServingPage extends React.Component {
   onWeightFieldChange = (event) => {
     var value = event.target.value;
     value = value.replace(/[^0-9\.]/g, "");
-    var updateState = {
-      weight: value
-    };
-    if(this.state.dish_id) {
-      updateState.weightBu = calcBu(this.state.dish_id, value);
-    }
-    this.setState(updateState);
+    weightChange(value)
   }
   onWeightBuFieldChange = (event) => {
     var value = event.target.value;
     value = value.replace(/[^0-9\.]/g, "");
-    var updateState = {
-      weightBu: value
-    };
-    if(this.state.dish_id) {
-      updateState.weight = calcWeightByBu(this.state.dish_id, value);
-    }
-    this.setState(updateState);
+    weightBuChange(value)
   }
   onUnitChange = (unit) => {
-    this.setState({
-      unit
-    })
+    unitChange(unit)
   }
   render() {
     if(!this.state.dishes || !this.state.settings) {
@@ -129,36 +91,6 @@ class AddServingPage extends React.Component {
     var dish = null
     if(this.state.dish_id) {
       dish = DishStore.getById(this.state.dish_id)
-    }
-    var dishes = sortDishes(this.state.dishes, this.state.settings["dish-order"]);
-    var dishesOptions = [];
-    var currentLetter = "";
-    var groupDishes = [];
-    dishes.forEach((dish) => {
-      if(dish.deleted) {
-        return
-      }
-      let newGroup = false;
-      let dishLetter = dish.title.trim()[0].toLowerCase();
-      if(!currentLetter) {
-        newGroup = true;
-      }
-      if(dishLetter != currentLetter) {
-        newGroup = true;
-      }
-      if(newGroup) {
-        if(currentLetter) {
-          dishesOptions.push(<optgroup key={"letter-" + currentLetter.toUpperCase()} label={currentLetter.toUpperCase()}>{groupDishes}</optgroup>);
-        }
-        currentLetter = dishLetter;
-        groupDishes = [];
-      }
-      groupDishes.push(<option key={dish.id} value={dish.id}>
-        {dish.title} ({dish.carbs})
-      </option>);
-    });
-    if(groupDishes.length) {
-      dishesOptions.push(<optgroup key={"letter-" + currentLetter.toUpperCase()} label={currentLetter}>{groupDishes}</optgroup>);
     }
     var info = null;
     if(this.state.dish_id && this.state.weight) {

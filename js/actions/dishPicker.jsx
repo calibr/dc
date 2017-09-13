@@ -2,7 +2,12 @@ import Dispatcher from "../dispatcher.jsx";
 import navigator from "../navigator.jsx";
 import DishPickStore from "../stores/DishPick.jsx"
 
-export var pickDish = function(id) {
+export var pickDish = function(data) {
+  Dispatcher.dispatch({
+    eventName: "dishPicker.picked",
+    id: data.id,
+    tag: data.tag
+  })
   var returnTo = DishPickStore.getReturnTo()
   if(returnTo) {
     navigator.navigate(returnTo)
@@ -10,10 +15,6 @@ export var pickDish = function(id) {
   else {
     navigator.back()
   }
-  Dispatcher.dispatch({
-    eventName: "dishPicker.picked",
-    id: id
-  })
 }
 
 export var display = function(opts) {

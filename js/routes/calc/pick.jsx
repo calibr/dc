@@ -2,6 +2,7 @@ var app = require("../../f7app");
 var React = require("react");
 
 import DishStore from "../../stores/Dish.jsx";
+import DishPickStore from "../../stores/DishPick.jsx";
 import Settings from "../../stores/Settings.jsx";
 import {loadDishes, fetchSettings, deleteDish} from "../../actions/actions.jsx";
 import {pickDish} from "../../actions/dishPicker.jsx";
@@ -65,7 +66,10 @@ class DishesPickPage extends React.Component {
     this.setState(buildState())
   }
   onDishClicked = (dish) => {
-    pickDish(dish.id)
+    pickDish({
+      id: dish.id,
+      tag: DishPickStore.tag
+    })
   }
   onSearchChange() {
     let dishesDisplayList = this.state.dishesSorted

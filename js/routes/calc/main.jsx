@@ -9,6 +9,7 @@ import {
   fetchActiveMeal, createMeal, fetchServings, loadDishes, deleteServing,
   endMeal, fetchSettings, setMealCoef, updateServing
 } from "../../actions/actions.jsx";
+import {display as displayAddServing} from "../../actions/addServing.jsx";
 import LoadingBox from "../../components/LoadingBox.jsx";
 import navigator from "../../navigator.jsx";
 import ServingListItem from "../../components/ServingListItem.jsx";
@@ -84,7 +85,7 @@ class CalcMainPage extends React.Component {
     });
   }
   onServingClick = (serving) => {
-    navigator.navigate("/calc/servings/" + serving.id);
+    displayAddServing(serving.id)
   }
   onServingDelete = (serving) => {
     deleteServing(serving.id);
@@ -140,6 +141,11 @@ class CalcMainPage extends React.Component {
       return <div className="page-content">
         <LoadingBox/>
       </div>;
+    }
+    if(!this.state.dishes) {
+      return <div className="page-content">
+        <LoadingBox/>
+      </div>
     }
 
     var servingsToEat = []
@@ -218,7 +224,7 @@ class CalcMainPageNavBar extends React.Component {
     });
   }
   onServingAdd() {
-    navigator.navigate("/calc/servings/add");
+    displayAddServing()
   }
   render() {
     return <div className="navbar-wrapper">

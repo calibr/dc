@@ -3,8 +3,10 @@ var app = require("../../f7app");
 const uuidV4 = require('uuid/v4');
 
 import navigator from "../../navigator.jsx";
-import {addDish, updateDish} from "../../actions/actions.jsx";
+import {addDish} from "../../actions/actions.jsx";
+import {addSubDish, changeSubDish, changeTitle, deleteSubDish} from "../../actions/addComplexDish.jsx";
 import DishStore from "../../stores/Dish.jsx";
+import AddComplexDishStore from "../../stores/AddComplexDish.jsx";
 import Settings from "../../stores/Settings.jsx";
 import {sortDishes, getCarbsInServing, getProteinsInServing, getFatsInServing} from "../../util/dishes.jsx";
 import LoadingBox from "../../components/LoadingBox.jsx";
@@ -12,16 +14,20 @@ import SubDish from "../../components/SubDish.jsx";
 import {round} from "../../util/calc.jsx";
 import {display as displayDishPicker} from '../../actions/dishPicker.jsx'
 
+function getActualState() {
+  return {
+    subDishes: AddComplexDishStore.subDishes,
+    title: AddComplexDishStore.title,
+    totalWeight: AddComplexDishStore.totalWeight,
+    dishes: DishStore.getDishes(),
+    settings: Settings.getSettings()
+  }
+}
+
 class AddComplexDishPage extends React.Component {
   constructor() {
-    super();
-    this.state = {
-      subDishes: [],
-      title: "",
-      totalWeight: 0,
-      dishes: DishStore.getDishes(),
-      settings: Settings.getSettings()
-    };
+    super()
+    this.state = getActualState()
   }
   componentWillMount() {
     if(this.props.id) {
@@ -30,9 +36,14 @@ class AddComplexDishPage extends React.Component {
   }
   componentDidMount() {
     DishStore.addListener("change", this.onDishesChange);
+    AddComplexDishStore.addListener("change", this.onComplexDishChange);
   }
   componentWillUnmount() {
     DishStore.removeListener("change", this.onDishesChange);
+    AddComplexDishStore.removeListener("change", this.onComplexDishChange);
+  }
+  onComplexDishChange = () => {
+    this.setState(getActualState())
   }
   onDishesChange = () => {
     this.setState({
@@ -40,36 +51,21 @@ class AddComplexDishPage extends React.Component {
     });
   }
   onSubDishChange = (index, data) => {
-    var subDishes = this.state.subDishes;
-    subDishes[index].weight = data.weight;
-    subDishes[index].dishId = data.dishId;
-    this.setState({
-      subDishes: subDishes
-    });
+    let uuid = this.state.subDishes[index].uuid
+    data.uuid = uuid
+    changeSubDish(data)
   }
   onSubDishDelete = (index) => {
     var subDishes = this.state.subDishes;
-    subDishes.splice(index, 1);
-    this.setState({
-      subDishes
-    });
+    let uuid = subDishes[index].uuid
+    deleteSubDish(uuid)
   }
-  onDishAdd = () => {
-    var subDishes = this.state.subDishes;
-    subDishes.push({
-      weight: 0,
-      dishId: 0,
-      uuid: uuidV4()
-    });
-    this.setState({
-      subDishes
-    });
+  onSubDishAdd = () => {
+    addSubDish()
   }
   onTitleFieldChange = (event) => {
     var value = event.target.value;
-    this.setState({
-      title: value
-    });
+    changeTitle(value)
   }
   onTotalWeightChange = (event) => {
     var value = event.target.value;
@@ -87,10 +83,11 @@ class AddComplexDishPage extends React.Component {
     var info = null;
     var subDishesElems = [];
     for(let i = 0; i != this.state.subDishes.length; i++) {
-      let subDish = this.state.subDishes[i];
+      let subDish = this.state.subDishes[i]
       let subDishElem = <SubDish
         key={"subdish_" + subDish.uuid}
         title={"Ингредиент \#" + (i + 1)}
+        uuid={subDish.uuid}
         dishId={subDish.dishId}
         weight={subDish.weight}
         onChange={this.onSubDishChange.bind(this, i)}
@@ -118,7 +115,7 @@ class AddComplexDishPage extends React.Component {
         </div>
         {subDishesElems}
         <div className="content-block">
-          <a href="#" className="button button-fill color-green" onClick={this.onDishAdd}>
+          <a href="#" className="button button-fill color-green" onClick={this.onSubDishAdd}>
             + ингредиент
           </a>
         </div>
@@ -157,7 +154,6 @@ class AddComplexDishPageNavbar extends React.Component {
   }
   onDishAdded = (data) => {
     if(data.tag === this.state.tag) {
-      console.log("NAVIGATE TO DISHES")
       navigator.navigate("/dishes");
     }
   }

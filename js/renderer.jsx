@@ -44,13 +44,14 @@ $(document).on('pageBeforeInit', function (e) {
   }
 
   if(prevPage) {
-    console.log('Cleanup old page components', url)
+    console.log('Cleanup old page components', prevPage.url)
     for(let {node} of prevPage.components) {
       ReactDom.unmountComponentAtNode(node)
     }
   }
 
   let pageInfo = {
+    url,
     page,
     components: []
   }
