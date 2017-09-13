@@ -72,7 +72,7 @@ class DishesPickPage extends React.Component {
     let query = this.searchInput.value.trim()
     query = escapeRegexp(query)
     query = query.replace(/\s+/, "\\s+")
-    let regexp = new RegExp('(?:^|\\s)' + query, 'i')
+    let regexp = new RegExp('(?:^|[\\s-])' + query, 'i')
     if(query) {
       // filter dishes by query
       dishesDisplayList = []

@@ -1,5 +1,6 @@
 var app = require("../../f7app");
 var React = require("react");
+var ReactDOM = require("react-dom");
 
 import DishStore from "../../stores/Dish.jsx";
 import Settings from "../../stores/Settings.jsx";
@@ -18,7 +19,7 @@ function buildState() {
   return {
     dishes,
     dishOrder: settings["dish-order"],
-    dishesSorted
+    dishesSorted,
   }
 }
 

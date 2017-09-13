@@ -47,6 +47,9 @@ app.getViewByName = (name) => {
     }
   }
 };
+app.getActualPageUrl = (url) => {
+  return url.replace(/^.+?\?url=/, "")
+}
 
 
 setTimeout(() => {

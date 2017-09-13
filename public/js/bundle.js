@@ -514,6 +514,9 @@ app.getViewByName = function (name) {
     }
   }
 };
+app.getActualPageUrl = function (url) {
+  return url.replace(/^.+?\?url=/, "");
+};
 
 setTimeout(function () {
   //document.querySelector('[href="#dishes-view"]').click()
@@ -1625,9 +1628,12 @@ var navigator = {
       throw new Error("View not found " + viewName);
     }
     console.log("Load page into view", viewName);
+    var newUrl = "page.html?url=" + url;
+    var reload = newUrl === view.url;
     view.router.load({
-      url: "page.html?url=" + url,
-      animatePages: false
+      url: newUrl,
+      animatePages: false,
+      reload: reload
     });
   },
   back: function back() {
@@ -1665,13 +1671,16 @@ var routes = {
   "/history": require("./routes/history/main.jsx")
 };
 
+var prevPage = null;
+
 $(document).on('pageBeforeInit', function (e) {
+  console.log('before init event', e.detail);
   // Page Data contains all required information about loaded and initialized page
   var page = e.detail.page;
   if (page.url.indexOf("page.html?url=") < 0) {
     return;
   }
-  var url = page.url.replace(/^.+?\?url=/, "");
+  var url = f7app.getActualPageUrl(page.url);
   // search for route
   var route = void 0;
   var routeParams = void 0;
@@ -1686,20 +1695,18 @@ $(document).on('pageBeforeInit', function (e) {
   if (!route) {
     throw new Error("Couldn't find route for " + url);
   }
-  var PageComponent = route.page;
-  var NavbarComponent = route.navbar;
-  ReactDom.render(React.createElement(PageComponent, routeParams), page.container);
-  ReactDom.render(React.createElement(NavbarComponent, routeParams), page.navbarInnerContainer);
-  if (route.custom) {
+
+  if (prevPage) {
+    console.log('Cleanup old page components', url);
     var _iteratorNormalCompletion = true;
     var _didIteratorError = false;
     var _iteratorError = undefined;
 
     try {
-      for (var _iterator = routes[url].custom[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-        var c = _step.value;
+      for (var _iterator = prevPage.components[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+        var node = _step.value.node;
 
-        ReactDom.render(React.createElement(c.component, null), document.querySelector(c.container));
+        ReactDom.unmountComponentAtNode(node);
       }
     } catch (err) {
       _didIteratorError = true;
@@ -1716,6 +1723,57 @@ $(document).on('pageBeforeInit', function (e) {
       }
     }
   }
+
+  var pageInfo = {
+    page: page,
+    components: []
+  };
+
+  var PageComponent = route.page;
+  var NavbarComponent = route.navbar;
+
+  var component = ReactDom.render(React.createElement(PageComponent, routeParams), page.container);
+  pageInfo.components.push({
+    node: page.container,
+    component: component
+  });
+  component = ReactDom.render(React.createElement(NavbarComponent, routeParams), page.navbarInnerContainer);
+  pageInfo.components.push({
+    node: page.navbarInnerContainer,
+    component: component
+  });
+  if (route.custom) {
+    var _iteratorNormalCompletion2 = true;
+    var _didIteratorError2 = false;
+    var _iteratorError2 = undefined;
+
+    try {
+      for (var _iterator2 = routes[url].custom[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+        var c = _step2.value;
+
+        var node = document.querySelector(c.container);
+        component = ReactDom.render(React.createElement(c.component, null), node);
+        pageInfo.components.push({
+          node: node,
+          component: component
+        });
+      }
+    } catch (err) {
+      _didIteratorError2 = true;
+      _iteratorError2 = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion2 && _iterator2.return) {
+          _iterator2.return();
+        }
+      } finally {
+        if (_didIteratorError2) {
+          throw _iteratorError2;
+        }
+      }
+    }
+  }
+  prevPage = pageInfo;
 });
 
 var renderer = {};
@@ -2360,7 +2418,7 @@ var DishesPickPage = function (_React$Component) {
       var query = this.searchInput.value.trim();
       query = (0, _escapeStringRegexp2.default)(query);
       query = query.replace(/\s+/, "\\s+");
-      var regexp = new RegExp('(?:^|\\s)' + query, 'i');
+      var regexp = new RegExp('(?:^|[\\s-])' + query, 'i');
       if (query) {
         // filter dishes by query
         dishesDisplayList = [];
@@ -3120,6 +3178,7 @@ var AddComplexDishPageNavbar = function (_React$Component2) {
 
     _this2.onDishAdded = function (data) {
       if (data.tag === _this2.state.tag) {
+        console.log("NAVIGATE TO DISHES");
         _navigator2.default.navigate("/dishes");
       }
     };
@@ -3345,6 +3404,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 var app = require("../../f7app");
 var React = require("react");
+var ReactDOM = require("react-dom");
 
 function buildState() {
   var settings = _Settings2.default.getSettings();
@@ -3499,7 +3559,7 @@ module.exports = {
   }]
 };
 
-},{"../../actions/actions.jsx":1,"../../components/DishListItem.jsx":6,"../../components/DishesPopover.jsx":7,"../../components/LoadingBox.jsx":8,"../../f7app":14,"../../navigator.jsx":15,"../../stores/Dish.jsx":28,"../../stores/Settings.jsx":33,"../../util/dishes.jsx":38,"react":230,"react-list":205}],22:[function(require,module,exports){
+},{"../../actions/actions.jsx":1,"../../components/DishListItem.jsx":6,"../../components/DishesPopover.jsx":7,"../../components/LoadingBox.jsx":8,"../../f7app":14,"../../navigator.jsx":15,"../../stores/Dish.jsx":28,"../../stores/Settings.jsx":33,"../../util/dishes.jsx":38,"react":230,"react-dom":78,"react-list":205}],22:[function(require,module,exports){
 'use strict';
 
 var mod = require('../calc/pick.jsx');
@@ -3855,7 +3915,6 @@ var AddServingPage = function (_React$Component) {
     };
 
     _this.onDishPicked = function () {
-      console.log("PICKED", _DishPick2.default.getDishId());
       var dishId = _DishPick2.default.getDishId();
       var updateState = {
         dish_id: dishId
@@ -41382,11 +41441,14 @@ module.exports = validateDOMNesting;
       }
     }, {
       key: 'componentDidUpdate',
-      value: function componentDidUpdate() {
+      value: function componentDidUpdate(prevProps, prevState) {
         var _this2 = this;
 
         // If the list has reached an unstable state, prevent an infinite loop.
-        if (this.unstable) return;
+        if (this.unstable) {
+          console.log('the list is unstable')
+          return;
+        }
 
         if (++this.updateCounter > MAX_SYNC_UPDATES) {
           this.unstable = true;

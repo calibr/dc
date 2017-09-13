@@ -10,9 +10,12 @@ var navigator = {
       throw new Error("View not found " + viewName);
     }
     console.log("Load page into view", viewName);
+    let newUrl = "page.html?url=" + url
+    let reload = newUrl === view.url
     view.router.load({
-      url: "page.html?url=" + url,
-      animatePages: false
+      url: newUrl,
+      animatePages: false,
+      reload
     })
   },
   back: () => {

@@ -157,6 +157,7 @@ class AddComplexDishPageNavbar extends React.Component {
   }
   onDishAdded = (data) => {
     if(data.tag === this.state.tag) {
+      console.log("NAVIGATE TO DISHES")
       navigator.navigate("/dishes");
     }
   }

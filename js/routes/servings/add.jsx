@@ -72,7 +72,6 @@ class AddServingPage extends React.Component {
     });
   }
   onDishPicked = () => {
-    console.log("PICKED", DishPickStore.getDishId())
     var dishId = DishPickStore.getDishId()
     var updateState = {
       dish_id: dishId

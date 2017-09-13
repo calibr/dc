@@ -18,13 +18,16 @@ var routes = {
   "/history": require("./routes/history/main.jsx"),
 };
 
+var prevPage = null
+
 $(document).on('pageBeforeInit', function (e) {
+  console.log('before init event', e.detail)
   // Page Data contains all required information about loaded and initialized page
   var page = e.detail.page;
   if(page.url.indexOf("page.html?url=") < 0) {
     return;
   }
-  var url = page.url.replace(/^.+?\?url=/, "");
+  var url = f7app.getActualPageUrl(page.url)
   // search for route
   let route;
   let routeParams;
@@ -39,17 +42,45 @@ $(document).on('pageBeforeInit', function (e) {
   if(!route) {
     throw new Error("Couldn't find route for " + url);
   }
-  let PageComponent = route.page;
-  let NavbarComponent = route.navbar;
-  ReactDom.render(<PageComponent {...routeParams}/>, page.container);
-  ReactDom.render(<NavbarComponent {...routeParams}/>, page.navbarInnerContainer);
-  if(route.custom) {
-    for(let c of routes[url].custom) {
-      ReactDom.render(<c.component/>, document.querySelector(c.container));
+
+  if(prevPage) {
+    console.log('Cleanup old page components', url)
+    for(let {node} of prevPage.components) {
+      ReactDom.unmountComponentAtNode(node)
     }
   }
+
+  let pageInfo = {
+    page,
+    components: []
+  }
+
+  let PageComponent = route.page;
+  let NavbarComponent = route.navbar;
+
+  let component = ReactDom.render(<PageComponent {...routeParams}/>, page.container);
+  pageInfo.components.push({
+    node: page.container,
+    component
+  })
+  component = ReactDom.render(<NavbarComponent {...routeParams}/>, page.navbarInnerContainer);
+  pageInfo.components.push({
+    node: page.navbarInnerContainer,
+    component
+  })
+  if(route.custom) {
+    for(let c of routes[url].custom) {
+      let node = document.querySelector(c.container)
+      component = ReactDom.render(<c.component/>, node);
+      pageInfo.components.push({
+        node,
+        component
+      })
+    }
+  }
+  prevPage = pageInfo
 });
 
 var renderer = {};
 
-export default renderer;
+export default renderer
