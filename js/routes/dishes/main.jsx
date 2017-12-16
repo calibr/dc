@@ -14,7 +14,7 @@ import ReactList from 'react-list';
 
 function buildState() {
   let settings = Settings.getSettings()
-  let dishes = DishStore.getDishes()
+  let dishes = DishStore.getDishesActive()
   let dishesSorted = dishes && sortDishes(dishes, settings["dish-order"])
   return {
     dishes,

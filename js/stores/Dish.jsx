@@ -3,14 +3,31 @@ import Dispatcher from "../dispatcher.jsx";
 
 class DishStore extends EventEmitter {
   dishes: null;
+  // not deleted dishes
+  dishesActive: null;
   constructor() {
     super();
     this.order = ["carbs", "asc"];
     this.idMap = new Map()
     Dispatcher.register(this.dispatch.bind(this));
   }
+  _addDish(dish) {
+    this.dishes.push(dish)
+    this.idMap.set(dish.id, dish)
+    if(!dish.deleted) {
+      this.dishesActive.push(dish)
+    }
+  }
+  _clearDishes() {
+    this.idMap.clear()
+    this.dishes = []
+    this.dishesActive = []
+  }
   getDishes() {
     return this.dishes;
+  }
+  getDishesActive() {
+    return this.dishesActive;
   }
   getOrder() {
     return this.order;
@@ -26,17 +43,14 @@ class DishStore extends EventEmitter {
   }
   dispatch(payload) {
     if(payload.eventName === "dishes.list") {
-      this.dishes = payload.dishes;
-      // rebuild map totally
-      this.idMap.clear()
-      for(let dish of this.dishes) {
-        this.idMap.set(dish.id, dish)
+      this._clearDishes()
+      for(let dish of payload.dishes) {
+        this._addDish(dish)
       }
       this.emit("change");
     }
     else if(payload.eventName === "dishes.added") {
-      this.dishes.push(payload.dish);
-      this.idMap.set(payload.dish.id, payload.dish)
+      this._addDish(dish)
       this.emit("added", {
         tag: payload.tag
       });
@@ -54,16 +68,16 @@ class DishStore extends EventEmitter {
     }
     else if(payload.eventName === "dishes.deleted") {
       let index = -1
-      for(let i = 0; i != this.dishes.length; i++) {
-        if(this.dishes[i].id == payload.id) {
+      // remove from active dishes
+      for(let i = 0; i != this.dishesActive.length; i++) {
+        if(this.dishesActive[i].id == payload.id) {
           index = i
           break;
         }
       }
       if(index >= 0) {
-        this.dishes.splice(index, 1)
+        this.dishesActive.splice(index, 1)
       }
-      this.idMap.delete(payload.id)
       this.emit("change");
     }
     else if(payload.eventName === "dishes.setOrder") {

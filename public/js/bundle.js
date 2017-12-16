@@ -1306,6 +1306,8 @@ var _actions = require("../actions/actions.jsx");
 
 var _bu = require("../util/bu.jsx");
 
+var _calc = require("../util/calc.jsx");
+
 var _AbstractSwipeOut2 = require("./AbstractSwipeOut.jsx");
 
 var _AbstractSwipeOut3 = _interopRequireDefault(_AbstractSwipeOut2);
@@ -1377,11 +1379,13 @@ var ServingListItem = function (_AbstractSwipeOut) {
     key: "render",
     value: function render() {
       var serving = this.props.serving;
+      var coef = this.props.coef;
       if (!this.state.dish) {
         return React.createElement("li", null);
       }
       var carbsInServing = this.state.dish.carbs / 100 * serving.weight;
       var buInServing = (0, _bu.carbsToBu)(carbsInServing);
+      var units = (0, _calc.calc)(carbsInServing, coef);
       return React.createElement(
         "li",
         { className: "swipeout serving-list-item" },
@@ -1406,13 +1410,15 @@ var ServingListItem = function (_AbstractSwipeOut) {
                 "span",
                 { className: "badge" },
                 serving.weight,
-                " \u0433."
+                "\u0433./",
+                buInServing,
+                "\u0425\u0415"
               ),
               React.createElement(
                 "span",
                 { className: "badge" },
-                buInServing,
-                " \u0425\u0415"
+                units,
+                "U"
               )
             )
           )
@@ -1440,7 +1446,7 @@ var ServingListItem = function (_AbstractSwipeOut) {
 
 exports.default = ServingListItem;
 
-},{"../actions/actions.jsx":1,"../f7app":16,"../stores/Dish.jsx":32,"../util/bu.jsx":38,"./AbstractSwipeOut.jsx":7,"react":234,"react-dom":82}],13:[function(require,module,exports){
+},{"../actions/actions.jsx":1,"../f7app":16,"../stores/Dish.jsx":32,"../util/bu.jsx":38,"../util/calc.jsx":39,"./AbstractSwipeOut.jsx":7,"react":234,"react-dom":82}],13:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2160,12 +2166,14 @@ var CalcMainPage = function (_React$Component) {
             onDelete: _this2.onServingDelete.bind(_this2, serving),
             onAte: _this2.onServingDidntEat.bind(_this2, serving),
             ateText: "\u041D\u0435 \u0441\u044A\u0435\u043B",
+            coef: _this2.state.activeMeal.coef,
             key: serving.id, serving: serving }));
         } else {
           servingsToEat.push(React.createElement(_ServingListItem2.default, {
             onClick: _this2.onServingClick.bind(_this2, serving),
             onDelete: _this2.onServingDelete.bind(_this2, serving),
             onAte: _this2.onServingAte.bind(_this2, serving),
+            coef: _this2.state.activeMeal.coef,
             key: serving.id, serving: serving }));
         }
       });
@@ -2216,13 +2224,17 @@ var CalcMainPage = function (_React$Component) {
               "div",
               { className: "insulin-dose" },
               "\u0414\u043E\u0437\u0430 \u0438\u043D\u0441\u0443\u043B\u0438\u043D\u0430: ",
-              dose
+              dose,
+              "U"
             ),
             React.createElement(
               "div",
               { className: "text-center" },
-              "\u0412\u0441\u0435\u0433\u043E \u0425\u0415: ",
-              totalBu
+              "\u0412\u0441\u0435\u0433\u043E \u0443\u0433\u043B\u0435\u0432\u043E\u0434\u043E\u0432: ",
+              carbs.toFixed(2),
+              "\u0433. \u0438\u043B\u0438 ",
+              totalBu,
+              "\u0425\u0415"
             )
           )
         ) : null,
@@ -3571,7 +3583,7 @@ var ReactDOM = require("react-dom");
 
 function buildState() {
   var settings = _Settings2.default.getSettings();
-  var dishes = _Dish2.default.getDishes();
+  var dishes = _Dish2.default.getDishesActive();
   var dishesSorted = dishes && (0, _dishes.sortDishes)(dishes, settings["dish-order"]);
   return {
     dishes: dishes,
@@ -5202,11 +5214,34 @@ var DishStore = function (_EventEmitter) {
     _dispatcher2.default.register(_this.dispatch.bind(_this));
     return _this;
   }
+  // not deleted dishes
+
 
   _createClass(DishStore, [{
+    key: "_addDish",
+    value: function _addDish(dish) {
+      this.dishes.push(dish);
+      this.idMap.set(dish.id, dish);
+      if (!dish.deleted) {
+        this.dishesActive.push(dish);
+      }
+    }
+  }, {
+    key: "_clearDishes",
+    value: function _clearDishes() {
+      this.idMap.clear();
+      this.dishes = [];
+      this.dishesActive = [];
+    }
+  }, {
     key: "getDishes",
     value: function getDishes() {
       return this.dishes;
+    }
+  }, {
+    key: "getDishesActive",
+    value: function getDishesActive() {
+      return this.dishesActive;
     }
   }, {
     key: "getOrder",
@@ -5228,18 +5263,16 @@ var DishStore = function (_EventEmitter) {
     key: "dispatch",
     value: function dispatch(payload) {
       if (payload.eventName === "dishes.list") {
-        this.dishes = payload.dishes;
-        // rebuild map totally
-        this.idMap.clear();
+        this._clearDishes();
         var _iteratorNormalCompletion = true;
         var _didIteratorError = false;
         var _iteratorError = undefined;
 
         try {
-          for (var _iterator = this.dishes[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-            var dish = _step.value;
+          for (var _iterator = payload.dishes[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+            var _dish = _step.value;
 
-            this.idMap.set(dish.id, dish);
+            this._addDish(_dish);
           }
         } catch (err) {
           _didIteratorError = true;
@@ -5258,8 +5291,7 @@ var DishStore = function (_EventEmitter) {
 
         this.emit("change");
       } else if (payload.eventName === "dishes.added") {
-        this.dishes.push(payload.dish);
-        this.idMap.set(payload.dish.id, payload.dish);
+        this._addDish(dish);
         this.emit("added", {
           tag: payload.tag
         });
@@ -5275,16 +5307,16 @@ var DishStore = function (_EventEmitter) {
         this.emit("change");
       } else if (payload.eventName === "dishes.deleted") {
         var index = -1;
-        for (var _i = 0; _i != this.dishes.length; _i++) {
-          if (this.dishes[_i].id == payload.id) {
+        // remove from active dishes
+        for (var _i = 0; _i != this.dishesActive.length; _i++) {
+          if (this.dishesActive[_i].id == payload.id) {
             index = _i;
             break;
           }
         }
         if (index >= 0) {
-          this.dishes.splice(index, 1);
+          this.dishesActive.splice(index, 1);
         }
-        this.idMap.delete(payload.id);
         this.emit("change");
       } else if (payload.eventName === "dishes.setOrder") {
         this.order = payload.order;

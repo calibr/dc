@@ -157,6 +157,7 @@ class CalcMainPage extends React.Component {
           onDelete={this.onServingDelete.bind(this, serving)}
           onAte={this.onServingDidntEat.bind(this, serving)}
           ateText="Не съел"
+          coef={this.state.activeMeal.coef}
           key={serving.id} serving={serving}/>)
       }
       else {
@@ -164,6 +165,7 @@ class CalcMainPage extends React.Component {
           onClick={this.onServingClick.bind(this, serving)}
           onDelete={this.onServingDelete.bind(this, serving)}
           onAte={this.onServingAte.bind(this, serving)}
+          coef={this.state.activeMeal.coef}
           key={serving.id} serving={serving}/>)
       }
     })
@@ -193,8 +195,8 @@ class CalcMainPage extends React.Component {
       {this.state.servings.length ?
         <div>
           <div className="content-block">
-            <div className="insulin-dose">Доза инсулина: {dose}</div>
-            <div className="text-center">Всего ХЕ: {totalBu}</div>
+            <div className="insulin-dose">Доза инсулина: {dose}U</div>
+            <div className="text-center">Всего углеводов: {carbs.toFixed(2)}г. или {totalBu}ХЕ</div>
           </div>
         </div>
         : null

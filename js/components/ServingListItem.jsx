@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import Dish from "../stores/Dish.jsx";
 import {loadDishes} from "../actions/actions.jsx";
 import {carbsToBu} from "../util/bu.jsx";
+import {calc} from "../util/calc.jsx";
 import AbstractSwipeOut from './AbstractSwipeOut.jsx'
 
 var $ = require("../f7app").$
@@ -42,19 +43,21 @@ class ServingListItem extends AbstractSwipeOut {
     });
   }
   render() {
-    var serving = this.props.serving;
+    var serving = this.props.serving
+    var coef = this.props.coef
     if(!this.state.dish) {
       return <li/>;
     }
     var carbsInServing = this.state.dish.carbs/100 * serving.weight;
     var buInServing = carbsToBu(carbsInServing);
+    var units = calc(carbsInServing, coef)
     return <li className="swipeout serving-list-item">
       <div onClick={this.onClick} className="swipeout-content item-content item-link">
         <div className="item-inner">
           <div className="item-title">{this.state.dish.title} ({this.state.dish.carbs})</div>
           <div className="item-after">
-            <span className="badge">{serving.weight} г.</span>
-            <span className="badge">{buInServing} ХЕ</span>
+            <span className="badge">{serving.weight}г./{buInServing}ХЕ</span>
+            <span className="badge">{units}U</span>
           </div>
         </div>
       </div>
