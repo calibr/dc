@@ -9,24 +9,30 @@ import LoadingBox from "../../components/LoadingBox.jsx";
 import DishListItem from "../../components/DishListItem.jsx";
 import DishesPopover from "../../components/DishesPopover.jsx";
 import navigator from "../../navigator.jsx";
-import {sortDishes} from "../../util/dishes.jsx";
-import ReactList from 'react-list';
-
-function buildState() {
-  let settings = Settings.getSettings()
-  let dishes = DishStore.getDishesActive()
-  let dishesSorted = dishes && sortDishes(dishes, settings["dish-order"])
-  return {
-    dishes,
-    dishOrder: settings["dish-order"],
-    dishesSorted,
-  }
-}
+import {sortDishes, filterDishesByQuery} from "../../util/dishes.jsx";
+import ReactList from 'react-list'
+import _ from 'lodash'
 
 class DishesMainPage extends React.Component {
   constructor() {
     super();
-    this.state = buildState()
+    this.state = this.buildState()
+    this.onSearchChangeDebounced = _.debounce(this.onSearchChange.bind(this), 200)
+  }
+  buildState() {
+    let settings = Settings.getSettings()
+    let dishes = DishStore.getDishesActive()
+    let dishesSorted = dishes && sortDishes(dishes, settings["dish-order"])
+    let dishesDisplayList = dishesSorted
+    if(this.state && this.state.query) {
+      dishesDisplayList = filterDishesByQuery(this.state.query, dishesDisplayList)
+    }
+    return {
+      dishes,
+      dishOrder: settings["dish-order"],
+      dishesSorted,
+      dishesDisplayList
+    }
   }
   componentDidMount() {
     DishStore.on("change", this.onDishesAvailable);
@@ -37,13 +43,19 @@ class DishesMainPage extends React.Component {
     if(!this.state.settings) {
       fetchSettings();
     }
+    app.searchbar('#dish-list-search-bar', {
+      customSearch: true,
+      onSearch: () => {
+        this.onSearchChangeDebounced()
+      }
+    })
   }
   componentWillUnmount() {
     DishStore.removeListener("change", this.onDishesAvailable);
     Settings.removeListener("change", this.onSettingsChange);
   }
   onDishesAvailable = () => {
-    this.setState(buildState());
+    this.setState(this.buildState());
   }
   onSettingsChange = () => {
     let settings = Settings.getSettings()
@@ -51,7 +63,7 @@ class DishesMainPage extends React.Component {
       // dishOrder wasn't changed
       return
     }
-    this.setState(buildState())
+    this.setState(this.buildState())
   }
   onDishClicked = (dish) => {
     navigator.navigate("/dishes/" + dish.id);
@@ -60,8 +72,19 @@ class DishesMainPage extends React.Component {
     deleteDish(dish.id)
     app.closeSwipeout()
   }
+  onSearchChange() {
+    let dishesDisplayList = this.state.dishesSorted
+    let query = this.searchInput.value.trim()
+    if(query) {
+      dishesDisplayList = filterDishesByQuery(query, dishesDisplayList)
+    }
+    this.setState({
+      query,
+      dishesDisplayList
+    })
+  }
   renderListItem = (index, key) => {
-    let dish = this.state.dishesSorted[index]
+    let dish = this.state.dishesDisplayList[index]
     return <DishListItem
       key={dish.id}
       dish={dish}
@@ -74,12 +97,21 @@ class DishesMainPage extends React.Component {
   render() {
     var dishesElems;
     return <div className="page-content">
+      {this.state.dishes ?
+      <form id="dish-list-search-bar" className="searchbar searchbar-init">
+        <div className="searchbar-input">
+          <input
+            ref={(input) => { this.searchInput = input; }} type="search" placeholder="Поиск"/>
+          <a href="#" className="searchbar-clear"></a>
+        </div>
+        <a href="#" className="searchbar-cancel">Отмена</a>
+      </form> : null}
       <div className="list-block">
         {this.state.dishes ?
           <ReactList
             itemRenderer={this.renderListItem}
             itemsRenderer={this.renderList}
-            length={this.state.dishesSorted.length}
+            length={this.state.dishesDisplayList.length}
             type='simple'
           />
          : <LoadingBox/>}

@@ -1,4 +1,5 @@
 import {visibleRel} from './date.jsx'
+import escapeRegexp from 'escape-string-regexp'
 
 export function sortDishes(dishes, order) {
   order = order.split(":");
@@ -52,4 +53,22 @@ export function nameFull(dish) {
     title += ' 🍕 ' + visibleRel(dish.date)
   }
   return title
+}
+
+export function searchQueryToRegExp(query) {
+  query = escapeRegexp(query)
+  query = query.replace(/\s+/, "\\s+")
+  let regexp = new RegExp('(?:^|[\\s-])' + query, 'i')
+  return regexp
+}
+
+export function filterDishesByQuery(query, dishes) {
+  let regexp = searchQueryToRegExp(query)
+  let result = []
+  for(let dish of dishes) {
+    if(regexp.test(dish.title)) {
+      result.push(dish)
+    }
+  }
+  return result
 }

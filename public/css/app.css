@@ -77,6 +77,11 @@
   opacity: 0;
 }
 
+.toolbar-through .page-content.history-content > div:last-child {
+  /* make bottom navbar to not overlay history content */
+  margin-bottom: 100px;
+}
+
 .history-content .month-head {
   text-align: center;
   font-size: 22px;

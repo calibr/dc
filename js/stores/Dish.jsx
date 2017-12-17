@@ -50,7 +50,7 @@ class DishStore extends EventEmitter {
       this.emit("change");
     }
     else if(payload.eventName === "dishes.added") {
-      this._addDish(dish)
+      this._addDish(payload.dish)
       this.emit("added", {
         tag: payload.tag
       });

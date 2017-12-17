@@ -1634,7 +1634,7 @@ var SubDish = function (_React$Component) {
     _this.pickTag = null;
     _this.state = {
       dishId: props.dishId || 0,
-      weight: props.weight || 0
+      weight: props.weight || ''
     };
     return _this;
   }
@@ -2499,7 +2499,7 @@ var React = require("react");
 
 function buildState() {
   var settings = _Settings2.default.getSettings();
-  var dishes = _Dish2.default.getDishes();
+  var dishes = _Dish2.default.getDishesActive();
   var dishesSorted = dishes && settings && (0, _dishes.sortDishes)(dishes, settings["dish-order"]);
   return {
     dishes: dishes,
@@ -3569,6 +3569,10 @@ var _reactList = require("react-list");
 
 var _reactList2 = _interopRequireDefault(_reactList);
 
+var _lodash = require("lodash");
+
+var _lodash2 = _interopRequireDefault(_lodash);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -3581,17 +3585,6 @@ var app = require("../../f7app");
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-function buildState() {
-  var settings = _Settings2.default.getSettings();
-  var dishes = _Dish2.default.getDishesActive();
-  var dishesSorted = dishes && (0, _dishes.sortDishes)(dishes, settings["dish-order"]);
-  return {
-    dishes: dishes,
-    dishOrder: settings["dish-order"],
-    dishesSorted: dishesSorted
-  };
-}
-
 var DishesMainPage = function (_React$Component) {
   _inherits(DishesMainPage, _React$Component);
 
@@ -3601,7 +3594,7 @@ var DishesMainPage = function (_React$Component) {
     var _this = _possibleConstructorReturn(this, (DishesMainPage.__proto__ || Object.getPrototypeOf(DishesMainPage)).call(this));
 
     _this.onDishesAvailable = function () {
-      _this.setState(buildState());
+      _this.setState(_this.buildState());
     };
 
     _this.onSettingsChange = function () {
@@ -3610,7 +3603,7 @@ var DishesMainPage = function (_React$Component) {
         // dishOrder wasn't changed
         return;
       }
-      _this.setState(buildState());
+      _this.setState(_this.buildState());
     };
 
     _this.onDishClicked = function (dish) {
@@ -3623,7 +3616,7 @@ var DishesMainPage = function (_React$Component) {
     };
 
     _this.renderListItem = function (index, key) {
-      var dish = _this.state.dishesSorted[index];
+      var dish = _this.state.dishesDisplayList[index];
       return React.createElement(_DishListItem2.default, {
         key: dish.id,
         dish: dish,
@@ -3639,13 +3632,33 @@ var DishesMainPage = function (_React$Component) {
       );
     };
 
-    _this.state = buildState();
+    _this.state = _this.buildState();
+    _this.onSearchChangeDebounced = _lodash2.default.debounce(_this.onSearchChange.bind(_this), 200);
     return _this;
   }
 
   _createClass(DishesMainPage, [{
+    key: "buildState",
+    value: function buildState() {
+      var settings = _Settings2.default.getSettings();
+      var dishes = _Dish2.default.getDishesActive();
+      var dishesSorted = dishes && (0, _dishes.sortDishes)(dishes, settings["dish-order"]);
+      var dishesDisplayList = dishesSorted;
+      if (this.state && this.state.query) {
+        dishesDisplayList = (0, _dishes.filterDishesByQuery)(this.state.query, dishesDisplayList);
+      }
+      return {
+        dishes: dishes,
+        dishOrder: settings["dish-order"],
+        dishesSorted: dishesSorted,
+        dishesDisplayList: dishesDisplayList
+      };
+    }
+  }, {
     key: "componentDidMount",
     value: function componentDidMount() {
+      var _this2 = this;
+
       _Dish2.default.on("change", this.onDishesAvailable);
       _Settings2.default.on("change", this.onSettingsChange);
       if (!_Dish2.default.getDishes()) {
@@ -3654,6 +3667,12 @@ var DishesMainPage = function (_React$Component) {
       if (!this.state.settings) {
         (0, _actions.fetchSettings)();
       }
+      app.searchbar('#dish-list-search-bar', {
+        customSearch: true,
+        onSearch: function onSearch() {
+          _this2.onSearchChangeDebounced();
+        }
+      });
     }
   }, {
     key: "componentWillUnmount",
@@ -3662,19 +3681,52 @@ var DishesMainPage = function (_React$Component) {
       _Settings2.default.removeListener("change", this.onSettingsChange);
     }
   }, {
+    key: "onSearchChange",
+    value: function onSearchChange() {
+      var dishesDisplayList = this.state.dishesSorted;
+      var query = this.searchInput.value.trim();
+      if (query) {
+        dishesDisplayList = (0, _dishes.filterDishesByQuery)(query, dishesDisplayList);
+      }
+      this.setState({
+        query: query,
+        dishesDisplayList: dishesDisplayList
+      });
+    }
+  }, {
     key: "render",
     value: function render() {
+      var _this3 = this;
+
       var dishesElems;
       return React.createElement(
         "div",
         { className: "page-content" },
+        this.state.dishes ? React.createElement(
+          "form",
+          { id: "dish-list-search-bar", className: "searchbar searchbar-init" },
+          React.createElement(
+            "div",
+            { className: "searchbar-input" },
+            React.createElement("input", {
+              ref: function ref(input) {
+                _this3.searchInput = input;
+              }, type: "search", placeholder: "\u041F\u043E\u0438\u0441\u043A" }),
+            React.createElement("a", { href: "#", className: "searchbar-clear" })
+          ),
+          React.createElement(
+            "a",
+            { href: "#", className: "searchbar-cancel" },
+            "\u041E\u0442\u043C\u0435\u043D\u0430"
+          )
+        ) : null,
         React.createElement(
           "div",
           { className: "list-block" },
           this.state.dishes ? React.createElement(_reactList2.default, {
             itemRenderer: this.renderListItem,
             itemsRenderer: this.renderList,
-            length: this.state.dishesSorted.length,
+            length: this.state.dishesDisplayList.length,
             type: "simple"
           }) : React.createElement(_LoadingBox2.default, null)
         )
@@ -3734,7 +3786,7 @@ module.exports = {
   }]
 };
 
-},{"../../actions/actions.jsx":1,"../../components/DishListItem.jsx":8,"../../components/DishesPopover.jsx":9,"../../components/LoadingBox.jsx":10,"../../f7app":16,"../../navigator.jsx":17,"../../stores/Dish.jsx":32,"../../stores/Settings.jsx":37,"../../util/dishes.jsx":42,"react":234,"react-dom":82,"react-list":209}],24:[function(require,module,exports){
+},{"../../actions/actions.jsx":1,"../../components/DishListItem.jsx":8,"../../components/DishesPopover.jsx":9,"../../components/LoadingBox.jsx":10,"../../f7app":16,"../../navigator.jsx":17,"../../stores/Dish.jsx":32,"../../stores/Settings.jsx":37,"../../util/dishes.jsx":42,"lodash":70,"react":234,"react-dom":82,"react-list":209}],24:[function(require,module,exports){
 'use strict';
 
 var mod = require('../calc/pick.jsx');
@@ -5270,9 +5322,9 @@ var DishStore = function (_EventEmitter) {
 
         try {
           for (var _iterator = payload.dishes[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-            var _dish = _step.value;
+            var dish = _step.value;
 
-            this._addDish(_dish);
+            this._addDish(dish);
           }
         } catch (err) {
           _didIteratorError = true;
@@ -5291,7 +5343,7 @@ var DishStore = function (_EventEmitter) {
 
         this.emit("change");
       } else if (payload.eventName === "dishes.added") {
-        this._addDish(dish);
+        this._addDish(payload.dish);
         this.emit("added", {
           tag: payload.tag
         });
@@ -6114,7 +6166,7 @@ function hour2(hour) {
 }
 
 },{"moment":71}],42:[function(require,module,exports){
-"use strict";
+'use strict';
 
 Object.defineProperty(exports, "__esModule", {
   value: true
@@ -6124,8 +6176,16 @@ exports.getCarbsInServing = getCarbsInServing;
 exports.getFatsInServing = getFatsInServing;
 exports.getProteinsInServing = getProteinsInServing;
 exports.nameFull = nameFull;
+exports.searchQueryToRegExp = searchQueryToRegExp;
+exports.filterDishesByQuery = filterDishesByQuery;
 
-var _date = require("./date.jsx");
+var _date = require('./date.jsx');
+
+var _escapeStringRegexp = require('escape-string-regexp');
+
+var _escapeStringRegexp2 = _interopRequireDefault(_escapeStringRegexp);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function sortDishes(dishes, order) {
   order = order.split(":");
@@ -6179,7 +6239,47 @@ function nameFull(dish) {
   return title;
 }
 
-},{"./date.jsx":41}],43:[function(require,module,exports){
+function searchQueryToRegExp(query) {
+  query = (0, _escapeStringRegexp2.default)(query);
+  query = query.replace(/\s+/, "\\s+");
+  var regexp = new RegExp('(?:^|[\\s-])' + query, 'i');
+  return regexp;
+}
+
+function filterDishesByQuery(query, dishes) {
+  var regexp = searchQueryToRegExp(query);
+  var result = [];
+  var _iteratorNormalCompletion = true;
+  var _didIteratorError = false;
+  var _iteratorError = undefined;
+
+  try {
+    for (var _iterator = dishes[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+      var dish = _step.value;
+
+      if (regexp.test(dish.title)) {
+        result.push(dish);
+      }
+    }
+  } catch (err) {
+    _didIteratorError = true;
+    _iteratorError = err;
+  } finally {
+    try {
+      if (!_iteratorNormalCompletion && _iterator.return) {
+        _iterator.return();
+      }
+    } finally {
+      if (_didIteratorError) {
+        throw _iteratorError;
+      }
+    }
+  }
+
+  return result;
+}
+
+},{"./date.jsx":41,"escape-string-regexp":43}],43:[function(require,module,exports){
 'use strict';
 
 var matchOperatorsRe = /[|\\{}()[\]^$+*?.]/g;

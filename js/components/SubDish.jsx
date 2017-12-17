@@ -13,7 +13,7 @@ class SubDish extends React.Component {
     this.pickTag = null
     this.state = {
       dishId: props.dishId || 0,
-      weight: props.weight || 0
+      weight: props.weight || ''
     };
   }
   componentDidMount() {

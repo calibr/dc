@@ -17,7 +17,7 @@ import escapeRegexp from 'escape-string-regexp'
 
 function buildState() {
   let settings = Settings.getSettings()
-  let dishes = DishStore.getDishes()
+  let dishes = DishStore.getDishesActive()
   let dishesSorted = dishes && settings && sortDishes(dishes, settings["dish-order"])
   return {
     dishes,
