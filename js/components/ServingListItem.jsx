@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import Dish from "../stores/Dish.jsx";
 import {loadDishes} from "../actions/actions.jsx";
 import {carbsToBu} from "../util/bu.jsx";
-import {calc} from "../util/calc.jsx";
+import {calc, round} from "../util/calc.jsx";
 import AbstractSwipeOut from './AbstractSwipeOut.jsx'
 
 var $ = require("../f7app").$
@@ -56,7 +56,7 @@ class ServingListItem extends AbstractSwipeOut {
         <div className="item-inner">
           <div className="item-title">{this.state.dish.title} ({this.state.dish.carbs})</div>
           <div className="item-after">
-            <span className="badge">{serving.weight}г./{buInServing}ХЕ</span>
+            <span className="badge">{serving.weight}г./{round(carbsInServing)}г.у.</span>
             <span className="badge">{units}U</span>
           </div>
         </div>

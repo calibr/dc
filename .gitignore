@@ -4,3 +4,5 @@ node_modules
 /config.php
 bower_components
 .DS_Store
+
+/vendor/

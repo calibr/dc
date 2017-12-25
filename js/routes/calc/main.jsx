@@ -1,6 +1,7 @@
 var app = require("../../f7app");
 var React = require("react");
 
+import moment from 'moment'
 import Meal from "../../stores/Meal.jsx";
 import Dish from "../../stores/Dish.jsx";
 import Settings from "../../stores/Settings.jsx";
@@ -10,6 +11,7 @@ import {
   endMeal, fetchSettings, setMealCoef, updateServing
 } from "../../actions/actions.jsx";
 import {display as displayAddServing} from "../../actions/addServing.jsx";
+import {addTreatment} from "../../actions/nightscout.jsx";
 import LoadingBox from "../../components/LoadingBox.jsx";
 import navigator from "../../navigator.jsx";
 import ServingListItem from "../../components/ServingListItem.jsx";
@@ -20,6 +22,7 @@ import {
 } from "../../util/coef.jsx";
 import {carbsToBu} from "../../util/bu.jsx";
 import {hour2} from '../../util/date.jsx'
+import {getCarbsInServing} from '../../util/dishes.jsx'
 
 class CalcMainPage extends React.Component {
   constructor() {
@@ -94,7 +97,13 @@ class CalcMainPage extends React.Component {
   onServingAte = (serving) => {
     updateServing(serving.id, {
       eaten: true
-    });
+    })
+    let dish = Dish.getById(serving.dish_id)
+    addTreatment({
+      carbs: getCarbsInServing(dish, serving.weight),
+      notes: dish.title,
+      sysTime: moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ')
+    })
     app.closeSwipeout()
   }
   onServingDidntEat = (serving) => {

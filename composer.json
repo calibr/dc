@@ -1,0 +1,13 @@
+{
+    "name": "calibr/diabetes",
+    "type": "project",
+    "authors": [
+        {
+            "name": "Calibr",
+            "email": "nope@nope.com"
+        }
+    ],
+    "require": {
+        "ramsey/uuid": "^3.7"
+    }
+}
