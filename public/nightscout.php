@@ -9,7 +9,7 @@ header("Content-Type: text/json;charset=utf-8");
 switch($_GET["a"]) {
   case "addTreatment":
     $nightscout = new Nightscout();
-    $res = $nightscout->addTreatment($_POST);
-    print json_encode($res);
+    $res = $nightscout->bufferTreatment($_POST);
+    print json_encode($_POST);
   break;
 }
