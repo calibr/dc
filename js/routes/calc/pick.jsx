@@ -5,7 +5,7 @@ import DishStore from "../../stores/Dish.jsx";
 import DishPickStore from "../../stores/DishPick.jsx";
 import Settings from "../../stores/Settings.jsx";
 import {loadDishes, fetchSettings, deleteDish} from "../../actions/actions.jsx";
-import {pickDish} from "../../actions/dishPicker.jsx";
+import {pickDish, goBack} from "../../actions/dishPicker.jsx";
 import LoadingBox from "../../components/LoadingBox.jsx";
 import {DishesPopoverShort} from "../../components/DishesPopover.jsx";
 import DishListItem from "../../components/DishListItem.jsx";
@@ -133,7 +133,7 @@ class DishesPickPage extends React.Component {
 
 class DishesPickPageNavBar extends React.Component {
   onBackClick() {
-    navigator.back()
+    goBack()
   }
   render() {
     return <div className="navbar">

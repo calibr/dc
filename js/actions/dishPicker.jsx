@@ -8,6 +8,10 @@ export var pickDish = function(data) {
     id: data.id,
     tag: data.tag
   })
+  goBack()
+}
+
+export var goBack = function() {
   var returnTo = DishPickStore.getReturnTo()
   if(returnTo) {
     navigator.navigate(returnTo)

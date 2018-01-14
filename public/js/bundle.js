@@ -478,7 +478,7 @@ var display = exports.display = function display(id) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.display = exports.pickDish = undefined;
+exports.display = exports.goBack = exports.pickDish = undefined;
 
 var _dispatcher = require("../dispatcher.jsx");
 
@@ -500,6 +500,10 @@ var pickDish = exports.pickDish = function pickDish(data) {
     id: data.id,
     tag: data.tag
   });
+  goBack();
+};
+
+var goBack = exports.goBack = function goBack() {
   var returnTo = _DishPick2.default.getReturnTo();
   if (returnTo) {
     _navigator2.default.navigate(returnTo);
@@ -2754,7 +2758,7 @@ var DishesPickPageNavBar = function (_React$Component2) {
   _createClass(DishesPickPageNavBar, [{
     key: "onBackClick",
     value: function onBackClick() {
-      _navigator2.default.back();
+      (0, _dishPicker.goBack)();
     }
   }, {
     key: "render",
