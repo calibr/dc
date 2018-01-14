@@ -50,3 +50,10 @@ export function changeTitle(title) {
     title
   })
 }
+
+export function changeTotalWeight(value) {
+  Dispatcher.dispatch({
+    eventName: 'addComplexDish.changeTotalWeight',
+    value
+  })
+}

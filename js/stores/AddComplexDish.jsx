@@ -67,6 +67,10 @@ class AddComplexDish extends EventEmitter {
       this.title = payload.title
       this.emit('change')
     }
+    else if(payload.eventName === 'addComplexDish.changeTotalWeight') {
+      this.totalWeight = payload.value
+      this.emit('change')
+    }
   }
 }
 

@@ -6,7 +6,8 @@ use Ramsey\Uuid\Uuid;
 
 class NightScout {
   // delay after adding treatments after which they should be flushed to nightscout
-  private $treatmentDelay = 30;
+  // TODO make it configurable
+  private $treatmentDelay = 300;
   public function flushTreatmentsIfNeed() {
     $now = time();
     $maxTime = DB::inst()->first("SELECT MAX(`time`) FROM `treatments_buffer`");
@@ -53,6 +54,10 @@ class NightScout {
       return $row['id'];
     }, $rows);
     DB::inst()->q('DELETE FROM `treatments_buffer` WHERE `id` IN ('.implode(',', $ids).')');
+    if(!empty($result['carbs'])) {
+      // round carbs to integer
+      $result['carbs'] = round($result['carbs']);
+    }
     $this->addTreatment($result);
   }
   public function bufferTreatment($data) {

@@ -4,6 +4,7 @@ var app = require("../f7app");
 import navigator from "../navigator.jsx";
 import {setDishOrder} from "../actions/actions.jsx";
 import Dish from '../stores/Dish.jsx'
+import AddComplexDish from '../stores/AddComplexDish.jsx'
 import Settings from "../stores/Settings.jsx";
 
 class DishesPopover extends React.Component {
@@ -34,6 +35,8 @@ class DishesPopover extends React.Component {
     app.closeModal();
   };
   onAddComplexDish = () => {
+    // need to reset AddComplexDish store first of all
+    AddComplexDish.reset()
     navigator.navigate("/dishes/addComplex");
     app.closeModal();
   };

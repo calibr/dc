@@ -4,7 +4,7 @@ const uuidV4 = require('uuid/v4');
 
 import navigator from "../../navigator.jsx";
 import {addDish} from "../../actions/actions.jsx";
-import {addSubDish, changeSubDish, changeTitle, deleteSubDish} from "../../actions/addComplexDish.jsx";
+import {addSubDish, changeSubDish, changeTitle, deleteSubDish, changeTotalWeight} from "../../actions/addComplexDish.jsx";
 import DishStore from "../../stores/Dish.jsx";
 import AddComplexDishStore from "../../stores/AddComplexDish.jsx";
 import Settings from "../../stores/Settings.jsx";
@@ -73,7 +73,8 @@ class AddComplexDishPage extends React.Component {
     var updateState = {
       totalWeight: value
     };
-    this.setState(updateState);
+    changeTotalWeight(value)
+    //this.setState(updateState);
   }
   render() {
     if(!this.state.dishes || !this.state.settings) {

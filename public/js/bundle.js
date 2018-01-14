@@ -329,6 +329,7 @@ exports.display = display;
 exports.changeSubDish = changeSubDish;
 exports.deleteSubDish = deleteSubDish;
 exports.changeTitle = changeTitle;
+exports.changeTotalWeight = changeTotalWeight;
 
 var _dispatcher = require("../dispatcher.jsx");
 
@@ -390,6 +391,13 @@ function changeTitle(title) {
   _dispatcher2.default.dispatch({
     eventName: 'addComplexDish.changeTitle',
     title: title
+  });
+}
+
+function changeTotalWeight(value) {
+  _dispatcher2.default.dispatch({
+    eventName: 'addComplexDish.changeTotalWeight',
+    value: value
   });
 }
 
@@ -913,6 +921,10 @@ var _Dish = require("../stores/Dish.jsx");
 
 var _Dish2 = _interopRequireDefault(_Dish);
 
+var _AddComplexDish = require("../stores/AddComplexDish.jsx");
+
+var _AddComplexDish2 = _interopRequireDefault(_AddComplexDish);
+
 var _Settings = require("../stores/Settings.jsx");
 
 var _Settings2 = _interopRequireDefault(_Settings);
@@ -962,6 +974,8 @@ var DishesPopover = function (_React$Component) {
     };
 
     _this.onAddComplexDish = function () {
+      // need to reset AddComplexDish store first of all
+      _AddComplexDish2.default.reset();
       _navigator2.default.navigate("/dishes/addComplex");
       app.closeModal();
     };
@@ -1079,7 +1093,7 @@ var DishesPopoverShort = exports.DishesPopoverShort = function (_DishesPopover) 
 
 exports.default = DishesPopover;
 
-},{"../actions/actions.jsx":1,"../f7app":17,"../navigator.jsx":18,"../stores/Dish.jsx":33,"../stores/Settings.jsx":38,"react":235}],11:[function(require,module,exports){
+},{"../actions/actions.jsx":1,"../f7app":17,"../navigator.jsx":18,"../stores/AddComplexDish.jsx":31,"../stores/Dish.jsx":33,"../stores/Settings.jsx":38,"react":235}],11:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3253,7 +3267,8 @@ var AddComplexDishPage = function (_React$Component) {
       var updateState = {
         totalWeight: value
       };
-      _this.setState(updateState);
+      (0, _addComplexDish.changeTotalWeight)(value);
+      //this.setState(updateState);
     };
 
     _this.state = getActualState();
@@ -5147,6 +5162,9 @@ var AddComplexDish = function (_EventEmitter) {
         this.dishPickSubDishUuid = payload.subDishUuid;
       } else if (payload.eventName === 'addComplexDish.changeTitle') {
         this.title = payload.title;
+        this.emit('change');
+      } else if (payload.eventName === 'addComplexDish.changeTotalWeight') {
+        this.totalWeight = payload.value;
         this.emit('change');
       }
     }
