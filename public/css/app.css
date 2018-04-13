@@ -39,6 +39,9 @@
 .serving-list-item .badge {
   margin-right: 5px;
 }
+.stt-list-item .badge {
+  margin-right: 5px;
+}
 
 .margin-auto {
   margin: auto;
@@ -115,7 +118,7 @@ ul.list-bottom-margin li:last-child {
 
 /* speech recognition dishes overlay */
 
-#speech-recognition-dishes-overlay {
+#speech-recognition-dishes-overlay.visible {
   position: fixed;
   left: 0;
   right: 0;
@@ -123,6 +126,10 @@ ul.list-bottom-margin li:last-child {
   bottom: 0;
   background: rgba(0,0,0,0.3);
   z-index: 5001;
+}
+
+#speech-recognition-dishes-overlay-inner {
+
 }
 
 #speech-recognition-dishes-overlay .dialog {
@@ -135,4 +142,12 @@ ul.list-bottom-margin li:last-child {
 
 #speech-recognition-dishes-overlay .dialog .list-block {
   margin-top: 10px;
+}
+
+.current-speech {
+  font-weight: bold;
+}
+
+.current-speech-placeholder {
+  font-style: italic;
 }

@@ -40,7 +40,7 @@ class ServingStore extends EventEmitter {
   dispatch(payload) {
     if(payload.eventName === "servings.added") {
       this._add(payload.serving);
-      this.emit("change");
+      this.emit("change", {tag: payload.tag});
     }
     else if(payload.eventName === "servings.updated") {
       this._add(payload.serving);

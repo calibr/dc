@@ -15,6 +15,13 @@ switch($_GET["a"]) {
   case "add":
     print json_encode(Serving::add($_POST));
   break;
+  case "import":
+    $servings = [];
+    foreach(@$_POST['serving'] as $serving) {
+      $servings[] = Serving::add($serving);
+    }
+    print json_encode(['servings' => $servings]);
+  break;
   case "update":
     print json_encode(Serving::update($_GET["id"], $_POST));
   break;

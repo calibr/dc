@@ -13,8 +13,11 @@ export class SpeechToText extends EventEmitter {
     this.onRecognitionResult = this.onRecognitionResult.bind(this)
     this.onRecognitionError = this.onRecognitionError.bind(this)
     this.onRecognitionEnd = this.onRecognitionEnd.bind(this)
+    this.results = []
+    this.language = null
   }
   start(language = 'ru') {
+    this.language = language
     this.nextItemIndex = 0
     this.langConfig = configs[language]
     let nochar = '[,\\.-_\\s]'
@@ -24,10 +27,18 @@ export class SpeechToText extends EventEmitter {
     this._start()
   }
   _start() {
+    /*
+    return setTimeout(() => {
+      this.emit('result', {
+        dishName: 'хлеб',
+        weight: 200
+      })
+      this.emit('end')
+    }, 1000)*/
     var recognition = new webkitSpeechRecognition()
     recognition.continuous = true
     recognition.interimResults = true
-    recognition.lang = language
+    recognition.lang = this.language
     recognition.onstart = this.onRecognitionStart
     recognition.onresult = this.onRecognitionResult
     recognition.onerror = this.onRecognitionError
@@ -39,7 +50,11 @@ export class SpeechToText extends EventEmitter {
     this.emit('start')
   }
   onRecognitionResult(event) {
+    if(event.currentTarget._finalized) {
+      return
+    }
     let results = event.results
+    console.log('result...')
     if(!results.length) {
       return
     }
@@ -52,32 +67,46 @@ export class SpeechToText extends EventEmitter {
     let text = phrases.join(' ')
     text = text.toLowerCase()
     console.log('raw', text)
-    // split on parts
-    let parts = text.split(this.nextRegExp)
-    parts = parts.map(part => part.trim())
-    parts = parts.filter(part => part.length > 0)
+
+    if(this.nextRegExp.test(text) || this.stopRegExp.test(text)) {
+      console.log('found stopword...')
+      event.currentTarget._finalized = true
+    }
+    else {
+      this.emit('raw', text)
+      return
+    }
+    this.emit('raw', '')
+    this.recognition.stop()
+    console.log('fetching result...')
+    let numberM = text.match(/([0-9\.]+)/)
+    if(numberM) {
+      let d = {}
+      let grams = numberM[1]
+      let dishName = text.split(grams)[0]
+      d.dishName = dishName.trim()
+      d.weight = grams
+      this.results.push(d)
+      // pasing
+      this.emit('result', d)
+    }
     if(this.stopRegExp.test(text)) {
-      this.recognition.stop()
+      this.stop()
     }
-    // pasing
-    let data = []
-    for(let part of parts) {
-      let numberM = part.match(/([0-9\.]+)/)
-      if(numberM) {
-        let d = {}
-        let grams = numberM[1]
-        let dishName = part.split(grams)[0]
-        d.dishName = dishName.trim()
-        d.weight = grams
-        data.push(d)
-      }
+    else {
+      console.log('next word...')
+      this.next()
     }
-    this.emit('parts', data)
   }
   onRecognitionError() {
   }
   onRecognitionEnd() {
+  }
+  stop() {
     this.emit('end')
+  }
+  next() {
+    this._start()
   }
 }
 

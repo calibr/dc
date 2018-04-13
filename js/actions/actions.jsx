@@ -1,7 +1,7 @@
 import 'whatwg-fetch'
 import Dispatcher from "../dispatcher.jsx";
 
-const ROOT = "/diab";
+export const ROOT = "/diab";
 
 function buildQuery(query) {
   var arr = [];

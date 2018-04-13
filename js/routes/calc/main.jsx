@@ -12,6 +12,7 @@ import {
 } from "../../actions/actions.jsx";
 import {display as displayAddServing} from "../../actions/addServing.jsx";
 import {addTreatment} from "../../actions/nightscout.jsx";
+import {showDialog as showSttDialog} from "../../actions/stt.jsx";
 import LoadingBox from "../../components/LoadingBox.jsx";
 import navigator from "../../navigator.jsx";
 import ServingListItem from "../../components/ServingListItem.jsx";
@@ -239,7 +240,7 @@ class CalcMainPageNavBar extends React.Component {
     displayAddServing()
   }
   onVoiceAdd() {
-
+    showSttDialog()
   }
   render() {
     return <div className="navbar-wrapper">
