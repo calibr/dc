@@ -1810,6 +1810,7 @@ var SpeechRecognitionDishes = function (_React$Component) {
     _this.onSttEnd = _this.onSttEnd.bind(_this);
     _this.onMealChange = _this.onMealChange.bind(_this);
     _this.onServingChange = _this.onServingChange.bind(_this);
+    _this.cancel = _this.cancel.bind(_this);
     return _this;
   }
 
@@ -1849,6 +1850,7 @@ var SpeechRecognitionDishes = function (_React$Component) {
         stt.on('result', this.onResult);
         stt.on('raw', this.onSttRawText);
         stt.start();
+        this.stt = stt;
       } else {
         _f7app2.default.$('#speech-recognition-dishes-overlay')[0].classList.remove('visible');
       }
@@ -1964,6 +1966,12 @@ var SpeechRecognitionDishes = function (_React$Component) {
         let keywords = parts.map(p => p.dishName)
         dishLookup(keywords)
       }*/
+    }
+  }, {
+    key: "cancel",
+    value: function cancel() {
+      this.stt.cancel();
+      (0, _stt.hideDialog)();
     }
   }, {
     key: "checkCanClose",
@@ -2148,7 +2156,7 @@ var SpeechRecognitionDishes = function (_React$Component) {
               { className: "content-block text-center" },
               React.createElement(
                 "a",
-                { href: "#", className: "button button-fill color-red" },
+                { href: "#", className: "button button-fill color-red", onClick: this.cancel },
                 "\u041E\u0442\u043C\u0435\u043D\u0430"
               )
             )
@@ -7299,6 +7307,11 @@ var SpeechToText = exports.SpeechToText = function (_EventEmitter) {
   }, {
     key: 'onRecognitionEnd',
     value: function onRecognitionEnd() {}
+  }, {
+    key: 'cancel',
+    value: function cancel() {
+      this.recognition.stop();
+    }
   }, {
     key: 'stop',
     value: function stop() {

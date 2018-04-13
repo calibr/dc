@@ -102,6 +102,9 @@ export class SpeechToText extends EventEmitter {
   }
   onRecognitionEnd() {
   }
+  cancel() {
+    this.recognition.stop()
+  }
   stop() {
     this.emit('end')
   }

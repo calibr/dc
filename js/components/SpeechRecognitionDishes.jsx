@@ -34,6 +34,7 @@ class SpeechRecognitionDishes extends React.Component {
     this.onSttEnd = this.onSttEnd.bind(this)
     this.onMealChange = this.onMealChange.bind(this)
     this.onServingChange = this.onServingChange.bind(this)
+    this.cancel = this.cancel.bind(this)
   }
   componentDidMount() {
     STTStore.on('change', this.onSttStoreChange)
@@ -63,6 +64,7 @@ class SpeechRecognitionDishes extends React.Component {
       stt.on('result', this.onResult)
       stt.on('raw', this.onSttRawText)
       stt.start()
+      this.stt = stt
     }
     else {
       f7app.$('#speech-recognition-dishes-overlay')[0].classList.remove('visible')
@@ -146,6 +148,10 @@ class SpeechRecognitionDishes extends React.Component {
       let keywords = parts.map(p => p.dishName)
       dishLookup(keywords)
     }*/
+  }
+  cancel() {
+    this.stt.cancel()
+    hideDialog()
   }
   checkCanClose() {
     if(this.state.active) {
@@ -243,7 +249,7 @@ class SpeechRecognitionDishes extends React.Component {
           </div>
           {currentSpeech}
           <div className="content-block text-center">
-            <a href="#" className="button button-fill color-red">
+            <a href="#" className="button button-fill color-red" onClick={this.cancel}>
               Отмена
             </a>
           </div>
