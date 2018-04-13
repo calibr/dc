@@ -112,3 +112,27 @@
 ul.list-bottom-margin li:last-child {
   margin-bottom: 100px;
 }
+
+/* speech recognition dishes overlay */
+
+#speech-recognition-dishes-overlay {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.3);
+  z-index: 5001;
+}
+
+#speech-recognition-dishes-overlay .dialog {
+  background: #efeff4;
+  border-radius: 10px;
+  margin: 5px;
+  padding-top: 1px;
+  padding-bottom: 1px;
+}
+
+#speech-recognition-dishes-overlay .dialog .list-block {
+  margin-top: 10px;
+}

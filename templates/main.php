@@ -19,6 +19,8 @@
 
   <div class="panel-overlay"></div>
 
+  <div id="speech-recognition-dishes-overlay"></div>
+
   <div class="panel panel-left panel-reveal">
     <div class="content-block">
       <p>Left panel content goes here</p>

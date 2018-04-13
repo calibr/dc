@@ -23,6 +23,7 @@ import {
 import {carbsToBu} from "../../util/bu.jsx";
 import {hour2} from '../../util/date.jsx'
 import {getCarbsInServing} from '../../util/dishes.jsx'
+import {SpeechToText} from '../../util/stt/speechToText.jsx'
 
 class CalcMainPage extends React.Component {
   constructor() {
@@ -237,6 +238,9 @@ class CalcMainPageNavBar extends React.Component {
   onServingAdd() {
     displayAddServing()
   }
+  onVoiceAdd() {
+
+  }
   render() {
     return <div className="navbar-wrapper">
       <div className="left">
@@ -247,9 +251,11 @@ class CalcMainPageNavBar extends React.Component {
       </div>
       <div className="center sliding">Рассчет дозы</div>
       <div className="right">
-        {this.state.activeMeal ? <a href="#" className="button button-fill color-green" onClick={this.onServingAdd}>
-          + порция
-        </a> : null}
+        {this.state.activeMeal ?
+          <p className="row">
+            <a href="#" className="button button-fill color-red" onClick={this.onVoiceAdd}>голос</a>
+            <a href="#" className="button button-fill color-green" onClick={this.onServingAdd}>+ порция</a>
+          </p> : null}
       </div>
     </div>
   }

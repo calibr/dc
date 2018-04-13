@@ -1,6 +1,7 @@
 var ReactDom = require("react-dom");
 var React = require("react");
 import navigator from "./navigator.jsx";
+import SpeechRecognitionDishes from './components/SpeechRecognitionDishes.jsx'
 
 require("./renderer.jsx");
 
@@ -51,15 +52,8 @@ app.getActualPageUrl = (url) => {
   return url.replace(/^.+?\?url=/, "")
 }
 
-
-setTimeout(() => {
-  //document.querySelector('[href="#dishes-view"]').click()
-  //navigator.navigate('/calc/pick')
-}, 1000)
-
 // initial navigation
 navigator.navigate("/calc");
-//navigator.navigate("/dishes");
 
 $(document).on("tab:show", (event) => {
   var viewName = event.target.getAttribute("id").replace("-view", "");
@@ -78,3 +72,6 @@ $(document).on('page:beforeremove', (event) => {
     }
   }
 });
+
+
+ReactDom.render(<SpeechRecognitionDishes/>, $('#speech-recognition-dishes-overlay')[0]);

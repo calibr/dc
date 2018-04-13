@@ -1,5 +1,7 @@
 var EventEmitter = require("events");
 import Dispatcher from "../dispatcher.jsx";
+import XRegExp from 'xregexp'
+import SimpleIndex from '../util/SimpleIndex.jsx'
 
 class DishStore extends EventEmitter {
   dishes: null;
@@ -9,7 +11,14 @@ class DishStore extends EventEmitter {
     super();
     this.order = ["carbs", "asc"];
     this.idMap = new Map()
+    this.wordSplitRegExp = new XRegExp('\W+')
+    this.wordsIndex = new SimpleIndex()
     Dispatcher.register(this.dispatch.bind(this));
+  }
+  _prepare(dish) {
+    if(!dish.words) {
+      dish.words = XRegExp.split(dish.title.toLowerCase(), this.wordSplitRegExp)
+    }
   }
   _addDish(dish) {
     this.dishes.push(dish)
@@ -17,6 +26,15 @@ class DishStore extends EventEmitter {
     if(!dish.deleted) {
       this.dishesActive.push(dish)
     }
+  }
+  _updateDish(dish) {
+    for(let i = 0; i != this.dishes.length; i++) {
+      if(this.dishes[i].id == dish.id) {
+        this.dishes[i] = dish;
+        break;
+      }
+    }
+    this.idMap.set(dish.id, dish)
   }
   _clearDishes() {
     this.idMap.clear()
@@ -57,13 +75,7 @@ class DishStore extends EventEmitter {
       this.emit("change");
     }
     else if(payload.eventName === "dishes.updated") {
-      for(let i = 0; i != this.dishes.length; i++) {
-        if(this.dishes[i].id == payload.dish.id) {
-          this.dishes[i] = payload.dish;
-          break;
-        }
-      }
-      this.idMap.set(payload.dish.id, payload.dish)
+      this._updateDish(payload.dish)
       this.emit("change");
     }
     else if(payload.eventName === "dishes.deleted") {
