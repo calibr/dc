@@ -169,6 +169,6 @@ ul.list-bottom-margin li:last-child {
 }
 
 .stt-pick-dish-list {
-  max-height: 300px;
+  max-height: 200px;
   overflow: auto;
 }
