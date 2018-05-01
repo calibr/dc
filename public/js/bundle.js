@@ -709,6 +709,9 @@ Object.defineProperty(exports, "__esModule", {
 exports.dishLookup = dishLookup;
 exports.showDialog = showDialog;
 exports.hideDialog = hideDialog;
+exports.startRecognize = startRecognize;
+exports.changeWeight = changeWeight;
+exports.cancelRecognition = cancelRecognition;
 
 require('whatwg-fetch');
 
@@ -720,13 +723,16 @@ var _uuid = require('uuid');
 
 var _uuid2 = _interopRequireDefault(_uuid);
 
+var _speechToText = require('../util/stt/speechToText.jsx');
+
 var _setup = require('../setup.jsx');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function dishLookup(keywords) {
+var sttByTag = {};
+
+function dishLookup(keywords, tag) {
   var formData = new FormData();
-  var reqId = _uuid2.default.v4();
   formData.append('keywords', JSON.stringify(keywords));
   fetch(_setup.ROOT + "/stt.php?a=keywordsToDishes", {
     method: "POST",
@@ -737,10 +743,9 @@ function dishLookup(keywords) {
     _dispatcher2.default.dispatch({
       eventName: "stt.keywordsToDishes",
       data: responseData,
-      reqId: reqId
+      tag: tag
     });
   });
-  return reqId;
 }
 
 function showDialog() {
@@ -757,7 +762,67 @@ function hideDialog() {
   });
 }
 
-},{"../dispatcher.jsx":19,"../setup.jsx":33,"uuid":244,"whatwg-fetch":249}],9:[function(require,module,exports){
+function startRecognize() {
+  var tag = _uuid2.default.v4();
+
+  setTimeout(function () {
+    var stt = new _speechToText.SpeechToText();
+    sttByTag[tag] = stt;
+    stt.on('start', function () {});
+    stt.on('end', function onSttEnd() {
+      _dispatcher2.default.dispatch({
+        eventName: "stt.end",
+        tag: tag
+      });
+      delete sttByTag[tag];
+    });
+    stt.on('result', function onSttResult(res) {
+      dishLookup([res.dishName], tag);
+      _dispatcher2.default.dispatch({
+        eventName: "stt.resut",
+        result: res,
+        tag: tag
+      });
+    });
+    stt.on('noresult', function onSttNoResult(res) {
+      _dispatcher2.default.dispatch({
+        eventName: "stt.noresult",
+        tag: tag
+      });
+    });
+    stt.on('raw', function onSttRaw(raw) {
+      _dispatcher2.default.dispatch({
+        eventName: "stt.raw",
+        text: raw,
+        tag: tag
+      });
+    });
+    stt.start();
+
+    _dispatcher2.default.dispatch({
+      eventName: "stt.start",
+      tag: tag
+    });
+  }, 0);
+
+  return { tag: tag };
+}
+
+function changeWeight(weight) {
+  _dispatcher2.default.dispatch({
+    eventName: "stt.weightChange",
+    weight: weight
+  });
+}
+
+function cancelRecognition(tag) {
+  if (!sttByTag[tag]) {
+    return;
+  }
+  sttByTag[tag].cancel();
+}
+
+},{"../dispatcher.jsx":19,"../setup.jsx":33,"../util/stt/speechToText.jsx":50,"uuid":244,"whatwg-fetch":249}],9:[function(require,module,exports){
 "use strict";
 
 var _navigator = require("./navigator.jsx");
@@ -1747,8 +1812,6 @@ var _Dish = require("../stores/Dish.jsx");
 
 var _Dish2 = _interopRequireDefault(_Dish);
 
-var _speechToText = require("../util/stt/speechToText.jsx");
-
 var _stt = require("../actions/stt.jsx");
 
 var _STT = require("../stores/STT.jsx");
@@ -1773,6 +1836,10 @@ var _f7app = require("../f7app");
 
 var _f7app2 = _interopRequireDefault(_f7app);
 
+var _LoadingBox = require("./LoadingBox.jsx");
+
+var _LoadingBox2 = _interopRequireDefault(_LoadingBox);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -1793,24 +1860,23 @@ var SpeechRecognitionDishes = function (_React$Component) {
     var _this = _possibleConstructorReturn(this, (SpeechRecognitionDishes.__proto__ || Object.getPrototypeOf(SpeechRecognitionDishes)).call(this, props));
 
     _this.state = {
-      items: {},
-      weights: {},
-      reqIds: [],
-      loadingReqs: [],
+      stage: '',
+      reqId: '',
       rawText: '',
-      active: true,
-      importTag: null,
-      visible: false
+      active: false,
+      visible: false,
+      keywordsToDishes: null,
+      sttResult: null,
+      dishIndex: 0,
+      weight: 0,
+      tag: null
     };
 
-    _this.onResult = _this.onResult.bind(_this);
     _this.onSttStoreChange = _this.onSttStoreChange.bind(_this);
     _this.onSttVisibilityChange = _this.onSttVisibilityChange.bind(_this);
-    _this.onSttRawText = _this.onSttRawText.bind(_this);
-    _this.onSttEnd = _this.onSttEnd.bind(_this);
-    _this.onMealChange = _this.onMealChange.bind(_this);
-    _this.onServingChange = _this.onServingChange.bind(_this);
     _this.cancel = _this.cancel.bind(_this);
+    _this.add = _this.add.bind(_this);
+    _this.again = _this.again.bind(_this);
     return _this;
   }
 
@@ -1819,16 +1885,12 @@ var SpeechRecognitionDishes = function (_React$Component) {
     value: function componentDidMount() {
       _STT2.default.on('change', this.onSttStoreChange);
       _STT2.default.on('visibilityChange', this.onSttVisibilityChange);
-      _Meal2.default.on('change', this.onMealChange);
-      _Serving2.default.on('change', this.onServingChange);
     }
   }, {
     key: "componentWillUnmount",
     value: function componentWillUnmount() {
       _STT2.default.removeListener('change', this.onSttStoreChange);
       _STT2.default.removeListener('visibilityChange', this.onSttVisibilityChange);
-      _Meal2.default.removeListener('change', this.onMealChange);
-      _Serving2.default.removeListener('change', this.onServingChange);
     }
   }, {
     key: "_partId",
@@ -1842,289 +1904,157 @@ var SpeechRecognitionDishes = function (_React$Component) {
       if (_STT2.default.visible) {
         // kind of a wrong way but so far I am not sure how to do this better
         _f7app2.default.$('#speech-recognition-dishes-overlay')[0].classList.add('visible');
-        var stt = new _speechToText.SpeechToText();
-        stt.on('start', function () {
-          console.log('stt start');
-        });
-        stt.on('end', this.onSttEnd);
-        stt.on('result', this.onResult);
-        stt.on('raw', this.onSttRawText);
-        stt.start();
-        this.stt = stt;
+        this.initRecognize();
       } else {
         _f7app2.default.$('#speech-recognition-dishes-overlay')[0].classList.remove('visible');
       }
     }
   }, {
-    key: "onSttRawText",
-    value: function onSttRawText(rawText) {
-      this.setState({ rawText: rawText });
-    }
-  }, {
-    key: "onServingChange",
-    value: function onServingChange(info) {
-      if (!info) {
-        return;
-      }
-      if (info.tag === this.state.importTag) {
-        setTimeout(function () {
-          (0, _stt.hideDialog)();
-        }, 0);
-      }
-    }
-  }, {
-    key: "onSttEnd",
-    value: function onSttEnd() {
-      this.setState({ active: false });
-      this.checkCanClose();
-    }
-  }, {
     key: "onSttStoreChange",
     value: function onSttStoreChange() {
-      var items = this.state.items;
-      var _iteratorNormalCompletion = true;
-      var _didIteratorError = false;
-      var _iteratorError = undefined;
-
-      try {
-        for (var _iterator = this.state.reqIds[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-          var reqId = _step.value;
-
-          if (items[reqId]) {
-            continue;
-          }
-          var res = _STT2.default.results.get(reqId);
-          if (!res) {
-            continue;
-          }
-          var dishesIds = res[Object.keys(res)[0]].dishes;
-          var dishId = dishesIds[0];
-          items[reqId] = { dishId: dishId };
-
-          var loadingReqs = this.state.loadingReqs;
-          var index = loadingReqs.indexOf(reqId);
-          if (index >= 0) {
-            loadingReqs.splice(index, 1);
-          }
-          this.setState({ items: items, loadingReqs: loadingReqs });
-          this.checkCanClose();
-        }
-      } catch (err) {
-        _didIteratorError = true;
-        _iteratorError = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion && _iterator.return) {
-            _iterator.return();
-          }
-        } finally {
-          if (_didIteratorError) {
-            throw _iteratorError;
-          }
-        }
-      }
+      this.setState({
+        stage: _STT2.default.stage,
+        active: _STT2.default.active,
+        rawText: _STT2.default.rawText,
+        keywordsToDishes: _STT2.default.keywordsToDishes,
+        sttResult: _STT2.default.result,
+        weight: _STT2.default.weight
+      });
     }
   }, {
-    key: "onMealChange",
-    value: function onMealChange() {
-      this.checkCanClose();
+    key: "onWeightChange",
+    value: function onWeightChange(event) {
+      var value = event.target.value;
+      if (value !== '') {
+        value = Math.abs(event.target.value);
+      }
+      (0, _stt.changeWeight)(value);
     }
   }, {
-    key: "onResult",
-    value: function onResult(result) {
-      var reqIds = this.state.reqIds;
-      var weights = this.state.weights;
-      var loadingReqs = this.state.loadingReqs;
-      var reqId = (0, _stt.dishLookup)([result.dishName]);
-      reqIds.push(reqId);
-      loadingReqs.push(reqId);
-      weights[reqId] = result.weight;
-      this.setState({ weights: weights, reqIds: reqIds, loadingReqs: loadingReqs });
-      /*
-      let items = this.state.items
-      let relookup = false
-      // each item in the state corresponds to item from parts array
-      for(let i = 0; i != parts.length; i++) {
-        let needToFind = false
-        let part = parts[i]
-        if(i > items.length - 1) {
-          // it is new part
-          needToFind = true
-        }
-        else {
-          // check if the old part has been changed
-          if(part.dishName !== item.dishName) {
-            needToFind = true
-          }
-        }
-        if(!needToFind) {
-          continue
-        }
-        relookup = true
-      }
-      if(relookup) {
-        let keywords = parts.map(p => p.dishName)
-        dishLookup(keywords)
-      }*/
+    key: "onDishClick",
+    value: function onDishClick(dishIndex) {
+      this.setState({ dishIndex: dishIndex });
     }
   }, {
     key: "cancel",
     value: function cancel() {
-      this.stt.cancel();
+      (0, _stt.cancelRecognition)(this.state.tag);
       (0, _stt.hideDialog)();
     }
   }, {
-    key: "checkCanClose",
-    value: function checkCanClose() {
-      if (this.state.active) {
-        return;
-      }
-      if (this.state.loadingReqs.length) {
-        return;
-      }
-      if (!_Meal2.default.getActive()) {
-        console.log('Creating meal...');
-        // need to start meal
-        var coefs = (0, _coef.getCoefsFromSettings)(this.state.settings);
-        var k = (0, _coef.getCurrentCoef)(coefs);
-        (0, _actions.createMeal)({
-          coef: k
-        });
-        return;
-      }
-      var mealId = _Meal2.default.getActive().id;
+    key: "again",
+    value: function again() {
+      this.initRecognize();
+    }
+  }, {
+    key: "add",
+    value: function add() {
+      var lookupRes = this.state.keywordsToDishes[this.state.sttResult.dishName];
+      var dishId = lookupRes.dishes[this.state.dishIndex];
+      var weight = this.state.weight;
       var servings = [];
-      var _iteratorNormalCompletion2 = true;
-      var _didIteratorError2 = false;
-      var _iteratorError2 = undefined;
-
-      try {
-        for (var _iterator2 = this.state.reqIds[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-          var reqId = _step2.value;
-
-          var item = this.state.items[reqId];
-          var weight = this.state.weights[reqId];
-          if (!item || !weight) {
-            continue;
-          }
-          servings.push({
-            meal_id: mealId,
-            dish_id: item.dishId,
-            weight: weight
-          });
-        }
-      } catch (err) {
-        _didIteratorError2 = true;
-        _iteratorError2 = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion2 && _iterator2.return) {
-            _iterator2.return();
-          }
-        } finally {
-          if (_didIteratorError2) {
-            throw _iteratorError2;
-          }
-        }
-      }
-
-      this.setState({
-        importTag: (0, _servings.importServings)(servings)
+      servings.push({
+        meal_id: _Meal2.default.activeMeal.id,
+        dish_id: dishId,
+        weight: weight
       });
+      (0, _servings.importServings)(servings);
+      this.initRecognize();
+    }
+  }, {
+    key: "initRecognize",
+    value: function initRecognize() {
+      var _this2 = this;
+
+      var tag = (0, _stt.startRecognize)();
+      setTimeout(function () {
+        _this2.setState({
+          tag: tag,
+          dishIndex: 0
+        });
+      }, 0);
     }
   }, {
     key: "render",
     value: function render() {
-      var _this2 = this;
+      var _this3 = this;
 
       if (!this.state.visible) {
         return React.createElement("div", null);
       }
-      var readyItems = this.state.reqIds.map(function (reqId) {
-        var item = _this2.state.items[reqId];
-        if (!item) {
-          return;
-        }
-        var weight = _this2.state.weights[reqId];
-        if (!item.dishId) {
-          return null;
-        }
-        var dish = _Dish2.default.getById(item.dishId);
-        return React.createElement(
-          "li",
-          { key: reqId, className: "stt-list-item" },
-          React.createElement(
-            "div",
-            { className: "item-content" },
-            React.createElement(
-              "div",
-              { className: "item-inner" },
+      var readyItems = [];
+      if (this.state.stage === 'list') {
+        (function () {
+          var lookupRes = _this3.state.keywordsToDishes[_this3.state.sttResult.dishName];
+          var i = -1;
+          // show only first 10 items
+          readyItems = lookupRes.dishes.map(function (dishId) {
+            var dish = _Dish2.default.getById(dishId);
+            i++;
+            return React.createElement(
+              "li",
+              { key: "dish-choose-" + dishId, className: "stt-list-item" },
               React.createElement(
-                "div",
-                { className: "item-title" },
-                dish.title
-              ),
-              React.createElement(
-                "div",
-                { className: "item-after" },
+                "label",
+                { className: "label-radio item-content" },
+                React.createElement("input", { type: "radio", name: "stt-dish-choose", value: dishId, onChange: _this3.onDishClick.bind(_this3, i), checked: i === _this3.state.dishIndex }),
                 React.createElement(
-                  "span",
-                  { className: "badge" },
-                  dish.carbs,
-                  " \u0433.\u0443."
-                ),
-                React.createElement(
-                  "span",
-                  { className: "badge" },
-                  weight,
-                  " \u0433."
+                  "div",
+                  { className: "item-inner" },
+                  React.createElement(
+                    "div",
+                    { className: "item-title" },
+                    dish.title
+                  ),
+                  React.createElement(
+                    "div",
+                    { className: "item-after" },
+                    React.createElement(
+                      "span",
+                      { className: "badge" },
+                      dish.carbs,
+                      " \u0433.\u0443."
+                    )
+                  )
                 )
               )
-            )
-          )
-        );
-      });
+            );
+          });
+        })();
+      }
       var listItems = readyItems.slice();
       var currentSpeech = void 0;
-      if (this.state.active) {
-        listItems.push(React.createElement(
-          "li",
-          { key: "loading" },
-          React.createElement(
-            "div",
-            { className: "item-content" },
-            React.createElement(
-              "div",
-              { className: "item-inner" },
-              React.createElement(
-                "div",
-                { className: "item-title" },
-                React.createElement("i", { className: "fa fa-spinner fa-spin" })
-              ),
-              React.createElement(
-                "div",
-                { className: "item-after" },
-                React.createElement(
-                  "span",
-                  { className: "badge" },
-                  React.createElement("i", { className: "fa fa-spinner fa-spin" })
-                )
-              )
-            )
-          )
-        ));
-        currentSpeech = React.createElement(
+      var loader = void 0;
+      currentSpeech = React.createElement(
+        "div",
+        null,
+        this.state.rawText ? React.createElement(
           "div",
-          null,
-          this.state.rawText ? React.createElement(
-            "div",
-            { className: "content-block text-center current-speech" },
-            this.state.rawText
-          ) : React.createElement(
-            "div",
-            { className: "content-block text-center current-speech-placeholder" },
-            "\u041F\u0440\u043E\u0438\u0437\u043D\u0435\u0441\u0438\u0442\u0435 \u043F\u0440\u043E\u0434\u0443\u043A\u0442..."
-          )
+          { className: "content-block text-center current-speech" },
+          this.state.rawText
+        ) : React.createElement(
+          "div",
+          { className: "content-block text-center current-speech-placeholder" },
+          "\u041F\u0440\u043E\u0438\u0437\u043D\u0435\u0441\u0438\u0442\u0435 \u043F\u0440\u043E\u0434\u0443\u043A\u0442..."
+        )
+      );
+      if (this.state.stage === 'lookup') {
+        loader = React.createElement(_LoadingBox2.default, null);
+      }
+      var noResultText = void 0;
+      if (this.state.stage === 'noresult') {
+        noResultText = React.createElement(
+          "div",
+          { className: "content-block text-center color-red" },
+          "\u041D\u0435 \u0432\u0435\u0440\u043D\u044B\u0439 \u0444\u043E\u0440\u043C\u0430\u0442 \u0442\u0435\u043A\u0441\u0442\u0430"
+        );
+      }
+      var notFoundText = void 0;
+      if (this.state.stage === 'notfound') {
+        notFoundText = React.createElement(
+          "div",
+          { className: "content-block text-center color-red" },
+          "\u041F\u043E \u0432\u0430\u0448\u0435\u0439 \u0444\u0440\u0430\u0437\u0435 \u043D\u0438\u0447\u0435\u0433\u043E \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D\u043E"
         );
       }
       return React.createElement(
@@ -2139,26 +2069,69 @@ var SpeechRecognitionDishes = function (_React$Component) {
             React.createElement(
               "div",
               null,
-              "\u041F\u0440\u043E\u0438\u0437\u043D\u0435\u0441\u0438\u0442\u0435 \u043D\u0430\u0437\u0432\u0430\u043D\u0438\u0435 \u0431\u043B\u044E\u0434\u0430 \u0438 \u043A\u043E\u043B\u0438\u0447\u0435\u0441\u0442\u0432\u043E \u0433\u0440\u0430\u043C\u043C, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440: \"\u041A\u043E\u0442\u043B\u0435\u0442\u0430 \u043A\u0438\u0435\u0432\u0441\u043A\u0430\u044F 39\". \u0427\u0442\u043E\u0431\u044B \u0434\u043E\u0431\u0430\u0432\u0438\u0442\u044C \u0435\u0449\u0435 \u043F\u043E\u0440\u0446\u0438\u044E \u043F\u0440\u043E\u0438\u0437\u043D\u0435\u0441\u0438\u0442\u0435 \"\u0414\u0430\u043B\u044C\u0448\u0435\". \u0427\u0442\u043E\u0431\u044B \u0437\u0430\u043A\u043E\u043D\u0447\u0438\u0442\u044C \u0432\u0432\u043E\u0434 \u043F\u0440\u043E\u0438\u0437\u043D\u0435\u0441\u0438\u0442\u0435 \"\u041A\u043E\u043D\u0435\u0446\"."
+              "\u041F\u0440\u043E\u0438\u0437\u043D\u0435\u0441\u0438\u0442\u0435 \u043D\u0430\u0437\u0432\u0430\u043D\u0438\u0435 \u0431\u043B\u044E\u0434\u0430 \u0438 \u043A\u043E\u043B\u0438\u0447\u0435\u0441\u0442\u0432\u043E \u0433\u0440\u0430\u043C\u043C, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440: \"\u041A\u043E\u0442\u043B\u0435\u0442\u0430 \u043A\u0438\u0435\u0432\u0441\u043A\u0430\u044F 39\"."
             ),
             React.createElement(
               "div",
-              { className: "list-block" },
+              { className: "list-block stt-pick-dish-list" },
               React.createElement(
                 "ul",
                 null,
                 listItems
               )
             ),
+            this.state.stage === 'list' ? React.createElement(
+              "div",
+              { className: "list-block" },
+              React.createElement(
+                "ul",
+                null,
+                React.createElement(
+                  "li",
+                  null,
+                  React.createElement(
+                    "div",
+                    { className: "item-content" },
+                    React.createElement(
+                      "div",
+                      { className: "item-inner" },
+                      React.createElement(
+                        "div",
+                        { className: "item-title label" },
+                        "\u0412\u0435\u0441"
+                      ),
+                      React.createElement(
+                        "div",
+                        { className: "item-input" },
+                        React.createElement("input", { type: "number", value: this.state.weight, onChange: this.onWeightChange })
+                      )
+                    )
+                  )
+                )
+              )
+            ) : null,
             currentSpeech,
+            loader,
+            noResultText,
+            notFoundText,
             React.createElement(
               "div",
-              { className: "content-block text-center" },
+              { className: "content-block text-center row flex-buttons" },
               React.createElement(
-                "a",
-                { href: "#", className: "button button-fill color-red", onClick: this.cancel },
+                "button",
+                { href: "#", className: "col button button-fill color-red", onClick: this.cancel },
                 "\u041E\u0442\u043C\u0435\u043D\u0430"
-              )
+              ),
+              this.state.stage === 'list' || this.state.stage === 'notfound' || this.state.stage === 'noresult' ? React.createElement(
+                "button",
+                { href: "#", className: "col button button-fill color-blue", onClick: this.again },
+                "\u0415\u0449\u0435 \u0440\u0430\u0437"
+              ) : null,
+              this.state.stage === 'list' ? React.createElement(
+                "button",
+                { href: "#", className: "col button button-fill color-green", onClick: this.add },
+                "\u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C"
+              ) : null
             )
           )
         )
@@ -2171,7 +2144,7 @@ var SpeechRecognitionDishes = function (_React$Component) {
 
 exports.default = SpeechRecognitionDishes;
 
-},{"../actions/actions.jsx":1,"../actions/servings.jsx":6,"../actions/stt.jsx":8,"../f7app":20,"../stores/Dish.jsx":36,"../stores/Meal.jsx":38,"../stores/STT.jsx":40,"../stores/Serving.jsx":41,"../util/coef.jsx":46,"../util/stt/speechToText.jsx":50,"react":242,"react-dom":90}],18:[function(require,module,exports){
+},{"../actions/actions.jsx":1,"../actions/servings.jsx":6,"../actions/stt.jsx":8,"../f7app":20,"../stores/Dish.jsx":36,"../stores/Meal.jsx":38,"../stores/STT.jsx":40,"../stores/Serving.jsx":41,"../util/coef.jsx":46,"./LoadingBox.jsx":13,"react":242,"react-dom":90}],18:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2960,11 +2933,11 @@ var CalcMainPageNavBar = function (_React$Component2) {
           this.state.activeMeal ? React.createElement(
             "p",
             { className: "row" },
-            React.createElement(
+            window.webkitSpeechRecognition ? React.createElement(
               "a",
               { href: "#", className: "button button-fill color-red", onClick: this.onVoiceAdd },
               "\u0433\u043E\u043B\u043E\u0441"
-            ),
+            ) : null,
             React.createElement(
               "a",
               { href: "#", className: "button button-fill color-green", onClick: this.onServingAdd },
@@ -6397,8 +6370,14 @@ var STTStore = function (_EventEmitter) {
 
     var _this = _possibleConstructorReturn(this, (STTStore.__proto__ || Object.getPrototypeOf(STTStore)).call(this));
 
-    _this.results = new Map();
+    _this.stage = 'nope';
+    _this.keywordsToDishes = null;
     _this.visible = false;
+    _this.tag = null;
+    _this.active = false;
+    _this.result = null;
+    _this.rawText = '';
+    _this.weight = 0;
     _dispatcher2.default.register(_this.dispatch.bind(_this));
     return _this;
   }
@@ -6407,11 +6386,42 @@ var STTStore = function (_EventEmitter) {
     key: "dispatch",
     value: function dispatch(payload) {
       if (payload.eventName === "stt.keywordsToDishes") {
-        this.results.set(payload.reqId, payload.data);
+        var keywords = Object.keys(payload.data)[0];
+        if (payload.data[keywords].dishes.length === 0) {
+          this.stage = 'notfound';
+        } else {
+          this.keywordsToDishes = payload.data;
+          this.stage = 'list';
+        }
         this.emit("change");
       } else if (payload.eventName === "stt.dialogStateChange") {
         this.visible = payload.visible;
         this.emit("visibilityChange");
+      } else if (payload.eventName === "stt.start") {
+        this.stage = 'speaking';
+        this.tag = payload.tag;
+        this.result = null;
+        this.noresult = false;
+        this.active = true;
+        this.rawText = '';
+        this.emit('change');
+      } else if (payload.eventName === "stt.end" && this.tag === payload.tag) {
+        this.active = false;
+        this.emit('change');
+      } else if (payload.eventName === "stt.resut" && this.tag === payload.tag) {
+        this.stage = 'lookup';
+        this.result = payload.result;
+        this.weight = this.result.weight;
+        this.emit('change');
+      } else if (payload.eventName === "stt.noresult" && this.tag === payload.tag) {
+        this.stage = 'noresult';
+        this.emit('change');
+      } else if (payload.eventName === "stt.raw" && this.tag === payload.tag) {
+        this.rawText = payload.text;
+        this.emit('change');
+      } else if (payload.eventName === "stt.weightChange") {
+        this.weight = payload.weight;
+        this.emit('change');
       }
     }
   }]);
@@ -7207,6 +7217,7 @@ var SpeechToText = exports.SpeechToText = function (_EventEmitter) {
     _this.onRecognitionError = _this.onRecognitionError.bind(_this);
     _this.onRecognitionEnd = _this.onRecognitionEnd.bind(_this);
     _this.results = [];
+    _this.rawResult = null;
     _this.language = null;
     return _this;
   }
@@ -7228,16 +7239,8 @@ var SpeechToText = exports.SpeechToText = function (_EventEmitter) {
   }, {
     key: '_start',
     value: function _start() {
-      /*
-      return setTimeout(() => {
-        this.emit('result', {
-          dishName: 'хлеб',
-          weight: 200
-        })
-        this.emit('end')
-      }, 1000)*/
       var recognition = new webkitSpeechRecognition();
-      recognition.continuous = true;
+      //recognition.continuous = true
       recognition.interimResults = true;
       recognition.lang = this.language;
       recognition.onstart = this.onRecognitionStart;
@@ -7259,7 +7262,6 @@ var SpeechToText = exports.SpeechToText = function (_EventEmitter) {
         return;
       }
       var results = event.results;
-      console.log('result...');
       if (!results.length) {
         return;
       }
@@ -7271,18 +7273,17 @@ var SpeechToText = exports.SpeechToText = function (_EventEmitter) {
       }
       var text = phrases.join(' ');
       text = text.toLowerCase();
-      console.log('raw', text);
 
-      if (this.nextRegExp.test(text) || this.stopRegExp.test(text)) {
-        console.log('found stopword...');
-        event.currentTarget._finalized = true;
-      } else {
-        this.emit('raw', text);
-        return;
-      }
-      this.emit('raw', '');
-      this.recognition.stop();
-      console.log('fetching result...');
+      this.emit('raw', text);
+      this.rawResult = text;
+    }
+  }, {
+    key: 'onRecognitionError',
+    value: function onRecognitionError() {}
+  }, {
+    key: 'onRecognitionEnd',
+    value: function onRecognitionEnd(event) {
+      var text = this.rawResult;
       var numberM = text.match(/([0-9\.]+)/);
       if (numberM) {
         var d = {};
@@ -7293,34 +7294,15 @@ var SpeechToText = exports.SpeechToText = function (_EventEmitter) {
         this.results.push(d);
         // pasing
         this.emit('result', d);
-      }
-      if (this.stopRegExp.test(text)) {
-        this.stop();
       } else {
-        console.log('next word...');
-        this.next();
+        this.emit('noresult');
       }
+      this.emit('end');
     }
-  }, {
-    key: 'onRecognitionError',
-    value: function onRecognitionError() {}
-  }, {
-    key: 'onRecognitionEnd',
-    value: function onRecognitionEnd() {}
   }, {
     key: 'cancel',
     value: function cancel() {
       this.recognition.stop();
-    }
-  }, {
-    key: 'stop',
-    value: function stop() {
-      this.emit('end');
-    }
-  }, {
-    key: 'next',
-    value: function next() {
-      this._start();
     }
   }]);
 

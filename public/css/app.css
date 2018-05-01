@@ -151,3 +151,24 @@ ul.list-bottom-margin li:last-child {
 .current-speech-placeholder {
   font-style: italic;
 }
+
+.color-red {
+  color: #A00;
+}
+
+.flex-buttons > button {
+  flex: 1;
+}
+
+.flex-buttons > button {
+  margin-left: 5px;
+}
+
+.flex-buttons > button:first-child {
+  margin-left: 0px;
+}
+
+.stt-pick-dish-list {
+  max-height: 300px;
+  overflow: auto;
+}

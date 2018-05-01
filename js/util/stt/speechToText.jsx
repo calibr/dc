@@ -14,6 +14,7 @@ export class SpeechToText extends EventEmitter {
     this.onRecognitionError = this.onRecognitionError.bind(this)
     this.onRecognitionEnd = this.onRecognitionEnd.bind(this)
     this.results = []
+    this.rawResult = null
     this.language = null
   }
   start(language = 'ru') {
@@ -27,16 +28,8 @@ export class SpeechToText extends EventEmitter {
     this._start()
   }
   _start() {
-    /*
-    return setTimeout(() => {
-      this.emit('result', {
-        dishName: 'хлеб',
-        weight: 200
-      })
-      this.emit('end')
-    }, 1000)*/
     var recognition = new webkitSpeechRecognition()
-    recognition.continuous = true
+    //recognition.continuous = true
     recognition.interimResults = true
     recognition.lang = this.language
     recognition.onstart = this.onRecognitionStart
@@ -54,7 +47,6 @@ export class SpeechToText extends EventEmitter {
       return
     }
     let results = event.results
-    console.log('result...')
     if(!results.length) {
       return
     }
@@ -66,19 +58,14 @@ export class SpeechToText extends EventEmitter {
     }
     let text = phrases.join(' ')
     text = text.toLowerCase()
-    console.log('raw', text)
 
-    if(this.nextRegExp.test(text) || this.stopRegExp.test(text)) {
-      console.log('found stopword...')
-      event.currentTarget._finalized = true
-    }
-    else {
-      this.emit('raw', text)
-      return
-    }
-    this.emit('raw', '')
-    this.recognition.stop()
-    console.log('fetching result...')
+    this.emit('raw', text)
+    this.rawResult = text
+  }
+  onRecognitionError() {
+  }
+  onRecognitionEnd(event) {
+    let text = this.rawResult
     let numberM = text.match(/([0-9\.]+)/)
     if(numberM) {
       let d = {}
@@ -90,26 +77,13 @@ export class SpeechToText extends EventEmitter {
       // pasing
       this.emit('result', d)
     }
-    if(this.stopRegExp.test(text)) {
-      this.stop()
-    }
     else {
-      console.log('next word...')
-      this.next()
+      this.emit('noresult')
     }
-  }
-  onRecognitionError() {
-  }
-  onRecognitionEnd() {
+    this.emit('end')
   }
   cancel() {
     this.recognition.stop()
-  }
-  stop() {
-    this.emit('end')
-  }
-  next() {
-    this._start()
   }
 }
 

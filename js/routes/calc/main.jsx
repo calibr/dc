@@ -254,7 +254,12 @@ class CalcMainPageNavBar extends React.Component {
       <div className="right">
         {this.state.activeMeal ?
           <p className="row">
-            <a href="#" className="button button-fill color-red" onClick={this.onVoiceAdd}>голос</a>
+            {
+              window.webkitSpeechRecognition ?
+                <a href="#" className="button button-fill color-red" onClick={this.onVoiceAdd}>голос</a>
+                :
+                null
+            }
             <a href="#" className="button button-fill color-green" onClick={this.onServingAdd}>+ порция</a>
           </p> : null}
       </div>

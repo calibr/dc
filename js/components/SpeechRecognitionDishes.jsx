@@ -1,8 +1,7 @@
 var React = require("react");
 var ReactDOM = require("react-dom");
 import DishStore from '../stores/Dish.jsx'
-import {SpeechToText} from '../util/stt/speechToText.jsx'
-import {dishLookup, hideDialog} from '../actions/stt.jsx'
+import {dishLookup, hideDialog, startRecognize, changeWeight, cancelRecognition} from '../actions/stt.jsx'
 import STTStore from '../stores/STT.jsx'
 import MealStore from '../stores/Meal.jsx'
 import ServingStore from '../stores/Serving.jsx'
@@ -12,41 +11,37 @@ import {
 } from "../util/coef.jsx";
 import {createMeal} from '../actions/actions.jsx'
 import f7app from '../f7app'
+import LoadingBox from './LoadingBox.jsx'
 
 class SpeechRecognitionDishes extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      items: {},
-      weights: {},
-      reqIds: [],
-      loadingReqs: [],
+      stage: '',
+      reqId: '',
       rawText: '',
-      active: true,
-      importTag: null,
-      visible: false
+      active: false,
+      visible: false,
+      keywordsToDishes: null,
+      sttResult: null,
+      dishIndex: 0,
+      weight: 0,
+      tag: null
     }
 
-    this.onResult = this.onResult.bind(this)
     this.onSttStoreChange = this.onSttStoreChange.bind(this)
     this.onSttVisibilityChange = this.onSttVisibilityChange.bind(this)
-    this.onSttRawText = this.onSttRawText.bind(this)
-    this.onSttEnd = this.onSttEnd.bind(this)
-    this.onMealChange = this.onMealChange.bind(this)
-    this.onServingChange = this.onServingChange.bind(this)
     this.cancel = this.cancel.bind(this)
+    this.add = this.add.bind(this)
+    this.again = this.again.bind(this)
   }
   componentDidMount() {
     STTStore.on('change', this.onSttStoreChange)
     STTStore.on('visibilityChange', this.onSttVisibilityChange)
-    MealStore.on('change', this.onMealChange)
-    ServingStore.on('change', this.onServingChange)
   }
   componentWillUnmount() {
     STTStore.removeListener('change', this.onSttStoreChange)
     STTStore.removeListener('visibilityChange', this.onSttVisibilityChange)
-    MealStore.removeListener('change', this.onMealChange)
-    ServingStore.removeListener('change', this.onServingChange)
   }
   _partId(part) {
     return JSON.stringify(part)
@@ -56,202 +51,155 @@ class SpeechRecognitionDishes extends React.Component {
     if(STTStore.visible) {
       // kind of a wrong way but so far I am not sure how to do this better
       f7app.$('#speech-recognition-dishes-overlay')[0].classList.add('visible')
-      let stt = new SpeechToText()
-      stt.on('start', () => {
-        console.log('stt start')
-      })
-      stt.on('end', this.onSttEnd)
-      stt.on('result', this.onResult)
-      stt.on('raw', this.onSttRawText)
-      stt.start()
-      this.stt = stt
+      this.initRecognize()
     }
     else {
       f7app.$('#speech-recognition-dishes-overlay')[0].classList.remove('visible')
     }
   }
-  onSttRawText(rawText) {
-    this.setState({rawText})
-  }
-  onServingChange(info) {
-    if(!info) {
-      return
-    }
-    if(info.tag === this.state.importTag) {
-      setTimeout(function() {
-        hideDialog()
-      }, 0)
-    }
-  }
-  onSttEnd() {
-    this.setState({active: false})
-    this.checkCanClose()
-  }
   onSttStoreChange() {
-    let items = this.state.items
-    for(let reqId of this.state.reqIds) {
-      if(items[reqId]) {
-        continue
-      }
-      let res = STTStore.results.get(reqId)
-      if(!res) {
-        continue
-      }
-      let dishesIds = res[Object.keys(res)[0]].dishes
-      let dishId = dishesIds[0]
-      items[reqId] = {dishId}
-
-      let loadingReqs = this.state.loadingReqs
-      let index = loadingReqs.indexOf(reqId)
-      if(index >= 0) {
-        loadingReqs.splice(index, 1)
-      }
-      this.setState({items, loadingReqs})
-      this.checkCanClose()
-    }
+    this.setState({
+      stage: STTStore.stage,
+      active: STTStore.active,
+      rawText: STTStore.rawText,
+      keywordsToDishes: STTStore.keywordsToDishes,
+      sttResult: STTStore.result,
+      weight: STTStore.weight
+    })
   }
-  onMealChange() {
-    this.checkCanClose()
-  }
-  onResult(result) {
-    let reqIds = this.state.reqIds
-    let weights = this.state.weights
-    let loadingReqs = this.state.loadingReqs
-    let reqId = dishLookup([result.dishName])
-    reqIds.push(reqId)
-    loadingReqs.push(reqId)
-    weights[reqId] = result.weight
-    this.setState({weights, reqIds, loadingReqs})
-    /*
-    let items = this.state.items
-    let relookup = false
-    // each item in the state corresponds to item from parts array
-    for(let i = 0; i != parts.length; i++) {
-      let needToFind = false
-      let part = parts[i]
-      if(i > items.length - 1) {
-        // it is new part
-        needToFind = true
-      }
-      else {
-        // check if the old part has been changed
-        if(part.dishName !== item.dishName) {
-          needToFind = true
-        }
-      }
-      if(!needToFind) {
-        continue
-      }
-      relookup = true
+  onWeightChange(event) {
+    let value = event.target.value
+    if(value !== '') {
+      value = Math.abs(event.target.value)
     }
-    if(relookup) {
-      let keywords = parts.map(p => p.dishName)
-      dishLookup(keywords)
-    }*/
+    changeWeight(value)
+  }
+  onDishClick(dishIndex) {
+    this.setState({dishIndex})
   }
   cancel() {
-    this.stt.cancel()
+    cancelRecognition(this.state.tag)
     hideDialog()
   }
-  checkCanClose() {
-    if(this.state.active) {
-      return
-    }
-    if(this.state.loadingReqs.length) {
-      return
-    }
-    if(!MealStore.getActive()) {
-      console.log('Creating meal...')
-      // need to start meal
-      let coefs = getCoefsFromSettings(this.state.settings)
-      let k = getCurrentCoef(coefs)
-      createMeal({
-        coef: k
-      })
-      return
-    }
-    let mealId = MealStore.getActive().id
+  again() {
+    this.initRecognize()
+  }
+  add() {
+    let lookupRes = this.state.keywordsToDishes[this.state.sttResult.dishName]
+    let dishId = lookupRes.dishes[this.state.dishIndex]
+    let weight = this.state.weight
     let servings = []
-    for(let reqId of this.state.reqIds) {
-      let item = this.state.items[reqId]
-      let weight = this.state.weights[reqId]
-      if(!item || !weight) {
-        continue
-      }
-      servings.push({
-        meal_id: mealId,
-        dish_id: item.dishId,
-        weight: weight
-      })
-    }
-    this.setState({
-      importTag: importServings(servings)
+    servings.push({
+      meal_id: MealStore.activeMeal.id,
+      dish_id: dishId,
+      weight
     })
+    importServings(servings)
+    this.initRecognize()
+  }
+  initRecognize() {
+    let tag = startRecognize()
+    setTimeout(() => {
+      this.setState({
+        tag,
+        dishIndex: 0
+      })
+    }, 0)
   }
   render() {
     if(!this.state.visible) {
       return <div/>
     }
-    let readyItems = this.state.reqIds.map(reqId => {
-      let item = this.state.items[reqId]
-      if(!item) {
-        return
-      }
-      let weight = this.state.weights[reqId]
-      if(!item.dishId) {
-        return null
-      }
-      let dish = DishStore.getById(item.dishId)
-      return <li key={reqId} className="stt-list-item">
-        <div className="item-content">
-          <div className="item-inner">
-            <div className="item-title">{dish.title}</div>
-            <div className="item-after">
-              <span className="badge">{dish.carbs} г.у.</span>
-              <span className="badge">{weight} г.</span>
+    let readyItems = []
+    if(this.state.stage === 'list') {
+      let lookupRes = this.state.keywordsToDishes[this.state.sttResult.dishName]
+      let i = -1
+      // show only first 10 items
+      readyItems = lookupRes.dishes.map(dishId => {
+        let dish = DishStore.getById(dishId)
+        i++
+        return <li key={"dish-choose-" + dishId} className="stt-list-item">
+          <label className="label-radio item-content">
+            <input type="radio" name="stt-dish-choose" value={dishId} onChange={this.onDishClick.bind(this, i)} checked={i === this.state.dishIndex}/>
+            <div className="item-inner">
+              <div className="item-title">{dish.title}</div>
+              <div className="item-after">
+                <span className="badge">{dish.carbs} г.у.</span>
+              </div>
             </div>
-          </div>
-        </div>
-      </li>
-    })
+          </label>
+        </li>
+      })
+    }
     let listItems = readyItems.slice()
     let currentSpeech
-    if(this.state.active) {
-      listItems.push(<li key="loading">
-        <div className="item-content">
-          <div className="item-inner">
-            <div className="item-title"><i className="fa fa-spinner fa-spin"></i></div>
-            <div className="item-after">
-              <span className="badge"><i className="fa fa-spinner fa-spin"></i></span>
-            </div>
-          </div>
-        </div>
-      </li>)
-      currentSpeech = <div>
-        {this.state.rawText ?
-          <div className="content-block text-center current-speech">{this.state.rawText}</div>
-          :
-          <div className="content-block text-center current-speech-placeholder">Произнесите продукт...</div>
-        }
-      </div>
+    let loader
+    currentSpeech = <div>
+      {this.state.rawText ?
+        <div className="content-block text-center current-speech">{this.state.rawText}</div>
+        :
+        <div className="content-block text-center current-speech-placeholder">Произнесите продукт...</div>
+      }
+    </div>
+    if(this.state.stage === 'lookup') {
+      loader = <LoadingBox/>
+    }
+    let noResultText
+    if(this.state.stage === 'noresult') {
+      noResultText = <div className="content-block text-center color-red">Не верный формат текста</div>
+    }
+    let notFoundText
+    if(this.state.stage === 'notfound') {
+      notFoundText = <div className="content-block text-center color-red">По вашей фразе ничего не найдено</div>
     }
     return <div id="speech-recognition-dishes-overlay-innder">
       <div className="dialog">
         <div className="content-block">
           <div>
             Произнесите название блюда и количество грамм, например: "Котлета киевская 39".
-            Чтобы добавить еще порцию произнесите "Дальше". Чтобы закончить ввод произнесите "Конец".
           </div>
-          <div className="list-block">
+          <div className="list-block stt-pick-dish-list">
             <ul>
               {listItems}
             </ul>
           </div>
+          {
+            this.state.stage === 'list' ?
+            <div className="list-block">
+              <ul>
+                <li>
+                  <div className="item-content">
+                    <div className="item-inner">
+                      <div className="item-title label">Вес</div>
+                      <div className="item-input">
+                        <input type="number" value={this.state.weight} onChange={this.onWeightChange}/>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+              </ul>
+            </div> : null
+          }
           {currentSpeech}
-          <div className="content-block text-center">
-            <a href="#" className="button button-fill color-red" onClick={this.cancel}>
+          {loader}
+          {noResultText}
+          {notFoundText}
+          <div className="content-block text-center row flex-buttons">
+            <button href="#" className="col button button-fill color-red" onClick={this.cancel}>
               Отмена
-            </a>
+            </button>
+            {
+              (
+                this.state.stage === 'list' || this.state.stage === 'notfound' || this.state.stage === 'noresult'
+              ) ? <button href="#" className="col button button-fill color-blue" onClick={this.again}>
+                Еще раз
+              </button> : null
+            }
+            {
+              (this.state.stage === 'list') ? <button href="#" className="col button button-fill color-green" onClick={this.add}>
+                Добавить
+              </button> : null
+            }
           </div>
         </div>
       </div>
