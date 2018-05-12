@@ -61,7 +61,7 @@ class AddServingPage extends React.Component {
     this.setState(getActualState())
   }
   onStartPickDish = () => {
-    displayDishPicker()
+    displayDishPicker(this.props.id)
   }
   onServingsChange = () => {
     navigator.navigate("/calc")

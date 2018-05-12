@@ -425,7 +425,7 @@ var _navigator2 = _interopRequireDefault(_navigator);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var displayDishPicker = exports.displayDishPicker = function displayDishPicker() {
+var displayDishPicker = exports.displayDishPicker = function displayDishPicker(servingId) {
   var tag = _uuid2.default.v4();
   _dispatcher2.default.dispatch({
     eventName: 'addServing.pickDish',
@@ -433,7 +433,7 @@ var displayDishPicker = exports.displayDishPicker = function displayDishPicker()
   });
   (0, _dishPicker.display)({
     tag: tag,
-    returnTo: '/calc/servings/add'
+    returnTo: servingId ? '/calc/servings/' + servingId : '/calc/servings/add'
   });
 };
 
@@ -4769,7 +4769,7 @@ var AddServingPage = function (_React$Component) {
     };
 
     _this.onStartPickDish = function () {
-      (0, _addServing.displayDishPicker)();
+      (0, _addServing.displayDishPicker)(_this.props.id);
     };
 
     _this.onServingsChange = function () {

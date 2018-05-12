@@ -3,7 +3,7 @@ import {display as displayDishPickerOrig} from './dishPicker.jsx'
 import UUID from 'uuid'
 import navigator from "../navigator.jsx"
 
-export var displayDishPicker = function() {
+export var displayDishPicker = function(servingId) {
   let tag = UUID.v4()
   Dispatcher.dispatch({
     eventName: 'addServing.pickDish',
@@ -11,7 +11,7 @@ export var displayDishPicker = function() {
   })
   displayDishPickerOrig({
     tag: tag,
-    returnTo: '/calc/servings/add'
+    returnTo: servingId ? ('/calc/servings/' + servingId) : '/calc/servings/add'
   })
 }
 
