@@ -7025,9 +7025,14 @@ function visibleRel(date) {
   var dateTimestamp = date.getTime();
   var now = new Date().getTime();
   var diffDays = Math.ceil((now - dateTimestamp) / (24 * 3600));
-  if (now - dateTimestamp < 24 * 3600 * 1000) {
+
+  var dateFormatted = (0, _moment2.default)(date).format('YYYY-MM-DD');
+  var todayDate = (0, _moment2.default)().format('YYYY-MM-DD');
+  var yesterdayDate = (0, _moment2.default)(now - 24 * 3600 * 1000).format('YYYY-MM-DD');
+
+  if (dateFormatted === todayDate) {
     return relDays.today;
-  } else if (now - dateTimestamp < 48 * 3600 * 1000) {
+  } else if (dateFormatted === yesterdayDate) {
     return relDays.yesterday;
   } else if (diffDays < 5) {
     return diffDays + ' дня назад';

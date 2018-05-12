@@ -92,10 +92,15 @@ export function visibleRel(date) {
   let dateTimestamp = date.getTime()
   let now = new Date().getTime()
   let diffDays = Math.ceil((now - dateTimestamp)/(24 * 3600))
-  if(now - dateTimestamp < 24 * 3600 * 1000) {
+
+  let dateFormatted = moment(date).format('YYYY-MM-DD')
+  let todayDate = moment().format('YYYY-MM-DD')
+  let yesterdayDate = moment(now - 24 * 3600 * 1000).format('YYYY-MM-DD')
+
+  if(dateFormatted === todayDate) {
     return relDays.today
   }
-  else if(now - dateTimestamp < 48 * 3600 * 1000) {
+  else if(dateFormatted === yesterdayDate) {
     return relDays.yesterday
   }
   else if(diffDays < 5) {
