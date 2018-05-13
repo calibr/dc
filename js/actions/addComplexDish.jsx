@@ -18,9 +18,10 @@ export var displayDishPicker = function(subDishUuid) {
   })
 }
 
-export function addSubDish() {
+export function addSubDish(subdish) {
   Dispatcher.dispatch({
-    eventName: 'addComplexDish.addSubDish'
+    eventName: 'addComplexDish.addSubDish',
+    subdish
   })
 }
 

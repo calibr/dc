@@ -31,11 +31,13 @@ class AddComplexDish extends EventEmitter {
   }
   dispatch(payload) {
     if(payload.eventName === 'addComplexDish.addSubDish') {
-      this.subDishes.push({
+      let subDish = Object.assign({
         dishId: undefined,
-        weight: '',
+        weight: ''
+      }, payload.subdish, {
         uuid: uuidV4()
       })
+      this.subDishes.push(subDish)
       this.emit('change')
     }
     else if(payload.eventName === "dishPicker.picked") {

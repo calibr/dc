@@ -8,13 +8,17 @@ class STTStore extends EventEmitter {
     super();
     this.stage = 'nope'
     this.keywordsToDishes = null
-    this.visible = false
     this.tag = null
     this.active = false
     this.result = null
     this.rawText = ''
     this.weight = 0
+    this.callback = null
+    this.returnTo = null
     Dispatcher.register(this.dispatch.bind(this));
+  }
+  getReturnTo() {
+    return this.returnTo
   }
   dispatch(payload) {
     if(payload.eventName === "stt.keywordsToDishes") {
@@ -29,8 +33,9 @@ class STTStore extends EventEmitter {
       this.emit("change");
     }
     else if(payload.eventName === "stt.dialogStateChange") {
-      this.visible = payload.visible
-      this.emit("visibilityChange");
+      this.callback = payload.callback
+      this.returnTo = payload.returnTo
+      this.emit("change");
     }
     else if(payload.eventName === "stt.start") {
       this.stage = 'speaking'

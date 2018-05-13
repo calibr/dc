@@ -1,26 +1,24 @@
 var React = require("react");
 var ReactDOM = require("react-dom");
-import DishStore from '../stores/Dish.jsx'
-import {dishLookup, hideDialog, startRecognize, changeWeight, cancelRecognition} from '../actions/stt.jsx'
-import STTStore from '../stores/STT.jsx'
-import MealStore from '../stores/Meal.jsx'
-import ServingStore from '../stores/Serving.jsx'
-import {importServings} from '../actions/servings.jsx'
+import DishStore from '../../stores/Dish.jsx'
+import {dishLookup, hideDialog, startRecognize, changeWeight, cancelRecognition, cancelAllRecognitions, goBack} from '../../actions/stt.jsx'
+import STTStore from '../../stores/STT.jsx'
+import MealStore from '../../stores/Meal.jsx'
+import ServingStore from '../../stores/Serving.jsx'
+import {importServings} from '../../actions/servings.jsx'
 import {
   getCurrentCoef, getCoefsFromSettings
-} from "../util/coef.jsx";
-import {createMeal} from '../actions/actions.jsx'
-import f7app from '../f7app'
-import LoadingBox from './LoadingBox.jsx'
+} from "../../util/coef.jsx";
+import {createMeal} from '../../actions/actions.jsx'
+import f7app from '../../f7app'
+import LoadingBox from '../../components/LoadingBox.jsx'
 
-class SpeechRecognitionDishes extends React.Component {
+class SpeechRecognitionDishesPage extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       stage: '',
       rawText: '',
-      active: false,
-      visible: false,
       keywordsToDishes: null,
       sttResult: null,
       dishIndex: 0,
@@ -30,37 +28,24 @@ class SpeechRecognitionDishes extends React.Component {
     }
 
     this.onSttStoreChange = this.onSttStoreChange.bind(this)
-    this.onSttVisibilityChange = this.onSttVisibilityChange.bind(this)
     this.cancel = this.cancel.bind(this)
     this.add = this.add.bind(this)
     this.again = this.again.bind(this)
   }
   componentDidMount() {
     STTStore.on('change', this.onSttStoreChange)
-    STTStore.on('visibilityChange', this.onSttVisibilityChange)
+
+    this.initRecognize()
   }
   componentWillUnmount() {
     STTStore.removeListener('change', this.onSttStoreChange)
-    STTStore.removeListener('visibilityChange', this.onSttVisibilityChange)
   }
   _partId(part) {
     return JSON.stringify(part)
   }
-  onSttVisibilityChange() {
-    this.setState({visible: STTStore.visible})
-    if(STTStore.visible) {
-      // kind of a wrong way but so far I am not sure how to do this better
-      f7app.$('#speech-recognition-dishes-overlay')[0].classList.add('visible')
-      this.initRecognize()
-    }
-    else {
-      f7app.$('#speech-recognition-dishes-overlay')[0].classList.remove('visible')
-    }
-  }
   onSttStoreChange() {
     this.setState({
       stage: STTStore.stage,
-      active: STTStore.active,
       rawText: STTStore.rawText,
       keywordsToDishes: STTStore.keywordsToDishes,
       sttResult: STTStore.result,
@@ -80,7 +65,7 @@ class SpeechRecognitionDishes extends React.Component {
   }
   cancel() {
     cancelRecognition(this.state.tag)
-    hideDialog()
+    goBack()
   }
   again() {
     this.initRecognize()
@@ -106,9 +91,6 @@ class SpeechRecognitionDishes extends React.Component {
     }, 0)
   }
   render() {
-    if(!this.state.visible) {
-      return <div/>
-    }
     let readyItems = []
     if(this.state.stage === 'list') {
       let lookupRes = this.state.keywordsToDishes[this.state.sttResult.dishName]
@@ -134,11 +116,14 @@ class SpeechRecognitionDishes extends React.Component {
     let currentSpeech
     let loader
     currentSpeech = <div>
-      {this.state.rawText ?
-        <div className="content-block text-center current-speech">{this.state.rawText}</div>
-        :
-        <div className="content-block text-center current-speech-placeholder">Произнесите продукт...</div>
+      {
+        this.state.stage === 'speaking' ? (this.state.rawText ?
+          <div className="content-block text-center current-speech">{this.state.rawText}</div>
+          :
+          <div className="content-block text-center current-speech-placeholder">Произнесите продукт...</div>
+        ) : null
       }
+
     </div>
     if(this.state.stage === 'lookup') {
       loader = <LoadingBox/>
@@ -151,10 +136,10 @@ class SpeechRecognitionDishes extends React.Component {
     if(this.state.stage === 'notfound') {
       notFoundText = <div className="content-block text-center color-red">По вашей фразе ничего не найдено</div>
     }
-    return <div id="speech-recognition-dishes-overlay-innder">
+    return <div className="page-content">
       <div className="dialog">
         <div className="content-block">
-          <div>
+          <div className="text-center">
             Произнесите название блюда и количество грамм, например: "Котлета киевская 39".
           </div>
           <div className="list-block stt-pick-dish-list">
@@ -206,4 +191,30 @@ class SpeechRecognitionDishes extends React.Component {
   }
 }
 
-export default SpeechRecognitionDishes;
+class SpeechRecognitionDishesPageNavBar extends React.Component {
+  onBackClick() {
+    cancelAllRecognitions()
+    goBack()
+  }
+  render() {
+    return <div className="navbar">
+      <div className="navbar-inner">
+        <div className="left">
+          <a href="#" className="link" onClick={this.onBackClick}>
+            <i className="icon icon-back"></i>
+            <span>Назад</span>
+          </a>
+        </div>
+        <div className="center sliding">Голосовой выбор блюд</div>
+        <div className="right">
+        </div>
+      </div>
+    </div>
+  }
+}
+
+module.exports = {
+  page: SpeechRecognitionDishesPage,
+  navbar: SpeechRecognitionDishesPageNavBar
+};
+

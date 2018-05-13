@@ -38,6 +38,19 @@ export class SpeechToText extends EventEmitter {
     recognition.onend = this.onRecognitionEnd
     recognition.start()
     this.recognition = recognition
+
+    // test
+    /*
+    setTimeout(() => {
+      let d = {}
+      this.rawResult = 'хлеб 22г'
+      d.dishName = 'хлеб'
+      d.weight = 22
+      this.results.push(d)
+      // pasing
+      this.emit('result', d)
+      this.recognition.stop()
+    }, 0)*/
   }
   onRecognitionStart() {
     this.emit('start')

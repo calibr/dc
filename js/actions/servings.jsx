@@ -2,6 +2,7 @@ import 'whatwg-fetch'
 import Dispatcher from "../dispatcher.jsx";
 import {ROOT} from './actions.jsx'
 import uuid from 'uuid'
+import MealStore from '../stores/Meal.jsx'
 
 export var importServings = function(servings) {
   var formData = new FormData();
@@ -27,4 +28,11 @@ export var importServings = function(servings) {
     }
   })
   return tag
-};
+}
+
+export function addServingFromSTT(serving) {
+  serving = Object.assign({}, serving, {
+    meal_id: MealStore.activeMeal.id,
+  })
+  importServings([serving])
+}

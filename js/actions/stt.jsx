@@ -3,6 +3,8 @@ import Dispatcher from "../dispatcher.jsx";
 import UUID from 'uuid'
 import {SpeechToText} from '../util/stt/speechToText.jsx'
 import {ROOT} from '../setup.jsx'
+import navigator from "../navigator.jsx";
+import STTStore from '../stores/STT.jsx'
 
 let sttByTag = {}
 
@@ -23,10 +25,15 @@ export function dishLookup(keywords, tag) {
   })
 }
 
-export function showDialog() {
+export function display(opts) {
+  opts = opts || {}
+  opts.view = opts.view || 'calc'
+  navigator.navigate('/' + opts.view + '/pickStt')
   Dispatcher.dispatch({
     eventName: "stt.dialogStateChange",
-    visible: true
+    visible: true,
+    callback: opts.callback,
+    returnTo: opts.returnTo
   })
 }
 
@@ -96,4 +103,20 @@ export function cancelRecognition(tag) {
     return
   }
   sttByTag[tag].cancel()
+}
+
+export function cancelAllRecognitions() {
+  for(let tag in sttByTag) {
+    sttByTag[tag].cancel()
+  }
+}
+
+export function goBack() {
+  var returnTo = STTStore.getReturnTo()
+  if(returnTo) {
+    navigator.navigate(returnTo)
+  }
+  else {
+    navigator.back()
+  }
 }

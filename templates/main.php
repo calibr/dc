@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="css/framework7/framework7.ios.colors.min.css">
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
 
-<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/app.css?v=<?php echo time() ?>">
 </head>
 <body>
 

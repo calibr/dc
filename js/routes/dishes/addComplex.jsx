@@ -4,6 +4,7 @@ const uuidV4 = require('uuid/v4');
 
 import navigator from "../../navigator.jsx";
 import {addDish} from "../../actions/actions.jsx";
+import {display as displayStt} from "../../actions/stt.jsx";
 import {addSubDish, changeSubDish, changeTitle, deleteSubDish, changeTotalWeight} from "../../actions/addComplexDish.jsx";
 import DishStore from "../../stores/Dish.jsx";
 import AddComplexDishStore from "../../stores/AddComplexDish.jsx";
@@ -63,6 +64,18 @@ class AddComplexDishPage extends React.Component {
   onSubDishAdd = () => {
     addSubDish()
   }
+  onVoiceAdd = () => {
+    displayStt({
+      view: 'dishes',
+      returnTo: '/dishes/addComplex',
+      callback: (dish) => {
+        addSubDish({
+          dishId: dish.dish_id,
+          weight: dish.weight
+        })
+      }
+    })
+  }
   onTitleFieldChange = (event) => {
     var value = event.target.value;
     changeTitle(value)
@@ -74,7 +87,6 @@ class AddComplexDishPage extends React.Component {
       totalWeight: value
     };
     changeTotalWeight(value)
-    //this.setState(updateState);
   }
   render() {
     if(!this.state.dishes || !this.state.settings) {
@@ -115,10 +127,16 @@ class AddComplexDishPage extends React.Component {
           </ul>
         </div>
         {subDishesElems}
-        <div className="content-block">
-          <a href="#" className="button button-fill color-green" onClick={this.onSubDishAdd}>
+        <div className="content-block text-center row flex-buttons">
+          {
+            window.webkitSpeechRecognition ?
+              <button href="#" className="col button button-fill color-red" onClick={this.onVoiceAdd}>голос</button>
+              :
+              null
+          }
+          <button href="#" className="col button button-fill color-green" onClick={this.onSubDishAdd}>
             + ингредиент
-          </a>
+          </button>
         </div>
         <div className="list-block" id="add-contact-form">
           <ul>
