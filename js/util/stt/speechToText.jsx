@@ -79,7 +79,7 @@ export class SpeechToText extends EventEmitter {
   }
   onRecognitionEnd(event) {
     let text = this.rawResult
-    let numberM = text.match(/([0-9\.]+)/)
+    let numberM = text && text.match(/([0-9\.]+)/)
     if(numberM) {
       let d = {}
       let grams = numberM[1]

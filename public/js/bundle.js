@@ -8188,7 +8188,7 @@ var SpeechToText = exports.SpeechToText = function (_EventEmitter) {
     key: 'onRecognitionEnd',
     value: function onRecognitionEnd(event) {
       var text = this.rawResult;
-      var numberM = text.match(/([0-9\.]+)/);
+      var numberM = text && text.match(/([0-9\.]+)/);
       if (numberM) {
         var d = {};
         var grams = numberM[1];
