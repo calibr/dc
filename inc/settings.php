@@ -43,6 +43,18 @@ class Settings {
     DB::inst()->q($query);
   }
 
+  public static function get($k) {
+    $query = "
+      SELECT
+        `value`
+      FROM
+        `settings`
+      WHERE
+        `name` = #s
+    ";
+    return DB::inst()->first($query, [$k]);
+  }
+
   public static function delete($k) {
     if(!is_array($k)) {
       $k = [$k];

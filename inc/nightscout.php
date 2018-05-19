@@ -58,6 +58,7 @@ class NightScout {
       // round carbs to integer
       $result['carbs'] = round($result['carbs']);
     }
+    print "Flushing treatment to NS: ".json_encode($result)."\n";
     $this->addTreatment($result);
   }
   public function bufferTreatment($data) {
@@ -74,20 +75,30 @@ class NightScout {
     $data['eventType'] = '<none>';
     $data['enteredBy'] = 'boluscalc';
     $data['uuid'] = Uuid::uuid4();
-    $nsConfig = Config::get('nightscout');
     $ch = curl_init();
+
+    $url = Settings::get('ns_url');
+    $secret = Settings::get('ns_secret');
+
+    if(!$url) {
+      print "Nightscout is not configured\n";
+      // nightscout is not configured
+      return;
+    }
+
     curl_setopt_array($ch, [
-      CURLOPT_URL => $nsConfig['url']."/api/v1/treatments.json",
+      CURLOPT_URL => "$url/api/v1/treatments.json",
       CURLOPT_POST => true,
       CURLOPT_POSTFIELDS => json_encode($data),
       CURLOPT_HTTPHEADER => [
         'Content-Type: application/json',
-        'api-secret: '.sha1($nsConfig['secret'])
+        'api-secret: '.sha1($secret)
       ],
       CURLOPT_RETURNTRANSFER => true
     ]);
     $response = curl_exec($ch);
     curl_close($ch);
+    print "Response from NS: $response\n";
     $parsed = json_decode($response);
     if($parsed && is_array($parsed)) {
       $parsed = $parsed[0];

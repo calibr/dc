@@ -17,6 +17,8 @@ var routes = {
   "/calc/servings/add": require("./routes/servings/add.jsx"),
   "/calc/servings/:id": require("./routes/servings/add.jsx"),
   "/settings": require("./routes/settings/main.jsx"),
+  "/settings/coeffs": require("./routes/settings/coeffs.jsx"),
+  "/settings/nightscout": require("./routes/settings/nightscout.jsx"),
   "/history": require("./routes/history/main.jsx"),
 };
 

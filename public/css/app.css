@@ -172,3 +172,7 @@ ul.list-bottom-margin li:last-child {
   max-height: 200px;
   overflow: auto;
 }
+
+.list-block.not-fixed-height .item-text {
+  height: auto;
+}
