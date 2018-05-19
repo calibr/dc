@@ -39,6 +39,7 @@ var navigator = {
     console.log("Load page into view", viewName);
     let newUrl = "page.html?url=" + url
     let reload = newUrl === view.url
+    app.ensureViewOpened(viewName)
     view.router.load({
       url: newUrl,
       animatePages: false,

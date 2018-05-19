@@ -920,6 +920,12 @@ app.getActiveView = function () {
     return historyView;
   }
 };
+app.ensureViewOpened = function (name) {
+  var $link = $('#bottom-tabbar a[href="#' + name + '-view"]');
+  if (!$link.hasClass('active')) {
+    $link.click();
+  }
+};
 app.getViewByName = function (name) {
   var _iteratorNormalCompletion = true;
   var _didIteratorError = false;
@@ -2449,6 +2455,7 @@ var navigator = {
     console.log("Load page into view", viewName);
     var newUrl = "page.html?url=" + url;
     var reload = newUrl === view.url;
+    app.ensureViewOpened(viewName);
     view.router.load({
       url: newUrl,
       animatePages: false,
@@ -6467,7 +6474,7 @@ var SettingsMainPage = function (_React$Component) {
                   React.createElement(
                     "div",
                     { className: "item-title label" },
-                    "Nightscout URL"
+                    "URL"
                   ),
                   React.createElement(
                     "div",
@@ -6498,7 +6505,7 @@ var SettingsMainPage = function (_React$Component) {
                   React.createElement(
                     "div",
                     { className: "item-title label" },
-                    "Nightscout Secret"
+                    "Secret"
                   ),
                   React.createElement(
                     "div",

@@ -41,6 +41,12 @@ app.getActiveView = () => {
     return historyView;
   }
 };
+app.ensureViewOpened = (name) => {
+  let $link = $('#bottom-tabbar a[href="#' + name + '-view"]')
+  if(!$link.hasClass('active')) {
+    $link.click()
+  }
+}
 app.getViewByName = (name) => {
   for(let view of app.views) {
     if(view.name === name) {

@@ -66,7 +66,7 @@
         <div class="page"></div>
       </div>
     </div>
-    <div class="toolbar tabbar tabbar-labels">
+    <div id="bottom-tabbar" class="toolbar tabbar tabbar-labels">
       <div class="toolbar-inner">
         <a href="#calc-view" class="tab-link active">
           <i class="fa fa-calculator"></i><span class="tabbar-label">Рассчет</span>

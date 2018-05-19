@@ -56,7 +56,7 @@ class SettingsMainPage extends React.Component {
             <div className="item-content">
               <div className="item-media"><i className="fa fa-globe"></i></div>
               <div className="item-inner">
-                <div className="item-title label">Nightscout URL</div>
+                <div className="item-title label">URL</div>
                 <div className="item-input">
                   <input
                     type="text"
@@ -71,7 +71,7 @@ class SettingsMainPage extends React.Component {
             <div className="item-content">
               <div className="item-media"><i className="fa fa-key"></i></div>
               <div className="item-inner">
-                <div className="item-title label">Nightscout Secret</div>
+                <div className="item-title label">Secret</div>
                 <div className="item-input">
                   <input
                     type="text"
