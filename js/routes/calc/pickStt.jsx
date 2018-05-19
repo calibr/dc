@@ -215,6 +215,7 @@ class SpeechRecognitionDishesPageNavBar extends React.Component {
 
 module.exports = {
   page: SpeechRecognitionDishesPage,
-  navbar: SpeechRecognitionDishesPageNavBar
+  navbar: SpeechRecognitionDishesPageNavBar,
+  title: 'Голосовой выбор блюд'
 };
 

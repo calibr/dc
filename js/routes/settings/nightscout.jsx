@@ -113,5 +113,6 @@ class SettingsMainPageNavBar extends React.Component {
 
 module.exports = {
   page: SettingsMainPage,
-  navbar: SettingsMainPageNavBar
+  navbar: SettingsMainPageNavBar,
+  title: 'Nightscout'
 };

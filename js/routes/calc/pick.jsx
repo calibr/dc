@@ -144,7 +144,7 @@ class DishesPickPageNavBar extends React.Component {
             <span>Назад</span>
           </a>
         </div>
-        <div className="center sliding">Выбор Блюда</div>
+        <div className="center sliding">Выбор блюда</div>
         <div className="right">
           <a href="#" className="link open-popover" data-popover=".popover-pick">
             <i className="icon icon-bars"></i>
@@ -163,5 +163,6 @@ module.exports = {
       component: DishesPopoverShort,
       container: "#pick-popover-content"
     }
-  ]
+  ],
+  title: 'Выбор блюда'
 };

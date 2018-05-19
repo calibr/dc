@@ -241,5 +241,6 @@ class SettingsCoeffsPageNavBar extends React.Component {
 
 module.exports = {
   page: SettingsCoeffsPage,
-  navbar: SettingsCoeffsPageNavBar
+  navbar: SettingsCoeffsPageNavBar,
+  title: 'Коэффициенты'
 };

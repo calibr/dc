@@ -73,5 +73,3 @@ $(document).on('page:beforeremove', (event) => {
   }
 });
 
-
-//ReactDom.render(<SpeechRecognitionDishes/>, $('#speech-recognition-dishes-overlay')[0]);

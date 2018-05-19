@@ -340,5 +340,6 @@ module.exports = {
       component: SelectCoefPopover,
       container: "#select-meal-coef-popover-content"
     }
-  ]
+  ],
+  title: 'Рассчет дозы'
 };

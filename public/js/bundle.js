@@ -973,8 +973,6 @@ $(document).on('page:beforeremove', function (event) {
   }
 });
 
-//ReactDom.render(<SpeechRecognitionDishes/>, $('#speech-recognition-dishes-overlay')[0]);
-
 },{"./components/SpeechRecognitionDishes.jsx":17,"./f7app":20,"./navigator.jsx":21,"./renderer.jsx":22,"react":246,"react-dom":94}],10:[function(require,module,exports){
 "use strict";
 
@@ -2394,15 +2392,53 @@ app.$ = Dom7;
 module.exports = app;
 
 },{}],21:[function(require,module,exports){
-"use strict";
+'use strict';
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+
+var _renderer = require('./renderer.jsx');
+
+var _renderer2 = _interopRequireDefault(_renderer);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
 var app = require("./f7app");
 
+
 var navigator = {
+  init: function init() {
+    var _this = this;
+
+    window.addEventListener('popstate', function (event) {
+      var url = document.location.hash;
+      if (url.indexOf('#!') !== 0) {
+        return;
+      }
+      url = url.replace(/^#!/, '');
+      _this._loadView(url);
+    }, false);
+  },
   navigate: function navigate(url) {
+    var params = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+    var _renderer$getRouteByU = _renderer2.default.getRouteByUrl(url),
+        route = _renderer$getRouteByU.route;
+
+    var needToLoadView = true;
+    if (!params.skipHistory && route && !route.skipHistory) {
+      var newHash = '#!' + url;
+      if (document.location.hash === newHash) {} else {
+        document.location.hash = '#!' + url;
+        needToLoadView = false;
+      }
+    }
+    if (needToLoadView) {
+      this._loadView(url);
+    }
+  },
+  _loadView: function _loadView(url) {
     console.log('Navigate to', url);
     var parts = url.split("/");
     var viewName = parts[1];
@@ -2426,19 +2462,31 @@ var navigator = {
   }
 };
 
+navigator.init();
+
 exports.default = navigator;
 
-},{"./f7app":20}],22:[function(require,module,exports){
+},{"./f7app":20,"./renderer.jsx":22}],22:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
 var $ = require("./f7app").$;
 var ReactDom = require("react-dom");
 var React = require("react");
 var f7app = require("./f7app");
 var UrlPattern = require("url-pattern");
+var EventEmitter = require("events");
 
 var routes = {
   "/calc": require("./routes/calc/main.jsx"),
@@ -2460,115 +2508,148 @@ var routes = {
 
 var prevPage = null;
 
-$(document).on('pageBeforeInit', function (e) {
-  console.log('before init event', e.detail);
-  // Page Data contains all required information about loaded and initialized page
-  var page = e.detail.page;
-  if (page.url.indexOf("page.html?url=") < 0) {
-    return;
+var Renderer = function (_EventEmitter) {
+  _inherits(Renderer, _EventEmitter);
+
+  function Renderer() {
+    _classCallCheck(this, Renderer);
+
+    var _this = _possibleConstructorReturn(this, (Renderer.__proto__ || Object.getPrototypeOf(Renderer)).call(this));
+
+    $(document).on('pageBeforeInit', function (e) {
+      console.log('before init event', e.detail);
+      // Page Data contains all required information about loaded and initialized page
+      var page = e.detail.page;
+      if (page.url.indexOf("page.html?url=") < 0) {
+        return;
+      }
+      var url = f7app.getActualPageUrl(page.url);
+      // search for route
+
+      var _this$getRouteByUrl = _this.getRouteByUrl(url),
+          route = _this$getRouteByUrl.route,
+          routeParams = _this$getRouteByUrl.routeParams;
+
+      if (!route) {
+        throw new Error("Couldn't find route for " + url);
+      }
+
+      if (prevPage) {
+        console.log('Cleanup old page components', prevPage.url);
+        var _iteratorNormalCompletion = true;
+        var _didIteratorError = false;
+        var _iteratorError = undefined;
+
+        try {
+          for (var _iterator = prevPage.components[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+            var node = _step.value.node;
+
+            ReactDom.unmountComponentAtNode(node);
+          }
+        } catch (err) {
+          _didIteratorError = true;
+          _iteratorError = err;
+        } finally {
+          try {
+            if (!_iteratorNormalCompletion && _iterator.return) {
+              _iterator.return();
+            }
+          } finally {
+            if (_didIteratorError) {
+              throw _iteratorError;
+            }
+          }
+        }
+      }
+
+      var pageInfo = {
+        url: url,
+        page: page,
+        components: []
+      };
+
+      var PageComponent = route.page;
+      var NavbarComponent = route.navbar;
+
+      var component = ReactDom.render(React.createElement(PageComponent, routeParams), page.container);
+      pageInfo.components.push({
+        node: page.container,
+        component: component
+      });
+      component = ReactDom.render(React.createElement(NavbarComponent, routeParams), page.navbarInnerContainer);
+      pageInfo.components.push({
+        node: page.navbarInnerContainer,
+        component: component
+      });
+      if (route.custom) {
+        var _iteratorNormalCompletion2 = true;
+        var _didIteratorError2 = false;
+        var _iteratorError2 = undefined;
+
+        try {
+          for (var _iterator2 = routes[url].custom[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+            var c = _step2.value;
+
+            var node = document.querySelector(c.container);
+            component = ReactDom.render(React.createElement(c.component, null), node);
+            pageInfo.components.push({
+              node: node,
+              component: component
+            });
+          }
+        } catch (err) {
+          _didIteratorError2 = true;
+          _iteratorError2 = err;
+        } finally {
+          try {
+            if (!_iteratorNormalCompletion2 && _iterator2.return) {
+              _iterator2.return();
+            }
+          } finally {
+            if (_didIteratorError2) {
+              throw _iteratorError2;
+            }
+          }
+        }
+      }
+      var title = ['DiaCalc'];
+      if (route.title) {
+        title.push(route.title);
+      }
+      document.title = title.join(': ');
+
+      _this.emit('rendered', { url: url, route: route });
+
+      prevPage = pageInfo;
+    });
+    return _this;
   }
-  var url = f7app.getActualPageUrl(page.url);
-  // search for route
-  var route = void 0;
-  var routeParams = void 0;
-  for (var path in routes) {
-    var pattern = new UrlPattern(path);
-    routeParams = pattern.match(url);
-    if (routeParams) {
-      route = routes[path];
-      break;
+
+  _createClass(Renderer, [{
+    key: "getRouteByUrl",
+    value: function getRouteByUrl(url) {
+      var route = void 0;
+      var routeParams = void 0;
+      for (var path in routes) {
+        var pattern = new UrlPattern(path);
+        routeParams = pattern.match(url);
+        if (routeParams) {
+          route = routes[path];
+          break;
+        }
+      }
+      return { route: route, routeParams: routeParams };
     }
-  }
-  if (!route) {
-    throw new Error("Couldn't find route for " + url);
-  }
+  }]);
 
-  if (prevPage) {
-    console.log('Cleanup old page components', prevPage.url);
-    var _iteratorNormalCompletion = true;
-    var _didIteratorError = false;
-    var _iteratorError = undefined;
+  return Renderer;
+}(EventEmitter);
 
-    try {
-      for (var _iterator = prevPage.components[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-        var node = _step.value.node;
-
-        ReactDom.unmountComponentAtNode(node);
-      }
-    } catch (err) {
-      _didIteratorError = true;
-      _iteratorError = err;
-    } finally {
-      try {
-        if (!_iteratorNormalCompletion && _iterator.return) {
-          _iterator.return();
-        }
-      } finally {
-        if (_didIteratorError) {
-          throw _iteratorError;
-        }
-      }
-    }
-  }
-
-  var pageInfo = {
-    url: url,
-    page: page,
-    components: []
-  };
-
-  var PageComponent = route.page;
-  var NavbarComponent = route.navbar;
-
-  var component = ReactDom.render(React.createElement(PageComponent, routeParams), page.container);
-  pageInfo.components.push({
-    node: page.container,
-    component: component
-  });
-  component = ReactDom.render(React.createElement(NavbarComponent, routeParams), page.navbarInnerContainer);
-  pageInfo.components.push({
-    node: page.navbarInnerContainer,
-    component: component
-  });
-  if (route.custom) {
-    var _iteratorNormalCompletion2 = true;
-    var _didIteratorError2 = false;
-    var _iteratorError2 = undefined;
-
-    try {
-      for (var _iterator2 = routes[url].custom[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-        var c = _step2.value;
-
-        var node = document.querySelector(c.container);
-        component = ReactDom.render(React.createElement(c.component, null), node);
-        pageInfo.components.push({
-          node: node,
-          component: component
-        });
-      }
-    } catch (err) {
-      _didIteratorError2 = true;
-      _iteratorError2 = err;
-    } finally {
-      try {
-        if (!_iteratorNormalCompletion2 && _iterator2.return) {
-          _iterator2.return();
-        }
-      } finally {
-        if (_didIteratorError2) {
-          throw _iteratorError2;
-        }
-      }
-    }
-  }
-  prevPage = pageInfo;
-});
-
-var renderer = {};
+var renderer = new Renderer();
 
 exports.default = renderer;
 
-},{"./f7app":20,"./routes/calc/main.jsx":23,"./routes/calc/pick.jsx":24,"./routes/calc/pickStt.jsx":25,"./routes/dishes/add.jsx":26,"./routes/dishes/addComplex.jsx":27,"./routes/dishes/main.jsx":28,"./routes/dishes/pick.jsx":29,"./routes/dishes/pickStt.jsx":30,"./routes/history/main.jsx":31,"./routes/servings/add.jsx":32,"./routes/settings/coeffs.jsx":34,"./routes/settings/main.jsx":35,"./routes/settings/nightscout.jsx":36,"react":246,"react-dom":94,"url-pattern":247}],23:[function(require,module,exports){
+},{"./f7app":20,"./routes/calc/main.jsx":23,"./routes/calc/pick.jsx":24,"./routes/calc/pickStt.jsx":25,"./routes/dishes/add.jsx":26,"./routes/dishes/addComplex.jsx":27,"./routes/dishes/main.jsx":28,"./routes/dishes/pick.jsx":29,"./routes/dishes/pickStt.jsx":30,"./routes/history/main.jsx":31,"./routes/servings/add.jsx":32,"./routes/settings/coeffs.jsx":34,"./routes/settings/main.jsx":35,"./routes/settings/nightscout.jsx":36,"events":56,"react":246,"react-dom":94,"url-pattern":247}],23:[function(require,module,exports){
 "use strict";
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -3107,7 +3188,8 @@ module.exports = {
   custom: [{
     component: SelectCoefPopover,
     container: "#select-meal-coef-popover-content"
-  }]
+  }],
+  title: 'Рассчет дозы'
 };
 
 },{"../../actions/actions.jsx":1,"../../actions/addServing.jsx":3,"../../actions/nightscout.jsx":5,"../../actions/servings.jsx":6,"../../actions/stt.jsx":8,"../../components/LoadingBox.jsx":13,"../../components/ServingListItem.jsx":15,"../../f7app":20,"../../navigator.jsx":21,"../../stores/Dish.jsx":40,"../../stores/Meal.jsx":42,"../../stores/Serving.jsx":45,"../../stores/Settings.jsx":46,"../../util/bu.jsx":48,"../../util/calc.jsx":49,"../../util/coef.jsx":50,"../../util/date.jsx":51,"../../util/dishes.jsx":52,"../../util/stt/speechToText.jsx":54,"moment":83,"react":246}],24:[function(require,module,exports){
@@ -3391,7 +3473,7 @@ var DishesPickPageNavBar = function (_React$Component2) {
           React.createElement(
             "div",
             { className: "center sliding" },
-            "\u0412\u044B\u0431\u043E\u0440 \u0411\u043B\u044E\u0434\u0430"
+            "\u0412\u044B\u0431\u043E\u0440 \u0431\u043B\u044E\u0434\u0430"
           ),
           React.createElement(
             "div",
@@ -3416,7 +3498,8 @@ module.exports = {
   custom: [{
     component: _DishesPopover.DishesPopoverShort,
     container: "#pick-popover-content"
-  }]
+  }],
+  title: 'Выбор блюда'
 };
 
 },{"../../actions/actions.jsx":1,"../../actions/dishPicker.jsx":4,"../../components/DishListItem.jsx":11,"../../components/DishesPopover.jsx":12,"../../components/LoadingBox.jsx":13,"../../f7app":20,"../../navigator.jsx":21,"../../stores/Dish.jsx":40,"../../stores/DishPick.jsx":41,"../../stores/Settings.jsx":46,"../../util/dishes.jsx":52,"escape-string-regexp":55,"lodash":82,"react":246,"react-list":221}],25:[function(require,module,exports){
@@ -3792,7 +3875,8 @@ var SpeechRecognitionDishesPageNavBar = function (_React$Component2) {
 
 module.exports = {
   page: SpeechRecognitionDishesPage,
-  navbar: SpeechRecognitionDishesPageNavBar
+  navbar: SpeechRecognitionDishesPageNavBar,
+  title: 'Голосовой выбор блюд'
 };
 
 },{"../../actions/actions.jsx":1,"../../actions/servings.jsx":6,"../../actions/stt.jsx":8,"../../components/LoadingBox.jsx":13,"../../f7app":20,"../../stores/Dish.jsx":40,"../../stores/Meal.jsx":42,"../../stores/STT.jsx":44,"../../stores/Serving.jsx":45,"../../util/coef.jsx":50,"react":246,"react-dom":94}],26:[function(require,module,exports){
@@ -4143,7 +4227,8 @@ var AddDishPageNavbar = function (_React$Component2) {
 
 module.exports = {
   page: AddDishPage,
-  navbar: AddDishPageNavbar
+  navbar: AddDishPageNavbar,
+  title: 'Добавление/Редактирование блюда'
 };
 
 },{"../../actions/actions.jsx":1,"../../f7app":20,"../../navigator.jsx":21,"../../stores/Dish.jsx":40,"react":246}],27:[function(require,module,exports){
@@ -4598,7 +4683,8 @@ var AddComplexDishPageNavbar = function (_React$Component2) {
 
 module.exports = {
   page: AddComplexDishPage,
-  navbar: AddComplexDishPageNavbar
+  navbar: AddComplexDishPageNavbar,
+  title: 'Добавление сложного блюда'
 };
 
 },{"../../actions/actions.jsx":1,"../../actions/addComplexDish.jsx":2,"../../actions/dishPicker.jsx":4,"../../actions/stt.jsx":8,"../../components/LoadingBox.jsx":13,"../../components/SubDish.jsx":18,"../../f7app":20,"../../navigator.jsx":21,"../../stores/AddComplexDish.jsx":38,"../../stores/Dish.jsx":40,"../../stores/Settings.jsx":46,"../../util/calc.jsx":49,"../../util/dishes.jsx":52,"react":246,"uuid/v4":252}],28:[function(require,module,exports){
@@ -4852,7 +4938,8 @@ module.exports = {
   custom: [{
     component: _DishesPopover2.default,
     container: "#dishes-popover-content"
-  }]
+  }],
+  title: 'Блюда'
 };
 
 },{"../../actions/actions.jsx":1,"../../components/DishListItem.jsx":11,"../../components/DishesPopover.jsx":12,"../../components/LoadingBox.jsx":13,"../../f7app":20,"../../navigator.jsx":21,"../../stores/Dish.jsx":40,"../../stores/Settings.jsx":46,"../../util/dishes.jsx":52,"lodash":82,"react":246,"react-dom":94,"react-list":221}],29:[function(require,module,exports){
@@ -5133,7 +5220,8 @@ var HistoryMainPageNavBar = function (_React$Component2) {
 
 module.exports = {
   page: HistoryMainPage,
-  navbar: HistoryMainPageNavBar
+  navbar: HistoryMainPageNavBar,
+  title: 'История'
 };
 
 },{"../../actions/actions.jsx":1,"../../components/LoadingBox.jsx":13,"../../components/MealHistoryListItem.jsx":14,"../../f7app":20,"../../navigator.jsx":21,"../../stores/Dish.jsx":40,"../../stores/Meal.jsx":42,"../../stores/MealHistory.jsx":43,"../../stores/Serving.jsx":45,"../../util/bu.jsx":48,"../../util/date.jsx":51,"../../util/dishes.jsx":52,"react":246}],32:[function(require,module,exports){
@@ -5531,7 +5619,8 @@ var AddServingPageNavbar = function (_React$Component2) {
 
 module.exports = {
   page: AddServingPage,
-  navbar: AddServingPageNavbar
+  navbar: AddServingPageNavbar,
+  title: 'Добавление/Редактирование порции'
 };
 
 },{"../../actions/actions.jsx":1,"../../actions/addServing.jsx":3,"../../components/LoadingBox.jsx":13,"../../f7app":20,"../../navigator.jsx":21,"../../stores/AddServing.jsx":39,"../../stores/Dish.jsx":40,"../../stores/Meal.jsx":42,"../../stores/Serving.jsx":45,"../../stores/Settings.jsx":46,"../../util/bu.jsx":48,"../../util/calc.jsx":49,"../../util/dishes.jsx":52,"react":246}],33:[function(require,module,exports){
@@ -6059,7 +6148,8 @@ var SettingsCoeffsPageNavBar = function (_React$Component2) {
 
 module.exports = {
   page: SettingsCoeffsPage,
-  navbar: SettingsCoeffsPageNavBar
+  navbar: SettingsCoeffsPageNavBar,
+  title: 'Коэффициенты'
 };
 
 },{"../../actions/actions.jsx":1,"../../actions/settings.jsx":7,"../../components/LoadingBox.jsx":13,"../../components/SettingsCoef.jsx":16,"../../f7app":20,"../../navigator.jsx":21,"../../stores/Settings.jsx":46,"../../util/coef.jsx":50,"../../util/date.jsx":51,"./coefModal.jsx":33,"lodash":82,"react":246}],35:[function(require,module,exports){
@@ -6252,7 +6342,8 @@ var SettingsMainPageNavBar = function (_React$Component2) {
 
 module.exports = {
   page: SettingsMainPage,
-  navbar: SettingsMainPageNavBar
+  navbar: SettingsMainPageNavBar,
+  title: 'Настройки'
 };
 
 },{"../../actions/actions.jsx":1,"../../actions/settings.jsx":7,"../../components/LoadingBox.jsx":13,"../../f7app":20,"../../navigator.jsx":21,"../../stores/Settings.jsx":46,"lodash":82,"react":246}],36:[function(require,module,exports){
@@ -6485,7 +6576,8 @@ var SettingsMainPageNavBar = function (_React$Component2) {
 
 module.exports = {
   page: SettingsMainPage,
-  navbar: SettingsMainPageNavBar
+  navbar: SettingsMainPageNavBar,
+  title: 'Nightscout'
 };
 
 },{"../../actions/actions.jsx":1,"../../actions/settings.jsx":7,"../../components/LoadingBox.jsx":13,"../../f7app":20,"../../navigator.jsx":21,"../../stores/Settings.jsx":46,"lodash":82,"react":246}],37:[function(require,module,exports){

@@ -218,5 +218,6 @@ class AddServingPageNavbar extends React.Component {
 
 module.exports = {
   page: AddServingPage,
-  navbar: AddServingPageNavbar
+  navbar: AddServingPageNavbar,
+  title: 'Добавление/Редактирование порции'
 };

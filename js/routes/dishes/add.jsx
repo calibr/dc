@@ -206,5 +206,6 @@ class AddDishPageNavbar extends React.Component {
 
 module.exports = {
   page: AddDishPage,
-  navbar: AddDishPageNavbar
+  navbar: AddDishPageNavbar,
+  title: 'Добавление/Редактирование блюда'
 };

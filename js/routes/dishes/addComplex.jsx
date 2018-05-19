@@ -264,5 +264,6 @@ class AddComplexDishPageNavbar extends React.Component {
 
 module.exports = {
   page: AddComplexDishPage,
-  navbar: AddComplexDishPageNavbar
+  navbar: AddComplexDishPageNavbar,
+  title: 'Добавление сложного блюда'
 };

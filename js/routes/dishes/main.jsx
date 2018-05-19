@@ -143,5 +143,6 @@ module.exports = {
       component: DishesPopover,
       container: "#dishes-popover-content"
     }
-  ]
+  ],
+  title: 'Блюда'
 };

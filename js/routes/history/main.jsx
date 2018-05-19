@@ -140,5 +140,6 @@ class HistoryMainPageNavBar extends React.Component {
 
 module.exports = {
   page: HistoryMainPage,
-  navbar: HistoryMainPageNavBar
+  navbar: HistoryMainPageNavBar,
+  title: 'История'
 };

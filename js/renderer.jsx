@@ -3,6 +3,7 @@ var ReactDom = require("react-dom");
 var React = require("react");
 var f7app = require("./f7app");
 var UrlPattern = require("url-pattern");
+const EventEmitter = require("events")
 
 var routes = {
   "/calc": require("./routes/calc/main.jsx"),
@@ -24,68 +25,86 @@ var routes = {
 
 var prevPage = null
 
-$(document).on('pageBeforeInit', function (e) {
-  console.log('before init event', e.detail)
-  // Page Data contains all required information about loaded and initialized page
-  var page = e.detail.page;
-  if(page.url.indexOf("page.html?url=") < 0) {
-    return;
-  }
-  var url = f7app.getActualPageUrl(page.url)
-  // search for route
-  let route;
-  let routeParams;
-  for(let path in routes) {
-    let pattern = new UrlPattern(path);
-    routeParams = pattern.match(url);
-    if(routeParams) {
-      route = routes[path];
-      break;
-    }
-  }
-  if(!route) {
-    throw new Error("Couldn't find route for " + url);
-  }
+class Renderer extends EventEmitter {
+  constructor() {
+    super()
+    $(document).on('pageBeforeInit', (e) => {
+      console.log('before init event', e.detail)
+      // Page Data contains all required information about loaded and initialized page
+      var page = e.detail.page;
+      if(page.url.indexOf("page.html?url=") < 0) {
+        return;
+      }
+      var url = f7app.getActualPageUrl(page.url)
+      // search for route
+      let {route, routeParams} = this.getRouteByUrl(url);
 
-  if(prevPage) {
-    console.log('Cleanup old page components', prevPage.url)
-    for(let {node} of prevPage.components) {
-      ReactDom.unmountComponentAtNode(node)
-    }
-  }
+      if(!route) {
+        throw new Error("Couldn't find route for " + url);
+      }
 
-  let pageInfo = {
-    url,
-    page,
-    components: []
-  }
+      if(prevPage) {
+        console.log('Cleanup old page components', prevPage.url)
+        for(let {node} of prevPage.components) {
+          ReactDom.unmountComponentAtNode(node)
+        }
+      }
 
-  let PageComponent = route.page;
-  let NavbarComponent = route.navbar;
+      let pageInfo = {
+        url,
+        page,
+        components: []
+      }
 
-  let component = ReactDom.render(<PageComponent {...routeParams}/>, page.container);
-  pageInfo.components.push({
-    node: page.container,
-    component
-  })
-  component = ReactDom.render(<NavbarComponent {...routeParams}/>, page.navbarInnerContainer);
-  pageInfo.components.push({
-    node: page.navbarInnerContainer,
-    component
-  })
-  if(route.custom) {
-    for(let c of routes[url].custom) {
-      let node = document.querySelector(c.container)
-      component = ReactDom.render(<c.component/>, node);
+      let PageComponent = route.page;
+      let NavbarComponent = route.navbar;
+
+      let component = ReactDom.render(<PageComponent {...routeParams}/>, page.container);
       pageInfo.components.push({
-        node,
+        node: page.container,
         component
       })
-    }
-  }
-  prevPage = pageInfo
-});
+      component = ReactDom.render(<NavbarComponent {...routeParams}/>, page.navbarInnerContainer);
+      pageInfo.components.push({
+        node: page.navbarInnerContainer,
+        component
+      })
+      if(route.custom) {
+        for(let c of routes[url].custom) {
+          let node = document.querySelector(c.container)
+          component = ReactDom.render(<c.component/>, node);
+          pageInfo.components.push({
+            node,
+            component
+          })
+        }
+      }
+      let title = ['DiaCalc']
+      if(route.title) {
+        title.push(route.title)
+      }
+      document.title = title.join(': ')
 
-var renderer = {};
+      this.emit('rendered', {url, route})
+
+      prevPage = pageInfo
+    });
+  }
+  getRouteByUrl(url) {
+    let route;
+    let routeParams;
+    for(let path in routes) {
+      let pattern = new UrlPattern(path);
+      routeParams = pattern.match(url);
+      if(routeParams) {
+        route = routes[path];
+        break;
+      }
+    }
+    return {route, routeParams}
+  }
+}
+
+var renderer = new Renderer();
 
 export default renderer
