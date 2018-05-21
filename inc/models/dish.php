@@ -2,7 +2,7 @@
 
 namespace Diab;
 
-class Dish {
+class Dish extends Model {
   public $id;
   public $title;
   public $carbs;
@@ -27,8 +27,8 @@ class Dish {
     }
   }
 
-  public static function getAll() {
-    $rows = DB::inst()->to_array("select * from dishes");
+  public function getAll() {
+    $rows = DB::inst()->to_array("select * from dishes where user_id = #d", [$this->userId]);
     $res = [];
     foreach($rows as $row) {
       $dish = new Dish();
@@ -43,8 +43,8 @@ class Dish {
     return $res;
   }
 
-  public static function get($id) {
-    $rows = DB::inst()->to_array("select * from dishes where `id` = #d", [$id]);
+  public function get($id) {
+    $rows = DB::inst()->to_array("select * from dishes where `id` = #d and user_id = #d", [$id, $this->userId]);
     if(!$rows) {
       throw new \Exception("Dish not found($id)");
     }
@@ -58,14 +58,15 @@ class Dish {
     return $dish;
   }
 
-  public static function add($dish) {
+  public function add($dish) {
     self::checkInputDish($dish);
     DB::inst()->q(
       "INSERT INTO `dishes`
       SET `date` = NOW(), `title` = #s, `carbs` = #s,
-      `proteins` = #s, `fats` = #s, `gi` = #s, `complex_data` = #s", [
+      `proteins` = #s, `fats` = #s, `gi` = #s, `complex_data` = #s, `user_id` = #d", [
         $dish["title"], $dish["carbs"], $dish["proteins"],
-        $dish["fats"], $dish["gi"], isset($dish["complex_data"]) ? $dish["complex_data"] : ""
+        $dish["fats"], $dish["gi"], isset($dish["complex_data"]) ? $dish["complex_data"] : "",
+        $this->userId
       ]
     );
     $id = DB::inst()->id();
@@ -75,33 +76,33 @@ class Dish {
     return self::get($id);
   }
 
-  public static function update($id, $dish) {
+  public function update($id, $dish) {
     self::checkInputDish($dish);
     DB::inst()->q(
       "UPDATE `dishes`
       SET `title` = #s, `carbs` = #s, `proteins` = #s, `fats` = #s, `gi` = #s
-      WHERE `id` = #d", [
-        $dish["title"], $dish["carbs"], $dish["proteins"], $dish["fats"], $dish["gi"], $id
+      WHERE `id` = #d AND user_id = #d", [
+        $dish["title"], $dish["carbs"], $dish["proteins"], $dish["fats"], $dish["gi"], $id, $this->userId
       ]
     );
     return self::get($id);
   }
 
-  public static function delete($id) {
+  public function delete($id) {
     DB::inst()->q(
       "DELETE FROM `dishes`
-      WHERE `id` = #d", [
-        $id
+      WHERE `id` = #d AND user_id = #d", [
+        $id, $this->userId
       ]
     );
   }
 
-  public static function markDelete($id) {
+  public function markDelete($id) {
     DB::inst()->q(
       "UPDATE `dishes`
       SET `deleted` = 1
-      WHERE `id` = #d", [
-        $id
+      WHERE `id` = #d AND user_id = #d", [
+        $id, $this->userId
       ]
     );
   }

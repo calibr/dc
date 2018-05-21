@@ -1,0 +1,12 @@
+<IfModule mod_negotiation.c>
+    Options -Multiviews
+</IfModule>
+
+<IfModule mod_security.c>
+    SecFilterEngine Off
+    SecFilterScanPOST Off
+</IfModule>
+
+RewriteEngine On
+
+RewriteRule ^api/(.*)$ api.php?a=$1 [QSA,L]

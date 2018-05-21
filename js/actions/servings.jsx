@@ -1,6 +1,6 @@
 import 'whatwg-fetch'
 import Dispatcher from "../dispatcher.jsx";
-import {ROOT} from './actions.jsx'
+import {apiFetch} from '../util/fetch.jsx'
 import uuid from 'uuid'
 import MealStore from '../stores/Meal.jsx'
 
@@ -13,11 +13,9 @@ export var importServings = function(servings) {
     }
   }
   let tag = uuid.v4()
-  fetch(ROOT + "/servings.php?a=import", {
+  apiFetch("/api/serving/import", {
     method: "POST",
     body: formData
-  }).then((response) => {
-    return response.json();
   }).then((responseData) => {
     for(let servingData of responseData.servings) {
       Dispatcher.dispatch({

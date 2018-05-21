@@ -2,6 +2,23 @@ var app = require("./f7app");
 import renderer from './renderer.jsx'
 
 var navigator = {
+  navigateMiddlewares: [],
+  addNavigateMiddleware: function(fn) {
+    this.navigateMiddlewares.push(fn)
+  },
+  runNavigateMiddlewares: function(initialData) {
+    let i = 0
+    let _run = (data) => {
+      if(!this.navigateMiddlewares[i]) {
+        return data
+      }
+      return Promise.resolve(this.navigateMiddlewares[i](data)).then(newData => {
+        i++
+        return _run(newData || data)
+      })
+    }
+    return _run(initialData)
+  },
   init: function() {
     window.addEventListener('popstate', (event) => {
       let url = document.location.hash
@@ -13,20 +30,22 @@ var navigator = {
     }, false)
   },
   navigate: function(url, params = {}) {
-    let {route} = renderer.getRouteByUrl(url)
-    let needToLoadView = true
-    if(!params.skipHistory && route && !route.skipHistory) {
-      let newHash = '#!' + url
-      if(document.location.hash === newHash) {
+    this.runNavigateMiddlewares({url}).then(({url}) => {
+      let {route} = renderer.getRouteByUrl(url)
+      let needToLoadView = true
+      if(!params.skipHistory && route && !route.skipHistory) {
+        let newHash = '#!' + url
+        if(document.location.hash === newHash) {
+        }
+        else {
+          document.location.hash = '#!' + url
+          needToLoadView = false
+        }
       }
-      else {
-        document.location.hash = '#!' + url
-        needToLoadView = false
+      if(needToLoadView) {
+        this._loadView(url)
       }
-    }
-    if(needToLoadView) {
-      this._loadView(url)
-    }
+    })
   },
   _loadView: (url) => {
     console.log('Navigate to', url)

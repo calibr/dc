@@ -1,17 +1,14 @@
 import 'whatwg-fetch'
 import Dispatcher from "../dispatcher.jsx";
-
-import {ROOT} from '../setup.jsx'
+import {apiFetch} from '../util/fetch.jsx'
 
 export function setValue(name, value) {
   var formData = new FormData();
   formData.append('name', name);
   formData.append('value', value);
-  fetch(ROOT + "/settings.php?a=set", {
+  apiFetch("/api/settings/set", {
     method: "POST",
     body: formData
-  }).then((response) => {
-    return response.json();
   }).then((responseData) => {
     Dispatcher.dispatch({
       eventName: "settings.set",
@@ -24,11 +21,9 @@ export function setValue(name, value) {
 export function deleteValue(name) {
   var formData = new FormData();
   formData.append('name', name);
-  fetch(ROOT + "/settings.php?a=delete", {
+  apiFetch("/api/settings/delete", {
     method: "POST",
     body: formData
-  }).then((response) => {
-    return response.json();
   }).then((responseData) => {
     Dispatcher.dispatch({
       eventName: "settings.delete",
@@ -41,11 +36,9 @@ export function deleteValue(name) {
 export function deleteValueMass(names) {
   var formData = new FormData();
   formData.append('names[]', names);
-  fetch(ROOT + "/settings.php?a=delete", {
+  apiFetch("/api/settings/delete", {
     method: "POST",
     body: formData
-  }).then((response) => {
-    return response.json();
   }).then((responseData) => {
     Dispatcher.dispatch({
       eventName: "settings.delete",

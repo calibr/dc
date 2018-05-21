@@ -42,6 +42,17 @@ class SettingsMainPage extends React.Component {
       <div className="list-block media-list not-fixed-height">
         <ul>
           <li>
+            <a href="#" className="item-link item-content" onClick={navigator.navigate.bind(navigator, '/settings/main')}>
+              <div className="item-inner">
+                <div className="item-title-row">
+                  <div className="item-title"><i className="fa fa-cog"></i> Основные настройки</div>
+                  <div className="item-after"></div>
+                </div>
+                <div className="item-text">Базовые настройки приложения</div>
+              </div>
+            </a>
+          </li>
+          <li>
             <a href="#" className="item-link item-content" onClick={navigator.navigate.bind(navigator, '/settings/coeffs')}>
               <div className="item-inner">
                 <div className="item-title-row">

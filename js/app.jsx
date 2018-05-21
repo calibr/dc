@@ -2,44 +2,40 @@ var ReactDom = require("react-dom");
 var React = require("react");
 import navigator from "./navigator.jsx";
 import SpeechRecognitionDishes from './components/SpeechRecognitionDishes.jsx'
+import UserStore from './stores/User.jsx'
+import accessControl from './accesscontrol.jsx'
+
+// what a weird word:)
+let prepopulatableStores = {
+  user: UserStore
+}
 
 require("./renderer.jsx");
 
 var app = require("./f7app");
 var $ = require("./f7app").$;
 
-var calcView = app.addView("#calc-view", {
-  dynamicNavbar: true
-});
-calcView.name = "calc";
-var dishesView = app.addView("#dishes-view", {
-  dynamicNavbar: true
-});
-dishesView.name = "dishes";
-var settingsView = app.addView("#settings-view", {
-  dynamicNavbar: true
-});
-settingsView.name = "settings";
-var historyView = app.addView("#history-view", {
-  dynamicNavbar: true
-});
-historyView.name = "history";
+let viewsNames = [
+  'calc',
+  'dishes',
+  'settings',
+  'history',
+  'auth'
+]
+let viewsByName = {}
+for(let viewName of viewsNames) {
+  let view = app.addView("#" + viewName + "-view", {
+    dynamicNavbar: true
+  });
+  view.name = viewName
+  viewsByName[viewName] = view
+}
 
 // extending framework7 app
 app.getActiveView = () => {
   var activeA = document.querySelector(".toolbar .tab-link.active");
-  if(activeA.getAttribute("href") === "#calc-view") {
-    return calcView;
-  }
-  if(activeA.getAttribute("href") === "#dishes-view") {
-    return dishesView;
-  }
-  if(activeA.getAttribute("href") === "#settings-view") {
-    return settingsView;
-  }
-  if(activeA.getAttribute("href") === "#history-view") {
-    return historyView;
-  }
+  let viewName = activeA.getAttribute("href").replace('#', '').replace('-view', '')
+  return viewsByName[viewName]
 };
 app.ensureViewOpened = (name) => {
   let $link = $('#bottom-tabbar a[href="#' + name + '-view"]')
@@ -56,6 +52,12 @@ app.getViewByName = (name) => {
 };
 app.getActualPageUrl = (url) => {
   return url.replace(/^.+?\?url=/, "")
+}
+
+if(window.PREPOPULATE) {
+  for(let item of window.PREPOPULATE) {
+    prepopulatableStores[item.store].populate(item.data)
+  }
 }
 
 // initial navigation

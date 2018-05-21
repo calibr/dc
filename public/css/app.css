@@ -90,8 +90,14 @@
   font-size: 22px;
   margin-top: 5px;
 }
+.history-content .month-head:first-child {
+  margin-top: 20px;
+}
 .history-content .month-head-2 {
   text-align: center;
+}
+.history-content .list-block {
+  margin: 20px 0;
 }
 
 .list-block.servings-eaten li {
@@ -175,4 +181,17 @@ ul.list-bottom-margin li:last-child {
 
 .list-block.not-fixed-height .item-text {
   height: auto;
+}
+
+.login-screen-content .item-content.errored {
+  background: rgba(255, 0, 0, 0.1);
+}
+
+.login-screen-content .field-error {
+  font-size: 10px;
+  color: rgba(255, 0, 0, 0.8);
+}
+
+.padding-5 {
+  padding: 5px;
 }

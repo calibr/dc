@@ -2,7 +2,7 @@ import 'whatwg-fetch'
 import Dispatcher from "../dispatcher.jsx";
 import UUID from 'uuid'
 import {SpeechToText} from '../util/stt/speechToText.jsx'
-import {ROOT} from '../setup.jsx'
+import {apiFetch} from '../util/fetch.jsx'
 import navigator from "../navigator.jsx";
 import STTStore from '../stores/STT.jsx'
 
@@ -11,11 +11,9 @@ let sttByTag = {}
 export function dishLookup(keywords, tag) {
   var formData = new FormData();
   formData.append('keywords', JSON.stringify(keywords));
-  fetch(ROOT + "/stt.php?a=keywordsToDishes", {
+  apiFetch("/api/stt/keywordsToDishes", {
     method: "POST",
     body: formData
-  }).then((response) => {
-    return response.json();
   }).then((responseData) => {
     Dispatcher.dispatch({
       eventName: "stt.keywordsToDishes",

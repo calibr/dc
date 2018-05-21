@@ -1,10 +1,10 @@
-var gramsInBu = 12;
+import Settings from '../stores/Settings.jsx'
 
 export function buToCarbs(bu) {
-  return gramsInBu * bu;
+  return Settings.getSetting('carbs_per_bu') * bu;
 }
 
 export function carbsToBu(carbs) {
-  var bu = carbs/gramsInBu;
+  var bu = carbs/Settings.getSetting('carbs_per_bu');
   return Math.round(bu * 100)/100;
 };

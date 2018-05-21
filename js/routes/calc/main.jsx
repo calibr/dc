@@ -61,7 +61,7 @@ class CalcMainPage extends React.Component {
   onMealChange = () => {
     var activeMeal = Meal.getActive();
     var newState = {
-      activeMeal: activeMeal
+      activeMeal
     };
     if(!activeMeal && this.state.servings) {
       newState.servings = null;
@@ -304,6 +304,10 @@ class SelectCoefPopover extends React.Component {
       settings: Settings.getSettings()
     });
   }
+  onGoSetupCoeffs() {
+    app.closeModal()
+    navigator.navigate('/settings/coeffs')
+  }
   render() {
     if(!this.state.settings) {
       return null;
@@ -325,6 +329,12 @@ class SelectCoefPopover extends React.Component {
         onClick={this.onSelectCoef.bind(this, coef.k)}>
         С {hour2(coef.from)} по {hour2(coef.to)} ({coef.k})
       </a></li>)
+
+    if(!coefElems.length) {
+      return <div className="text-center padding-5">
+        Коэффициенты не заданы, <a href="" onClick={this.onGoSetupCoeffs}>задать</a>
+      </div>
+    }
 
     return <ul>
       {coefElems}

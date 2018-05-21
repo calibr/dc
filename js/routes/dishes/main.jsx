@@ -83,6 +83,9 @@ class DishesMainPage extends React.Component {
       dishesDisplayList
     })
   }
+  onAddDish() {
+    navigator.navigate("/dishes/add")
+  }
   renderListItem = (index, key) => {
     let dish = this.state.dishesDisplayList[index]
     return <DishListItem
@@ -96,6 +99,25 @@ class DishesMainPage extends React.Component {
   }
   render() {
     var dishesElems;
+    let dishesList
+    if(this.state.dishes) {
+      if(this.state.dishes.length) {
+        dishesList = <ReactList
+          itemRenderer={this.renderListItem}
+          itemsRenderer={this.renderList}
+          length={this.state.dishesDisplayList.length}
+          type='simple'
+        />
+      }
+      else {
+        dishesList = <div className="text-center">
+          В списке блюд ничего нет, <a href="" onClick={this.onAddDish}>добавить</a>
+        </div>
+      }
+    }
+    else {
+      dishesList = <LoadingBox/>
+    }
     return <div className="page-content">
       {this.state.dishes ?
       <form id="dish-list-search-bar" className="searchbar searchbar-init">
@@ -107,14 +129,7 @@ class DishesMainPage extends React.Component {
         <a href="#" className="searchbar-cancel">Отмена</a>
       </form> : null}
       <div className="list-block">
-        {this.state.dishes ?
-          <ReactList
-            itemRenderer={this.renderListItem}
-            itemsRenderer={this.renderList}
-            length={this.state.dishesDisplayList.length}
-            type='simple'
-          />
-         : <LoadingBox/>}
+        {dishesList}
       </div>
     </div>
   }

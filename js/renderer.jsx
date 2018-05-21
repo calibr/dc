@@ -20,7 +20,10 @@ var routes = {
   "/settings": require("./routes/settings/main.jsx"),
   "/settings/coeffs": require("./routes/settings/coeffs.jsx"),
   "/settings/nightscout": require("./routes/settings/nightscout.jsx"),
+  "/settings/main": require("./routes/settings/mainSettings.jsx"),
   "/history": require("./routes/history/main.jsx"),
+  "/auth": require("./routes/auth/login.jsx"),
+  "/auth/register": require("./routes/auth/register.jsx")
 };
 
 var prevPage = null
@@ -64,11 +67,13 @@ class Renderer extends EventEmitter {
         node: page.container,
         component
       })
-      component = ReactDom.render(<NavbarComponent {...routeParams}/>, page.navbarInnerContainer);
-      pageInfo.components.push({
-        node: page.navbarInnerContainer,
-        component
-      })
+      if(NavbarComponent) {
+        component = ReactDom.render(<NavbarComponent {...routeParams}/>, page.navbarInnerContainer);
+        pageInfo.components.push({
+          node: page.navbarInnerContainer,
+          component
+        })
+      }
       if(route.custom) {
         for(let c of routes[url].custom) {
           let node = document.querySelector(c.container)
@@ -84,6 +89,25 @@ class Renderer extends EventEmitter {
         title.push(route.title)
       }
       document.title = title.join(': ')
+
+      // special view options
+      // hide navbar
+      let $navbar = $(page.navbarInnerContainer.parentNode)
+      if(route.hideNavbar) {
+        $navbar.hide()
+      }
+      else {
+        $navbar.show()
+      }
+
+      // hide tabbar
+      let $tabbar = $('#bottom-tabbar')
+      if(route.hideTabbar) {
+        $tabbar.hide()
+      }
+      else {
+        $tabbar.show()
+      }
 
       this.emit('rendered', {url, route})
 

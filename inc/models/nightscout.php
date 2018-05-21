@@ -4,7 +4,7 @@ namespace Diab;
 
 use Ramsey\Uuid\Uuid;
 
-class NightScout {
+class NightScout extends Model {
   // delay after adding treatments after which they should be flushed to nightscout
   // TODO make it configurable
   private $treatmentDelay = 300;

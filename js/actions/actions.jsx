@@ -1,7 +1,6 @@
 import 'whatwg-fetch'
 import Dispatcher from "../dispatcher.jsx";
-
-export const ROOT = "/diab";
+import {apiFetch} from '../util/fetch.jsx'
 
 function buildQuery(query) {
   var arr = [];
@@ -17,9 +16,7 @@ export var loadDishes = function() {
     return;
   }
   loadingDishes = true;
-  fetch(ROOT + "/dishes.php?a=fetch").then((response) => {
-    return response.json();
-  }).then((data) => {
+  apiFetch("/api/dish/fetch").then((data) => {
     loadingDishes = false;
     Dispatcher.dispatch({
       eventName: "dishes.list",
@@ -33,11 +30,9 @@ export var addDish = function(data, opts = {}) {
   for(let k in data) {
     formData.append(k, data[k]);
   }
-  fetch(ROOT + "/dishes.php?a=add", {
+  apiFetch("/api/dish/add", {
     method: "POST",
     body: formData
-  }).then((response) => {
-    return response.json();
   }).then((responseData) => {
     Dispatcher.dispatch({
       eventName: "dishes.added",
@@ -52,11 +47,9 @@ export var updateDish = function(id, data) {
   for(let k in data) {
     formData.append(k, data[k]);
   }
-  fetch(ROOT + "/dishes.php?a=update&id=" + id, {
+  apiFetch("/api/dish/update?id=" + id, {
     method: "POST",
     body: formData
-  }).then((response) => {
-    return response.json();
   }).then((responseData) => {
     Dispatcher.dispatch({
       eventName: "dishes.updated",
@@ -66,7 +59,7 @@ export var updateDish = function(id, data) {
 };
 
 export var deleteDish = function(id) {
-  fetch(ROOT + "/dishes.php?a=delete&id=" + id, {
+  apiFetch("/api/dish/delete?id=" + id, {
     method: "POST"
   }).then((response) => {
     Dispatcher.dispatch({
@@ -93,10 +86,8 @@ export var loadMeals = function(options = {}) {
     offset,
     limit
   });
-  fetch(ROOT + "/meals.php?a=fetch&" + query).then((response) => {
+  apiFetch("/api/meal/fetch?" + query).then((data) => {
     fetchingActiveMeal = false;
-    return response.json();
-  }).then((data) => {
     Dispatcher.dispatch({
       eventName: "meals.list",
       meals: data,
@@ -112,10 +103,8 @@ export var fetchActiveMeal = function() {
     return;
   }
   fetchingActiveMeal = true;
-  fetch(ROOT + "/meals.php?a=fetch_active").then((response) => {
+  apiFetch("/api/meal/fetchactive").then((data) => {
     fetchingActiveMeal = false;
-    return response.json();
-  }).then((data) => {
     Dispatcher.dispatch({
       eventName: "meals.active-fetch",
       meal: data
@@ -129,11 +118,9 @@ export var createMeal = function(data) {
   for(let k in data) {
     formData.append(k, data[k]);
   }
-  fetch(ROOT + "/meals.php?a=add", {
+  apiFetch("/api/meal/add", {
     method: "POST",
     body: formData
-  }).then((response) => {
-    return response.json();
   }).then((data) => {
     Dispatcher.dispatch({
       eventName: "meals.create",
@@ -145,11 +132,9 @@ export var createMeal = function(data) {
 export var setMealCoef = function(id, coef) {
   var formData = new FormData();
   formData.append("coef", coef);
-  fetch(ROOT + "/meals.php?a=setCoef&id=" + encodeURIComponent(id), {
+  apiFetch("/api/meal/setCoef?id=" + encodeURIComponent(id), {
     method: "POST",
     body: formData
-  }).then((response) => {
-    return response.json();
   }).then((data) => {
     Dispatcher.dispatch({
       eventName: "meals.update",
@@ -159,10 +144,8 @@ export var setMealCoef = function(id, coef) {
 };
 
 export var endMeal = function(id) {
-  fetch(ROOT + "/meals.php?a=end&id=" + id, {
+  apiFetch("/api/meal/end?id=" + id, {
     method: "POST"
-  }).then((response) => {
-    return response.json();
   }).then((data) => {
     Dispatcher.dispatch({
       eventName: "meals.end",
@@ -178,11 +161,9 @@ export var addServing = function(data) {
   for(let k in data) {
     formData.append(k, data[k]);
   }
-  fetch(ROOT + "/servings.php?a=add", {
+  apiFetch("/api/serving/add", {
     method: "POST",
     body: formData
-  }).then((response) => {
-    return response.json();
   }).then((responseData) => {
     Dispatcher.dispatch({
       eventName: "servings.added",
@@ -196,11 +177,9 @@ export var updateServing = function(id, data) {
   for(let k in data) {
     formData.append(k, data[k]);
   }
-  fetch(ROOT + "/servings.php?a=update&id=" + id, {
+  apiFetch("/api/serving/update?id=" + id, {
     method: "POST",
     body: formData
-  }).then((response) => {
-    return response.json();
   }).then((responseData) => {
     Dispatcher.dispatch({
       eventName: "servings.updated",
@@ -210,7 +189,7 @@ export var updateServing = function(id, data) {
 };
 
 export var deleteServing = function(id, data) {
-  fetch(ROOT + "/servings.php?a=delete&id=" + id, {
+  apiFetch("/api/serving/delete?id=" + id, {
     method: "POST"
   }).then((responseData) => {
     Dispatcher.dispatch({
@@ -234,9 +213,7 @@ export var fetchServings = function(params) {
     return;
   }
   fetchingServings[key] = true;
-  fetch(ROOT + "/servings.php?a=fetch&" + query).then((response) => {
-    return response.json();
-  }).then((responseData) => {
+  apiFetch("/api/serving/fetch?" + query).then((responseData) => {
     fetchingServings[key] = false;
     Dispatcher.dispatch({
       eventName: "servings.list",
@@ -254,9 +231,7 @@ export var fetchSettings = function() {
     return;
   }
   fetchingSettings = true;
-  fetch(ROOT + "/settings.php?a=fetch").then((response) => {
-    return response.json();
-  }).then((responseData) => {
+  apiFetch("/api/settings/fetch").then((responseData) => {
     fetchingSettings = false;
     Dispatcher.dispatch({
       eventName: "settings.list",
@@ -270,11 +245,9 @@ export var saveSettings = function(data) {
   for(let k in data) {
     formData.append(k, data[k]);
   }
-  fetch(ROOT + "/settings.php?a=save", {
+  apiFetch("/api/settings/save", {
     method: "POST",
     body: formData
-  }).then((response) => {
-    return response.json();
   }).then((responseData) => {
     Dispatcher.dispatch({
       eventName: "settings.list",
@@ -287,11 +260,9 @@ export var setSetting = function(k, v) {
   var formData = new FormData();
   formData.append("name", k);
   formData.append("value", v);
-  fetch(ROOT + "/settings.php?a=set", {
+  apiFetch("/api/settings/set", {
     method: "POST",
     body: formData
-  }).then((response) => {
-    return response.json();
   }).then((responseData) => {
     Dispatcher.dispatch({
       eventName: "settings.list",

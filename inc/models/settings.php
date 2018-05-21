@@ -2,9 +2,9 @@
 
 namespace Diab;
 
-class Settings {
-  public static function getAll() {
-    $rows = DB::inst()->to_array("select `name`, `value` from settings");
+class Settings extends Model {
+  public function getAll() {
+    $rows = DB::inst()->to_array("select `name`, `value` from settings where user_id = #d", [$this->userId]);
     $result = [];
     foreach($rows as $row) {
       $result[$row["name"]] = $row["value"];
@@ -12,11 +12,12 @@ class Settings {
     return $result;
   }
 
-  public static function setMass($data) {
+  public function setMass($data) {
     foreach($data as $k => $v) {
       $set = "
         `name` = '".mysql_escape_string($k)."',
-        `value` = '".mysql_escape_string($v)."'
+        `value` = '".mysql_escape_string($v)."',
+        `user_id` = ".intval($this->userId)."
       ";
       $query = "
         REPLACE INTO
@@ -26,13 +27,14 @@ class Settings {
       ";
       DB::inst()->q($query);
     }
-    return self::getAll();
+    return $this->getAll();
   }
 
-  public static function set($k, $v) {
+  public function set($k, $v) {
     $set = "
       `name` = '".mysql_escape_string($k)."',
-      `value` = '".mysql_escape_string($v)."'
+      `value` = '".mysql_escape_string($v)."',
+      `user_id` = ".intval($this->userId)."
     ";
     $query = "
       REPLACE INTO
@@ -43,19 +45,19 @@ class Settings {
     DB::inst()->q($query);
   }
 
-  public static function get($k) {
+  public function get($k) {
     $query = "
       SELECT
         `value`
       FROM
         `settings`
       WHERE
-        `name` = #s
+        `name` = #s AND user_id = #d
     ";
-    return DB::inst()->first($query, [$k]);
+    return DB::inst()->first($query, [$k, $this->userId]);
   }
 
-  public static function delete($k) {
+  public function delete($k) {
     if(!is_array($k)) {
       $k = [$k];
     }
@@ -63,8 +65,8 @@ class Settings {
       DELETE FROM
         `settings`
       WHERE
-        `name` IN ('".implode("','", array_map('mysql_escape_string', $k))."')
+        `name` IN ('".implode("','", array_map('mysql_escape_string', $k))."') AND user_id = #d
     ";
-    DB::inst()->q($query);
+    DB::inst()->q($query, [$this->userId]);
   }
 }

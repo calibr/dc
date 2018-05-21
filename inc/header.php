@@ -10,10 +10,26 @@ require dirname(__DIR__)."/vendor/autoload.php";
 include __DIR__."/config.php";
 include __DIR__."/db.php";
 include __DIR__."/util.php";
+include __DIR__."/model.php";
+include __DIR__."/controller.php";
+include __DIR__."/session.php";
+include __DIR__."/context.php";
 
-include __DIR__."/dish.php";
-include __DIR__."/meal.php";
-include __DIR__."/serving.php";
-include __DIR__."/settings.php";
-include __DIR__."/nightscout.php";
-include __DIR__."/stt.php";
+include __DIR__."/controllers/dish.php";
+include __DIR__."/controllers/meal.php";
+include __DIR__."/controllers/nightscout.php";
+include __DIR__."/controllers/serving.php";
+include __DIR__."/controllers/settings.php";
+include __DIR__."/controllers/stt.php";
+include __DIR__."/controllers/auth.php";
+
+include __DIR__."/models/dish.php";
+include __DIR__."/models/meal.php";
+include __DIR__."/models/nightscout.php";
+include __DIR__."/models/serving.php";
+include __DIR__."/models/settings.php";
+include __DIR__."/models/stt.php";
+include __DIR__."/models/user.php";
+
+include __DIR__."/errors/error.php";
+include __DIR__."/errors/validation.php";

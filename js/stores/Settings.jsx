@@ -5,17 +5,29 @@ class SettingsStore extends EventEmitter {
   constructor() {
     super();
     this.settings = null;
+    this.defaults = {
+      'dish_order': 'title',
+      carbs_per_bu: 12
+    }
     Dispatcher.register(this.dispatch.bind(this));
   }
   getSettings() {
-    return this.settings;
+    if(this.settings === null) {
+      // not fetched
+      return null
+    }
+    let settings = Object.assign({}, this.defaults, this.settings)
+    return settings
   }
   getSetting(key) {
     if(!this.settings) {
       return null;
     }
     if(!this.settings.hasOwnProperty(key)) {
-      return null;
+      if(key in this.defaults) {
+        return this.defaults[key]
+      }
+      return null
     }
     return this.settings[key];
   }

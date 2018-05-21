@@ -29,7 +29,7 @@ class HistoryMainPage extends React.Component {
     if(!this.state.dishes) {
       loadDishes()
     }
-    if(!this.state.meals) {
+    if(!this.state.mealsIds) {
       loadMeals()
     }
   }
@@ -103,6 +103,13 @@ class HistoryMainPage extends React.Component {
       currentList.push(<MealHistoryListItem key={mealId} mealId={mealId}/>)
     })
     buildCurrentList()
+    if(lists.length === 0) {
+      lists = <div className="list-block">
+        <div className="text-center">
+          История не содержит записей приемов пищи
+        </div>
+      </div>
+    }
     return <div className="page-content history-content">
       {lists}
     </div>;
@@ -123,7 +130,6 @@ class HistoryMainPageNavBar extends React.Component {
           throw new Error("Все значения должны быть введены");
         }
       }
-      //saveSettings(data);
     }
     catch(err) {
       app.alert(err.message, "Ошибка");

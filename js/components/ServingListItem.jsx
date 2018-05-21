@@ -52,7 +52,7 @@ class ServingListItem extends AbstractSwipeOut {
     var buInServing = carbsToBu(carbsInServing);
     var units = calc(carbsInServing, coef)
     return <li className="swipeout serving-list-item">
-      <div onClick={this.onClick} className="swipeout-content item-content item-link">
+      <a onClick={this.onClick} className="swipeout-content item-content item-link">
         <div className="item-inner">
           <div className="item-title">{this.state.dish.title} ({this.state.dish.carbs})</div>
           <div className="item-after">
@@ -60,7 +60,7 @@ class ServingListItem extends AbstractSwipeOut {
             <span className="badge">{units}U</span>
           </div>
         </div>
-      </div>
+      </a>
       <div className="swipeout-actions-left">
         <a href="#" onClick={this.onSwipeOutDelete} className="bg-red">Удалить</a>
         <a href="#" onClick={this.onSwipeOutAte} className="bg-blue">{this.props.ateText || "Съел"}</a>

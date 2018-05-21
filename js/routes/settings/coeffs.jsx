@@ -199,7 +199,7 @@ class SettingsCoeffsPage extends React.Component {
     />)
 
     return <div className="page-content">
-      <div className="content-block-title">Коэффициенты ХЕ/unit</div>
+      <div className="content-block-title">Коэффициенты unit/ХЕ</div>
       <div className="list-block" id="settings-form">
         {
           coefElems.length ? <ul>{coefElems}</ul>

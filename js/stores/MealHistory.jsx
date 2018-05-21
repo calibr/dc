@@ -31,6 +31,13 @@ class MealHistoryStore extends EventEmitter {
         if(anyMealsAdded) {
           this.emit('change')
         }
+        else {
+          if(typeof this.mealsIds === 'undefined') {
+            // the first fetch with empty history
+            this.mealsIds = []
+            this.emit('change')
+          }
+        }
       }
     }
   }

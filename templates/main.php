@@ -66,6 +66,14 @@
         <div class="page"></div>
       </div>
     </div>
+    <div class="tab view navbar-fixed" id="auth-view">
+      <div class="navbar">
+        <div id="list-navbar" class="navbar-inner"></div>
+      </div>
+      <div class="pages">
+        <div class="page"></div>
+      </div>
+    </div>
     <div id="bottom-tabbar" class="toolbar tabbar tabbar-labels">
       <div class="toolbar-inner">
         <a href="#calc-view" class="tab-link active">
@@ -80,12 +88,18 @@
         <a href="#settings-view" class="tab-link">
           <i class="fa fa-cog"></i><span class="tabbar-label">Настройки</span>
         </a>
+        <a style="display:none" href="#auth-view" class="tab-link">
+          <i class="fa fa-cog"></i><span class="tabbar-label"></span>
+        </a>
       </div>
     </div>
   </div>
 
   <?php include __DIR__."/direct_body_elems.php" ?>
 
+  <script>
+    var PREPOPULATE = <?php echo json_encode($prepopulateStores) ?>
+  </script>
   <script type="text/javascript" src="js/framework7/framework7.min.js"></script>
   <script type="text/javascript" src="js/bundle.js?<?php echo time() ?>"></script>
 
