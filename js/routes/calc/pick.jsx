@@ -18,10 +18,10 @@ import escapeRegexp from 'escape-string-regexp'
 function buildState() {
   let settings = Settings.getSettings()
   let dishes = DishStore.getDishesActive()
-  let dishesSorted = dishes && settings && sortDishes(dishes, settings["dish-order"])
+  let dishesSorted = dishes && settings && sortDishes(dishes, settings["dish_order"])
   return {
     dishes,
-    dishOrder: settings['dish-order'],
+    dishOrder: settings['dish_order'],
     dishesSorted,
     dishesDisplayList: dishesSorted
   }
@@ -59,7 +59,7 @@ class DishesPickPage extends React.Component {
   }
   onSettingsChange = () => {
     let settings = Settings.getSettings()
-    if(settings['dish-order'] === this.state.dishOrder) {
+    if(settings['dish_order'] === this.state.dishOrder) {
       // ignore settings change, it didn't affect dish order
       return
     }

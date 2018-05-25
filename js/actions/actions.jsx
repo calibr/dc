@@ -70,7 +70,7 @@ export var deleteDish = function(id) {
 };
 
 export var setDishOrder = function(field, direction) {
-  setSetting("dish-order", field + ":" + direction);
+  setSetting("dish_order", field + ":" + direction);
   Dispatcher.dispatch({
     eventName: "dishes.setOrder",
     order: [field, direction]

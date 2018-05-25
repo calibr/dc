@@ -22,14 +22,14 @@ class DishesMainPage extends React.Component {
   buildState() {
     let settings = Settings.getSettings()
     let dishes = DishStore.getDishesActive()
-    let dishesSorted = dishes && sortDishes(dishes, settings["dish-order"])
+    let dishesSorted = dishes && sortDishes(dishes, settings["dish_order"])
     let dishesDisplayList = dishesSorted
     if(this.state && this.state.query) {
       dishesDisplayList = filterDishesByQuery(this.state.query, dishesDisplayList)
     }
     return {
       dishes,
-      dishOrder: settings["dish-order"],
+      dishOrder: settings["dish_order"],
       dishesSorted,
       dishesDisplayList
     }
@@ -59,7 +59,7 @@ class DishesMainPage extends React.Component {
   }
   onSettingsChange = () => {
     let settings = Settings.getSettings()
-    if(settings['dish-order'] === this.state.dishOrder) {
+    if(settings['dish_order'] === this.state.dishOrder) {
       // dishOrder wasn't changed
       return
     }

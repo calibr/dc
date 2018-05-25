@@ -92,7 +92,7 @@ class AddComplexDishPage extends React.Component {
     if(!this.state.dishes || !this.state.settings) {
       return <div className="page-content"><LoadingBox/></div>
     }
-    var dishes = sortDishes(this.state.dishes, this.state.settings["dish-order"]);
+    var dishes = sortDishes(this.state.dishes, this.state.settings["dish_order"]);
     var info = null;
     var subDishesElems = [];
     for(let i = 0; i != this.state.subDishes.length; i++) {

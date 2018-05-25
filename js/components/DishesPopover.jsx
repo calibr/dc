@@ -52,7 +52,7 @@ class DishesPopover extends React.Component {
     Settings.removeListener("change", this.onSettingsChange);
   }
   render() {
-    var orderStr = this.state.settings["dish-order"]
+    var orderStr = this.state.settings["dish_order"]
     var addDishButton = <li><a href="#" className="list-button item-link color-green" onClick={this.onAddDish}>
         Добавить Блюдо
       </a></li>;

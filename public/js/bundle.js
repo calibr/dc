@@ -143,7 +143,7 @@ var deleteDish = exports.deleteDish = function deleteDish(id) {
 };
 
 var setDishOrder = exports.setDishOrder = function setDishOrder(field, direction) {
-  setSetting("dish-order", field + ":" + direction);
+  setSetting("dish_order", field + ":" + direction);
   _dispatcher2.default.dispatch({
     eventName: "dishes.setOrder",
     order: [field, direction]
@@ -1412,7 +1412,7 @@ var DishesPopover = function (_React$Component) {
   }, {
     key: "render",
     value: function render() {
-      var orderStr = this.state.settings["dish-order"];
+      var orderStr = this.state.settings["dish_order"];
       var addDishButton = React.createElement(
         "li",
         null,
@@ -4000,10 +4000,10 @@ var React = require("react");
 function buildState() {
   var settings = _Settings2.default.getSettings();
   var dishes = _Dish2.default.getDishesActive();
-  var dishesSorted = dishes && settings && (0, _dishes.sortDishes)(dishes, settings["dish-order"]);
+  var dishesSorted = dishes && settings && (0, _dishes.sortDishes)(dishes, settings["dish_order"]);
   return {
     dishes: dishes,
-    dishOrder: settings['dish-order'],
+    dishOrder: settings['dish_order'],
     dishesSorted: dishesSorted,
     dishesDisplayList: dishesSorted
   };
@@ -4023,7 +4023,7 @@ var DishesPickPage = function (_React$Component) {
 
     _this.onSettingsChange = function () {
       var settings = _Settings2.default.getSettings();
-      if (settings['dish-order'] === _this.state.dishOrder) {
+      if (settings['dish_order'] === _this.state.dishOrder) {
         // ignore settings change, it didn't affect dish order
         return;
       }
@@ -5133,7 +5133,7 @@ var AddComplexDishPage = function (_React$Component) {
           React.createElement(_LoadingBox2.default, null)
         );
       }
-      var dishes = (0, _dishes.sortDishes)(this.state.dishes, this.state.settings["dish-order"]);
+      var dishes = (0, _dishes.sortDishes)(this.state.dishes, this.state.settings["dish_order"]);
       var info = null;
       var subDishesElems = [];
       for (var i = 0; i != this.state.subDishes.length; i++) {
@@ -5499,7 +5499,7 @@ var DishesMainPage = function (_React$Component) {
 
     _this.onSettingsChange = function () {
       var settings = _Settings2.default.getSettings();
-      if (settings['dish-order'] === _this.state.dishOrder) {
+      if (settings['dish_order'] === _this.state.dishOrder) {
         // dishOrder wasn't changed
         return;
       }
@@ -5542,14 +5542,14 @@ var DishesMainPage = function (_React$Component) {
     value: function buildState() {
       var settings = _Settings2.default.getSettings();
       var dishes = _Dish2.default.getDishesActive();
-      var dishesSorted = dishes && (0, _dishes.sortDishes)(dishes, settings["dish-order"]);
+      var dishesSorted = dishes && (0, _dishes.sortDishes)(dishes, settings["dish_order"]);
       var dishesDisplayList = dishesSorted;
       if (this.state && this.state.query) {
         dishesDisplayList = (0, _dishes.filterDishesByQuery)(this.state.query, dishesDisplayList);
       }
       return {
         dishes: dishes,
-        dishOrder: settings["dish-order"],
+        dishOrder: settings["dish_order"],
         dishesSorted: dishesSorted,
         dishesDisplayList: dishesDisplayList
       };
@@ -8732,7 +8732,7 @@ var SettingsStore = function (_EventEmitter) {
 
     _this.settings = null;
     _this.defaults = {
-      'dish_order': 'title',
+      'dish_order': 'title:asc',
       carbs_per_bu: 12
     };
     _dispatcher2.default.register(_this.dispatch.bind(_this));

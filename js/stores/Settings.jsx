@@ -6,7 +6,7 @@ class SettingsStore extends EventEmitter {
     super();
     this.settings = null;
     this.defaults = {
-      'dish_order': 'title',
+      'dish_order': 'title:asc',
       carbs_per_bu: 12
     }
     Dispatcher.register(this.dispatch.bind(this));
