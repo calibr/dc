@@ -1004,6 +1004,10 @@ var _accesscontrol = require("./accesscontrol.jsx");
 
 var _accesscontrol2 = _interopRequireDefault(_accesscontrol);
 
+var _renderer = require("./renderer.jsx");
+
+var _renderer2 = _interopRequireDefault(_renderer);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var ReactDom = require("react-dom");
@@ -1015,10 +1019,12 @@ var prepopulatableStores = {
   user: _User2.default
 };
 
-require("./renderer.jsx");
-
 var app = require("./f7app");
 var $ = require("./f7app").$;
+
+_renderer2.default.once('rendered', function () {
+  $('body').removeClass('loading');
+});
 
 var viewsNames = ['calc', 'dishes', 'settings', 'history', 'auth'];
 var viewsByName = {};
@@ -8400,6 +8406,7 @@ var MealHistoryStore = function (_EventEmitter) {
       } else if (payload.eventName === 'meals.end') {
         // need to clear the store
         this.mealsIds = undefined;
+        this.emit('change');
       }
     }
   }]);

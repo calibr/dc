@@ -4,16 +4,19 @@ import navigator from "./navigator.jsx";
 import SpeechRecognitionDishes from './components/SpeechRecognitionDishes.jsx'
 import UserStore from './stores/User.jsx'
 import accessControl from './accesscontrol.jsx'
+import renderer from "./renderer.jsx"
 
 // what a weird word:)
 let prepopulatableStores = {
   user: UserStore
 }
 
-require("./renderer.jsx");
-
 var app = require("./f7app");
 var $ = require("./f7app").$;
+
+renderer.once('rendered', () => {
+  $('body').removeClass('loading')
+})
 
 let viewsNames = [
   'calc',

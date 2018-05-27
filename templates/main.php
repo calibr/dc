@@ -7,13 +7,24 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <title>Рассчет углеводов</title>
 
-<link rel="stylesheet" href="css/framework7/framework7.ios.min.css">
-<link rel="stylesheet" href="css/framework7/framework7.ios.colors.min.css">
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+<style>
+  html {
+    min-height: 100%;
+  }
+  body.loading > * {
+    display: none;
+  }
+  body.loading {
+    background: url(./images/loading.gif);
+    background-position: center center;
+    background-size: 48px 48px;
+    background-repeat: no-repeat;
+    height: 100%;
+  }
+</style>
 
-<link rel="stylesheet" href="css/app.css?v=<?php echo time() ?>">
 </head>
-<body>
+<body class="loading">
 
   <div class="statusbar-overlay"></div>
 
@@ -96,6 +107,11 @@
   </div>
 
   <?php include __DIR__."/direct_body_elems.php" ?>
+
+  <link rel="stylesheet" href="css/framework7/framework7.ios.min.css">
+  <link rel="stylesheet" href="css/framework7/framework7.ios.colors.min.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="css/app.css?v=<?php echo time() ?>">
 
   <script>
     var PREPOPULATE = <?php echo json_encode($prepopulateStores) ?>
