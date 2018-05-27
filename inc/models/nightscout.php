@@ -10,8 +10,8 @@ class NightScout extends Model {
   private $treatmentDelay = 300;
   public function flushTreatmentsIfNeed() {
     $now = time();
-    $minTime = $now - $this->treatmentDelay;
-    $rows = DB::inst()->to_array("SELECT user_id FROM `treatments_buffer` WHERE `time` > #d GROUP BY user_id", [$minTime]);
+    $maxTime = $now - $this->treatmentDelay;
+    $rows = DB::inst()->to_array("SELECT user_id FROM `treatments_buffer` WHERE `time` < #d GROUP BY user_id", [$maxTime]);
     if(!$rows) {
       print "Nothing to flush...\n";
       // nothing to flush
@@ -41,11 +41,18 @@ class NightScout extends Model {
       return;
     }
     $treatments = array_map(function($row) {
-      return json_decode($row['json'], true);
+      $t = json_decode($row['json'], true);
+      $t['time'] = intval($row['time']);
+      return $t;
     }, $rows);
     // now only merge carbs and notes fields
     $result = array_shift($treatments);
+    // need to save minimum time among treatments
+    $minTime = $result['time'];
     foreach($treatments as $treatment) {
+      if($treatment['time'] < $minTime) {
+        $minTime = $treatment['time'];
+      }
       if(!empty($treatment['carbs'])) {
         if(!isset($result['carbs'])) {
           $result['carbs'] = 0;
@@ -65,11 +72,13 @@ class NightScout extends Model {
     $ids = array_map(function($row) {
       return $row['id'];
     }, $rows);
-    DB::inst()->q('DELETE FROM `treatments_buffer` WHERE `id` IN ('.implode(',', $ids).')');
     if(!empty($result['carbs'])) {
       // round carbs to integer
       $result['carbs'] = round($result['carbs']);
     }
+    $result['time'] = $minTime;
+    $result['created_at'] = gmdate(DATE_ISO8601, $minTime);
+    DB::inst()->q('DELETE FROM `treatments_buffer` WHERE `id` IN ('.implode(',', $ids).')');
     print "Flushing treatment to NS: ".json_encode($result)." for $userId\n";
     $this->addTreatment($userId, $result);
   }
@@ -84,7 +93,7 @@ class NightScout extends Model {
     ", [json_encode($data), time(), $this->userId]);
   }
   public function addTreatment($userId, $data) {
-    $data['timestamp'] = time() * 1000;
+    $data['timestamp'] = $data['time'] * 1000;
     $data['eventType'] = '<none>';
     $data['enteredBy'] = 'boluscalc';
     $data['uuid'] = Uuid::uuid4();
