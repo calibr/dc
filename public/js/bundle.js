@@ -8397,6 +8397,9 @@ var MealHistoryStore = function (_EventEmitter) {
             }
           }
         }
+      } else if (payload.eventName === 'meals.end') {
+        // need to clear the store
+        this.mealsIds = undefined;
       }
     }
   }]);

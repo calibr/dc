@@ -40,6 +40,11 @@ class MealHistoryStore extends EventEmitter {
         }
       }
     }
+    else if(payload.eventName === 'meals.end') {
+      // need to clear the store
+      this.mealsIds = undefined
+      this.emit('change')
+    }
   }
 }
 
