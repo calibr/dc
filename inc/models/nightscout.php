@@ -10,21 +10,33 @@ class NightScout extends Model {
   private $treatmentDelay = 300;
   public function flushTreatmentsIfNeed() {
     $now = time();
-    $maxTime = DB::inst()->first("SELECT MAX(`time`) FROM `treatments_buffer`");
-    if(!$maxTime) {
-      // no records in db
+    $minTime = $now - $this->treatmentDelay;
+    $rows = DB::inst()->to_array("SELECT user_id FROM `treatments_buffer` WHERE `time` > #d GROUP BY user_id", [$minTime]);
+    if(!$rows) {
+      print "Nothing to flush...\n";
+      // nothing to flush
       return;
     }
-    $delay = $now - $maxTime;
-    if($delay < $this->treatmentDelay) {
-      // not time
-      return;
-    }
-    $this->flushTreatments();
+    $usersIds = array_map(function($row) {
+      return $row['user_id'];
+    }, $rows);
+    $this->flushTreatments($usersIds);
   }
-  private function flushTreatments() {
+  private function flushTreatments($usersIds) {
+    foreach($usersIds as $userId) {
+      $this->flushTreatmentsForUser($userId);
+    }
+  }
+  private function flushTreatmentsForUser($userId) {
     // squash all treatments into one
-    $rows = DB::inst()->to_array("SELECT * FROM `treatments_buffer`");
+    $rows = DB::inst()->to_array('
+      SELECT
+        *
+      FROM
+        `treatments_buffer`
+      WHERE
+        user_id = #d
+    ', [$userId]);
     if(!$rows) {
       return;
     }
@@ -58,8 +70,8 @@ class NightScout extends Model {
       // round carbs to integer
       $result['carbs'] = round($result['carbs']);
     }
-    print "Flushing treatment to NS: ".json_encode($result)."\n";
-    $this->addTreatment($result);
+    print "Flushing treatment to NS: ".json_encode($result)." for $userId\n";
+    $this->addTreatment($userId, $result);
   }
   public function bufferTreatment($data) {
     DB::inst()->q("
@@ -67,21 +79,24 @@ class NightScout extends Model {
         `treatments_buffer`
       SET
         `json` = #s,
-        `time` = #d
-    ", [json_encode($data), time()]);
+        `time` = #d,
+        `user_id` = #d
+    ", [json_encode($data), time(), $this->userId]);
   }
-  public function addTreatment($data) {
+  public function addTreatment($userId, $data) {
     $data['timestamp'] = time() * 1000;
     $data['eventType'] = '<none>';
     $data['enteredBy'] = 'boluscalc';
     $data['uuid'] = Uuid::uuid4();
     $ch = curl_init();
 
-    $url = Settings::get('ns_url');
-    $secret = Settings::get('ns_secret');
+    $settings = new Settings($userId);
+
+    $url = $settings->get('ns_url');
+    $secret = $settings->get('ns_secret');
 
     if(!$url) {
-      print "Nightscout is not configured\n";
+      print "Nightscout is not configured for $userId\n";
       // nightscout is not configured
       return;
     }
