@@ -254,7 +254,7 @@ class CalcMainPageNavBar extends React.Component {
             K = {this.state.activeMeal.coef}
           </a> : null}
       </div>
-      <div className="center sliding">Рассчет дозы</div>
+      <div className="center sliding">Рассчет</div>
       <div className="right">
         {this.state.activeMeal ?
           <p className="row">
@@ -351,5 +351,5 @@ module.exports = {
       container: "#select-meal-coef-popover-content"
     }
   ],
-  title: 'Рассчет дозы'
+  title: 'Рассчет'
 };

@@ -9,7 +9,8 @@ import LoadingBox from "../../components/LoadingBox.jsx";
 import DishListItem from "../../components/DishListItem.jsx";
 import DishesPopover from "../../components/DishesPopover.jsx";
 import navigator from "../../navigator.jsx";
-import {sortDishes, filterDishesByQuery} from "../../util/dishes.jsx";
+import {sortDishes} from "../../util/dishes.jsx";
+import DishSearch from '../../util/DishSearch.jsx'
 import ReactList from 'react-list'
 import _ from 'lodash'
 
@@ -25,7 +26,8 @@ class DishesMainPage extends React.Component {
     let dishesSorted = dishes && sortDishes(dishes, settings["dish_order"])
     let dishesDisplayList = dishesSorted
     if(this.state && this.state.query) {
-      dishesDisplayList = filterDishesByQuery(this.state.query, dishesDisplayList)
+      let dishSearch = new DishSearch(this.state.query, dishesDisplayList)
+      dishesDisplayList = dishSearch.search()
     }
     return {
       dishes,
@@ -76,7 +78,8 @@ class DishesMainPage extends React.Component {
     let dishesDisplayList = this.state.dishesSorted
     let query = this.searchInput.value.trim()
     if(query) {
-      dishesDisplayList = filterDishesByQuery(query, dishesDisplayList)
+      let dishSearch = new DishSearch(query, dishesDisplayList)
+      dishesDisplayList = dishSearch.search()
     }
     this.setState({
       query,

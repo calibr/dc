@@ -12,8 +12,8 @@ import DishListItem from "../../components/DishListItem.jsx";
 import navigator from "../../navigator.jsx";
 import {sortDishes} from "../../util/dishes.jsx";
 import ReactList from 'react-list';
+import DishSearch from '../../util/DishSearch.jsx'
 import _ from 'lodash'
-import escapeRegexp from 'escape-string-regexp'
 
 function buildState() {
   let settings = Settings.getSettings()
@@ -72,20 +72,9 @@ class DishesPickPage extends React.Component {
     })
   }
   onSearchChange() {
-    let dishesDisplayList = this.state.dishesSorted
     let query = this.searchInput.value.trim()
-    query = escapeRegexp(query)
-    query = query.replace(/\s+/, "\\s+")
-    let regexp = new RegExp('(?:^|[\\s-])' + query, 'i')
-    if(query) {
-      // filter dishes by query
-      dishesDisplayList = []
-      for(let dish of this.state.dishesSorted) {
-        if(regexp.test(dish.title)) {
-          dishesDisplayList.push(dish)
-        }
-      }
-    }
+    let dishSearch = new DishSearch(query, this.state.dishesSorted)
+    let dishesDisplayList = dishSearch.search()
     this.setState({
       query,
       dishesDisplayList

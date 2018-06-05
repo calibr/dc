@@ -16,21 +16,20 @@ class DishStore extends EventEmitter {
     Dispatcher.register(this.dispatch.bind(this));
   }
   _prepare(dish) {
-    if(!dish.words) {
-      dish.words = XRegExp.split(dish.title.toLowerCase(), this.wordSplitRegExp)
-    }
+    dish.carbsInt = parseInt(dish.carbs)
+    return dish
   }
   _addDish(dish) {
     this.dishes.push(dish)
     this.idMap.set(dish.id, dish)
     if(!dish.deleted) {
-      this.dishesActive.push(dish)
+      this.dishesActive.push(this._prepare(dish))
     }
   }
   _updateDish(dish) {
     for(let i = 0; i != this.dishes.length; i++) {
       if(this.dishes[i].id == dish.id) {
-        this.dishes[i] = dish;
+        this.dishes[i] = this._prepare(dish);
         break;
       }
     }

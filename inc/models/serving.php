@@ -49,7 +49,7 @@ class Serving {
     }
     DB::inst()->q(
       "INSERT INTO `servings`
-      SET `add_date` = NOW(), `dish_id` = #d, `meal_id` = #d, `weight` = #s", [
+      SET `add_date` = '".Time::now()."', `dish_id` = #d, `meal_id` = #d, `weight` = #s", [
         $serving["dish_id"],
         $serving["meal_id"],
         $serving["weight"]
@@ -80,7 +80,7 @@ class Serving {
         $serving["eaten"] = false;
       }
       if($serving["eaten"]) {
-        $value = "NOW()";
+        $value = "'".Time::now()."'";
       }
       else {
         $value = "NULL";

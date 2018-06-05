@@ -19,10 +19,38 @@ class MealController extends Controller {
     if(!isset($_GET["offset"]) || !isset($_GET["limit"])) {
       throw new ValidationError('Offset/limit are required');
     }
-    return $this->model()->getAll([
+    $meals = $this->model()->getAll([
       "offset" => $_GET["offset"],
       "limit" => $_GET["limit"]
     ]);
+
+    if(!empty($_GET['doNotCut']) && $_GET['doNotCut'] === 'true' && $meals) {
+      // need to not cut the last day, check if the previous meals are from the same day as the last fetched, if so add them to the returning list
+      while(true) {
+        $lastMeal = $meals[count($meals) - 1];
+        $timeInst = new Time();
+        // use dates in local user's time
+        $lastMealDate = $timeInst->convertDateTo($timeInst->timestampStrFromJS($lastMeal->date), $_GET['timeZoneOffset'], 'date');
+        $mealsBefore = $this->model()->getBefore($lastMeal->id, 5);
+        if($mealsBefore) {
+          $addedMeals = 0;
+          foreach($mealsBefore as $mealBefore) {
+            $mealBeforeDate = $timeInst->convertDateTo($timeInst->timestampStrFromJS($mealBefore->date), $_GET['timeZoneOffset'], 'date');
+
+            if($mealBeforeDate === $lastMealDate) {
+              $meals[] = $mealBefore;
+              $addedMeals++;
+            }
+          }
+          if($addedMeals === count($mealsBefore)) {
+            // need to look further there might be more meals from the same day
+            continue;
+          }
+        }
+        break;
+      }
+    }
+    return $meals;
   }
   public function actionAdd() {
     return $this->model()->add($_POST);

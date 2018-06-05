@@ -62,7 +62,7 @@ class Dish extends Model {
     self::checkInputDish($dish);
     DB::inst()->q(
       "INSERT INTO `dishes`
-      SET `date` = NOW(), `title` = #s, `carbs` = #s,
+      SET `date` = '".Time::now()."', `title` = #s, `carbs` = #s,
       `proteins` = #s, `fats` = #s, `gi` = #s, `complex_data` = #s, `user_id` = #d", [
         $dish["title"], $dish["carbs"], $dish["proteins"],
         $dish["fats"], $dish["gi"], isset($dish["complex_data"]) ? $dish["complex_data"] : "",

@@ -13,9 +13,19 @@ class MealHistoryStore extends EventEmitter {
     if(!this.mealsIds) {
       this.mealsIds = []
     }
+    if(this.mealsIds.indexOf(mealId) >= 0) {
+      return false
+    }
     this.mealsIds.push(mealId)
+    return true
+  }
+  countMeals() {
+    return this.mealsIds ? this.mealsIds.length : 0
   }
   getIds() {
+    if(this.mealsIds) {
+      return this.mealsIds.slice()
+    }
     return this.mealsIds
   }
   dispatch(payload) {
@@ -25,19 +35,16 @@ class MealHistoryStore extends EventEmitter {
       if(payload.offset === countCurrentMeals) {
         let anyMealsAdded = false
         for(let meal of payload.meals) {
-          anyMealsAdded = true
-          this._add(meal.id)
-        }
-        if(anyMealsAdded) {
-          this.emit('change')
-        }
-        else {
-          if(typeof this.mealsIds === 'undefined') {
-            // the first fetch with empty history
-            this.mealsIds = []
-            this.emit('change')
+          if(this._add(meal.id)) {
+            anyMealsAdded = true
           }
         }
+        if(typeof this.mealsIds === 'undefined') {
+          // the first fetch with empty history
+          this.mealsIds = []
+        }
+        // still need to call change even if no meals were added, we need to notifiy views that request completed
+        this.emit('change', {tag: payload.tag, anyMealsAdded})
       }
     }
     else if(payload.eventName === 'meals.end') {

@@ -1,6 +1,7 @@
 import 'whatwg-fetch'
 import Dispatcher from "../dispatcher.jsx";
 import {apiFetch} from '../util/fetch.jsx'
+import UUID from 'uuid'
 
 function buildQuery(query) {
   var arr = [];
@@ -78,23 +79,29 @@ export var setDishOrder = function(field, direction) {
 };
 
 // meals
-
 export var loadMeals = function(options = {}) {
   var offset = options.offset || 0
   var limit = options.limit || 30
+  var timeZoneOffset = options.timeZoneOffset || 0
+  var doNotCut = options.doNotCut || false
   var query = buildQuery({
     offset,
-    limit
+    limit,
+    timeZoneOffset,
+    doNotCut
   });
+  let tag = UUID.v4()
   apiFetch("/api/meal/fetch?" + query).then((data) => {
     fetchingActiveMeal = false;
     Dispatcher.dispatch({
       eventName: "meals.list",
       meals: data,
       offset,
-      limit
+      limit,
+      tag
     });
-  });
+  })
+  return tag
 }
 
 var fetchingActiveMeal = false;

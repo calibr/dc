@@ -71,6 +71,27 @@ class Meal extends Model {
     return $meals;
   }
 
+  public function getBefore($beforeId, $num = 5) {
+    $query = "
+      SELECT
+        *
+      FROM
+        `meals`
+      WHERE
+        `active` = 0 AND user_id = #d AND id < #d
+      ORDER BY
+        `id` DESC
+      LIMIT #d
+    ";
+    $rows = DB::inst()->to_array($query, [$this->userId, $beforeId, $num]);
+    $meals = [];
+    foreach($rows as $row) {
+      $meal = $this->_initMeal($row, true);
+      $meals[] = $meal;
+    }
+    return $meals;
+  }
+
   public function end($id) {
     $servingModel = new Serving($this->userId);
     $servings = $servingModel->getForMeal($id);
@@ -80,7 +101,7 @@ class Meal extends Model {
       }, $servings);
       $eatDates = array_filter($eatDates);
       $date = "`date`";
-      $date_end = "NOW()";
+      $date_end = "'".Time::now()."'";
       if($eatDates) {
         $date = "'".date("Y-m-d H:i:s", round(min($eatDates)/1000))."'";
         $date_end = "'".date("Y-m-d H:i:s", round(max($eatDates)/1000))."'";
@@ -107,7 +128,7 @@ class Meal extends Model {
       INSERT INTO
         `meals`
       SET
-        `date` = NOW(), user_id = #d
+        `date` = '".Time::now()."', user_id = #d
     ", [$this->userId]);
     $id = DB::inst()->id();
     if(!$id) {

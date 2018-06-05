@@ -14,23 +14,31 @@ import MealHistoryListItem from '../../components/MealHistoryListItem.jsx'
 import {visibleMonthYearDay} from '../../util/date.jsx'
 import {getCarbsInServing} from '../../util/dishes.jsx'
 import {carbsToBu} from '../../util/bu.jsx'
+import InfiniteScroll from '../../components/InfiniteScroll.jsx'
+
+// it is approximate because the server will return full meals list for every day. we
+// can't return partial list because if so summary information about a day might be incorrect
+const minMealsPerLoad = 20
 
 class HistoryMainPage extends React.Component {
   constructor() {
-    super();
-  }
-  componentWillMount() {
+    super()
     this.state = {
       mealsIds: MealHistory.getIds(),
-      dishes: Dish.getDishes()
+      dishes: Dish.getDishes(),
+      loadMealsTag: null,
+      allMealsLoaded: false
     }
+    this.onPreload = this.onPreload.bind(this)
+  }
+  componentWillMount() {
     MealHistory.on("change", this.onMealHistoryChange)
     Dish.on("change", this.onDishChange)
     if(!this.state.dishes) {
       loadDishes()
     }
     if(!this.state.mealsIds) {
-      loadMeals()
+      this.onPreload()
     }
   }
   componentWillUnmount() {
@@ -42,10 +50,20 @@ class HistoryMainPage extends React.Component {
       dishes: Dish.getDishes()
     })
   }
-  onMealHistoryChange = () => {
-    this.setState({
+  onMealHistoryChange = data => {
+    let stateUpd = {
       mealsIds: MealHistory.getIds()
-    });
+    }
+    if(data.tag === this.state.loadMealsTag) {
+      stateUpd.loading = false
+      if(
+        this.state.mealsIds && MealHistory.countMeals() === this.state.mealsIds.length ||
+        typeof this.state.mealsIds === 'undefined' && MealHistory.countMeals() === 0
+      ) {
+        stateUpd.allMealsLoaded = true
+      }
+    }
+    this.setState(stateUpd)
   }
   totalCarbsForMeal = (mealId) => {
     let carbs = 0
@@ -63,12 +81,22 @@ class HistoryMainPage extends React.Component {
     }
     return carbs
   }
+  onPreload() {
+    let tag = loadMeals({
+      offset: MealHistory.countMeals(),
+      limit: minMealsPerLoad,
+      timeZoneOffset: new Date().getTimezoneOffset(),
+      doNotCut: true
+    })
+    this.setState({loading: true, loadMealsTag: tag})
+  }
   render() {
     if(!this.state.mealsIds || !this.state.dishes) {
       return <div className="page-content">
         <LoadingBox/>
       </div>;
     }
+
     var mealListItems = []
     var lastYearMonth = ""
     var lists = []
@@ -111,7 +139,9 @@ class HistoryMainPage extends React.Component {
       </div>
     }
     return <div className="page-content history-content">
-      {lists}
+      <InfiniteScroll loading={this.state.loading} fullfilled={this.state.allMealsLoaded} preloadThreshold={0.5} onNeedPreload={this.onPreload}>
+        {lists}
+      </InfiniteScroll>
     </div>;
   }
 }

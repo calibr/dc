@@ -14,6 +14,7 @@ include __DIR__."/model.php";
 include __DIR__."/controller.php";
 include __DIR__."/session.php";
 include __DIR__."/context.php";
+include __DIR__."/time.php";
 
 include __DIR__."/controllers/dish.php";
 include __DIR__."/controllers/meal.php";

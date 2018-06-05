@@ -54,21 +54,3 @@ export function nameFull(dish) {
   }
   return title
 }
-
-export function searchQueryToRegExp(query) {
-  query = escapeRegexp(query)
-  query = query.replace(/\s+/, "\\s+")
-  let regexp = new RegExp('(?:^|[\\s-])' + query, 'i')
-  return regexp
-}
-
-export function filterDishesByQuery(query, dishes) {
-  let regexp = searchQueryToRegExp(query)
-  let result = []
-  for(let dish of dishes) {
-    if(regexp.test(dish.title)) {
-      result.push(dish)
-    }
-  }
-  return result
-}
