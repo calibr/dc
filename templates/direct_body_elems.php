@@ -5,6 +5,13 @@
     </div>
   </div>
 </div>
+<div class="popover popover-history">
+  <div class="popover-angle"></div>
+  <div class="popover-inner">
+    <div class="list-block" id="history-popover-content">
+    </div>
+  </div>
+</div>
 <div class="popover popover-pick">
   <div class="popover-angle"></div>
   <div class="popover-inner">

@@ -92,6 +92,26 @@ class Meal extends Model {
     return $meals;
   }
 
+  public function getInPeriod($periodStart, $periodEnd) {
+    $query = "
+      SELECT
+        *
+      FROM
+        `meals`
+      WHERE
+        user_id = #d AND `active` = 0 AND `date` >= #s AND date_end <= #s
+      ORDER BY
+        `id` ASC
+    ";
+    $rows = DB::inst()->to_array($query, [$this->userId, $periodStart, $periodEnd]);
+    $meals = [];
+    foreach($rows as $row) {
+      $meal = $this->_initMeal($row, true);
+      $meals[] = $meal;
+    }
+    return $meals;
+  }
+
   public function end($id) {
     $servingModel = new Serving($this->userId);
     $servings = $servingModel->getForMeal($id);

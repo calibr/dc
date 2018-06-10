@@ -5,6 +5,8 @@ namespace Diab;
 use Ramsey\Uuid\Uuid;
 
 class NightScout extends Model {
+  const ENTERED_BY = 'boluscalc';
+
   // delay after adding treatments after which they should be flushed to nightscout
   // TODO make it configurable
   private $treatmentDelay = 300;
@@ -95,7 +97,7 @@ class NightScout extends Model {
   public function addTreatment($userId, $data) {
     $data['timestamp'] = $data['time'] * 1000;
     $data['eventType'] = '<none>';
-    $data['enteredBy'] = 'boluscalc';
+    $data['enteredBy'] = self::ENTERED_BY;
     $data['uuid'] = Uuid::uuid4();
     $ch = curl_init();
 
@@ -127,6 +129,67 @@ class NightScout extends Model {
     if($parsed && is_array($parsed)) {
       $parsed = $parsed[0];
     }
+    return $parsed;
+  }
+  public function getTreatments($startDayTimestamp, $endDayTimestamp, $query = []) {
+    $settings = new Settings($this->userId);
+
+    $url = $settings->get('ns_url');
+    $secret = $settings->get('ns_secret');
+    if(!$url) {
+      // nightscout is not configured
+      return;
+    }
+    $query = array_merge($query, [
+      // created_at must be in UTC
+      'find[created_at][$gte]' => date('Y-m-d', $startDayTimestamp).'T00:00:00',
+      'find[created_at][$lte]' => date('Y-m-d', $endDayTimestamp).'T23:59:59'
+    ]);
+    $ch = curl_init();
+    curl_setopt_array($ch, [
+      CURLOPT_URL => "$url/api/v1/treatments.json?".http_build_query($query),
+      CURLOPT_HTTPHEADER => [
+        'Content-Type: application/json',
+        'api-secret: '.sha1($secret)
+      ],
+      CURLOPT_RETURNTRANSFER => true
+    ]);
+    $response = curl_exec($ch);
+    curl_close($ch);
+    $parsed = json_decode($response);
+    return $parsed;
+  }
+  public function getBloodSugars($startDayTimestamp, $endDayTimestamp, $timeZoneOffset, $query = []) {
+    $settings = new Settings($this->userId);
+
+    $url = $settings->get('ns_url');
+    $secret = $settings->get('ns_secret');
+    if(!$url) {
+      // nightscout is not configured
+      return;
+    }
+    $time = new Time();
+    $startDayUser = $time->convertDateTo('@'.$startDayTimestamp, $timeZoneOffset, 'date');
+    $endDayUser = $time->convertDateTo('@'.$endDayTimestamp, $timeZoneOffset, 'date');
+    $query = array_merge($query, [
+      // dateString in local user time, need to convert
+      'find[dateString][$gte]' => $startDayUser.'T00:00:00',
+      'find[dateString][$lte]' => $endDayUser.'T23:59:59',
+      // sugar records for a year max
+      'count' => 8640 * 12
+    ]);
+    $ch = curl_init();
+    curl_setopt_array($ch, [
+      CURLOPT_URL => "$url/api/v1/entries/sgv.json?".http_build_query($query),
+      CURLOPT_HTTPHEADER => [
+        'Content-Type: application/json',
+        'api-secret: '.sha1($secret)
+      ],
+      CURLOPT_RETURNTRANSFER => true
+    ]);
+    $response = curl_exec($ch);
+    curl_close($ch);
+    $parsed = json_decode($response);
     return $parsed;
   }
 }

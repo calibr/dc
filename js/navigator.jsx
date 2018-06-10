@@ -66,9 +66,7 @@ var navigator = {
     })
   },
   back: () => {
-    app.getCurrentView().router.back({
-      animatePages: true
-    })
+    window.history.back()
   }
 };
 

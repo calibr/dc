@@ -22,6 +22,7 @@ var routes = {
   "/settings/nightscout": require("./routes/settings/nightscout.jsx"),
   "/settings/main": require("./routes/settings/mainSettings.jsx"),
   "/history": require("./routes/history/main.jsx"),
+  "/history/export": require("./routes/history/export.jsx"),
   "/auth": require("./routes/auth/login.jsx"),
   "/auth/register": require("./routes/auth/register.jsx")
 };

@@ -52,6 +52,9 @@ class MealHistoryStore extends EventEmitter {
       this.mealsIds = undefined
       this.emit('change')
     }
+    else if(payload.eventName === 'history.exported') {
+      this.emit('exported')
+    }
   }
 }
 

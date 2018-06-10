@@ -15,6 +15,7 @@ import {visibleMonthYearDay} from '../../util/date.jsx'
 import {getCarbsInServing} from '../../util/dishes.jsx'
 import {carbsToBu} from '../../util/bu.jsx'
 import InfiniteScroll from '../../components/InfiniteScroll.jsx'
+import HistoryPopover from "../../components/HistoryPopover.jsx"
 
 // it is approximate because the server will return full meals list for every day. we
 // can't return partial list because if so summary information about a day might be incorrect
@@ -169,6 +170,9 @@ class HistoryMainPageNavBar extends React.Component {
     return <div className="navbar-wrapper">
       <div className="center sliding">История</div>
       <div className="right">
+        <a href="#" className="link open-popover" data-popover=".popover-history">
+          <i className="icon icon-bars"></i>
+        </a>
       </div>
     </div>
   }
@@ -177,5 +181,11 @@ class HistoryMainPageNavBar extends React.Component {
 module.exports = {
   page: HistoryMainPage,
   navbar: HistoryMainPageNavBar,
+  custom: [
+    {
+      component: HistoryPopover,
+      container: "#history-popover-content"
+    }
+  ],
   title: 'История'
 };
