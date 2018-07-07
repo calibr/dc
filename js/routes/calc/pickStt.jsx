@@ -79,7 +79,8 @@ class SpeechRecognitionDishesPage extends React.Component {
       weight
     }
     this.state.callback(serving)
-    this.initRecognize()
+    //this.initRecognize()
+    goBack()
   }
   initRecognize() {
     let tag = startRecognize()
@@ -170,7 +171,7 @@ class SpeechRecognitionDishesPage extends React.Component {
           {notFoundText}
           <div className="content-block text-center row flex-buttons">
             <button href="#" className="col button button-fill color-red" onClick={this.cancel}>
-              Отмена
+              Закончить
             </button>
             {
               (

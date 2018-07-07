@@ -2553,7 +2553,7 @@ var SpeechRecognitionDishes = function (_React$Component) {
               React.createElement(
                 "button",
                 { href: "#", className: "col button button-fill color-red", onClick: this.cancel },
-                "\u041E\u0442\u043C\u0435\u043D\u0430"
+                "\u0417\u0430\u043A\u043E\u043D\u0447\u0438\u0442\u044C"
               ),
               this.state.stage === 'list' || this.state.stage === 'notfound' || this.state.stage === 'noresult' ? React.createElement(
                 "button",
@@ -4575,7 +4575,8 @@ var SpeechRecognitionDishesPage = function (_React$Component) {
         weight: weight
       };
       this.state.callback(serving);
-      this.initRecognize();
+      //this.initRecognize()
+      (0, _stt.goBack)();
     }
   }, {
     key: "initRecognize",
@@ -4733,7 +4734,7 @@ var SpeechRecognitionDishesPage = function (_React$Component) {
               React.createElement(
                 "button",
                 { href: "#", className: "col button button-fill color-red", onClick: this.cancel },
-                "\u041E\u0442\u043C\u0435\u043D\u0430"
+                "\u0417\u0430\u043A\u043E\u043D\u0447\u0438\u0442\u044C"
               ),
               this.state.stage === 'list' || this.state.stage === 'notfound' || this.state.stage === 'noresult' ? React.createElement(
                 "button",
@@ -10024,12 +10025,12 @@ var SpeechToText = exports.SpeechToText = function (_EventEmitter) {
       recognition.start();
       this.recognition = recognition;
 
-      // test
       /*
+      // test
       setTimeout(() => {
         let d = {}
-        this.rawResult = 'хлеб 22г'
-        d.dishName = 'хлеб'
+        this.rawResult = 'каша 22г'
+        d.dishName = 'каша'
         d.weight = 22
         this.results.push(d)
         // pasing

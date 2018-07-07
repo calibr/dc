@@ -185,7 +185,7 @@ class SpeechRecognitionDishes extends React.Component {
           {notFoundText}
           <div className="content-block text-center row flex-buttons">
             <button href="#" className="col button button-fill color-red" onClick={this.cancel}>
-              Отмена
+              Закончить
             </button>
             {
               (

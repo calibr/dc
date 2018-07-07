@@ -39,12 +39,12 @@ export class SpeechToText extends EventEmitter {
     recognition.start()
     this.recognition = recognition
 
-    // test
     /*
+    // test
     setTimeout(() => {
       let d = {}
-      this.rawResult = 'хлеб 22г'
-      d.dishName = 'хлеб'
+      this.rawResult = 'каша 22г'
+      d.dishName = 'каша'
       d.weight = 22
       this.results.push(d)
       // pasing
