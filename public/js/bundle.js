@@ -4569,6 +4569,7 @@ var SpeechRecognitionDishesPage = function (_React$Component) {
     value: function add() {
       var lookupRes = this.state.keywordsToDishes[this.state.sttResult.dishName];
       var dishId = lookupRes.dishes[this.state.dishIndex];
+      alert("INDEX: " + this.state.dishIndex + ", " + dishId);
       var weight = this.state.weight;
       var serving = {
         dish_id: dishId,

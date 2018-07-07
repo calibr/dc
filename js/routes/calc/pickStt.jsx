@@ -73,6 +73,7 @@ class SpeechRecognitionDishesPage extends React.Component {
   add() {
     let lookupRes = this.state.keywordsToDishes[this.state.sttResult.dishName]
     let dishId = lookupRes.dishes[this.state.dishIndex]
+    alert("INDEX: " + this.state.dishIndex + ", " + dishId)
     let weight = this.state.weight
     let serving = {
       dish_id: dishId,
