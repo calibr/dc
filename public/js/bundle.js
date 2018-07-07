@@ -4502,7 +4502,6 @@ var SpeechRecognitionDishesPage = function (_React$Component) {
       tag: null,
       callback: null
     };
-
     _this.onSttStoreChange = _this.onSttStoreChange.bind(_this);
     _this.cancel = _this.cancel.bind(_this);
     _this.add = _this.add.bind(_this);

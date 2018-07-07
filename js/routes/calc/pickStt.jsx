@@ -26,7 +26,6 @@ class SpeechRecognitionDishesPage extends React.Component {
       tag: null,
       callback: null
     }
-
     this.onSttStoreChange = this.onSttStoreChange.bind(this)
     this.cancel = this.cancel.bind(this)
     this.add = this.add.bind(this)
