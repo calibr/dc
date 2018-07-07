@@ -31,8 +31,6 @@ class SpeechRecognitionDishesPage extends React.Component {
     this.cancel = this.cancel.bind(this)
     this.add = this.add.bind(this)
     this.again = this.again.bind(this)
-
-    alert('RENDER!');
   }
   componentDidMount() {
     STTStore.on('change', this.onSttStoreChange)
@@ -148,6 +146,7 @@ class SpeechRecognitionDishesPage extends React.Component {
             Произнесите название блюда и количество грамм, например: "Котлета киевская 39".
           </div>
           <div className="list-block stt-pick-dish-list">
+            What is: {this.state.dishIndex}
             <ul>
               {listItems}
             </ul>

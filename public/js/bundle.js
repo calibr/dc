@@ -4507,8 +4507,6 @@ var SpeechRecognitionDishesPage = function (_React$Component) {
     _this.cancel = _this.cancel.bind(_this);
     _this.add = _this.add.bind(_this);
     _this.again = _this.again.bind(_this);
-
-    alert('RENDER!');
     return _this;
   }
 
@@ -4692,6 +4690,8 @@ var SpeechRecognitionDishesPage = function (_React$Component) {
             React.createElement(
               "div",
               { className: "list-block stt-pick-dish-list" },
+              "What is: ",
+              this.state.dishIndex,
               React.createElement(
                 "ul",
                 null,
