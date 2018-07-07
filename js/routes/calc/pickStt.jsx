@@ -104,7 +104,7 @@ class SpeechRecognitionDishesPage extends React.Component {
         i++
         return <li key={"dish-choose-" + dishId} className="stt-list-item">
           <label className="label-radio item-content">
-            <input type="radio" name="stt-dish-choose" value={dishId} onChange={this.onDishClick.bind(this, i)} checked={i === this.state.dishIndex}/>
+            <input type="radio" name="stt-dish-choose" value={dishId} onClick={this.onDishClick.bind(this, i)} checked={i === this.state.dishIndex}/>
             <div className="item-inner">
               <div className="item-title">{dish.title}</div>
               <div className="item-after">
