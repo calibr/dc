@@ -4551,6 +4551,7 @@ var SpeechRecognitionDishesPage = function (_React$Component) {
   }, {
     key: "onDishClick",
     value: function onDishClick(dishIndex) {
+      alert("CLICK: " + dishIndex);
       this.setState({ dishIndex: dishIndex });
     }
   }, {

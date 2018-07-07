@@ -61,6 +61,7 @@ class SpeechRecognitionDishesPage extends React.Component {
     changeWeight(value)
   }
   onDishClick(dishIndex) {
+    alert("CLICK: " + dishIndex)
     this.setState({dishIndex})
   }
   cancel() {
