@@ -4551,7 +4551,6 @@ var SpeechRecognitionDishesPage = function (_React$Component) {
   }, {
     key: "onDishClick",
     value: function onDishClick(dishIndex) {
-      alert("CLICK: " + dishIndex);
       this.setState({ dishIndex: dishIndex });
     }
   }, {
@@ -4570,7 +4569,6 @@ var SpeechRecognitionDishesPage = function (_React$Component) {
     value: function add() {
       var lookupRes = this.state.keywordsToDishes[this.state.sttResult.dishName];
       var dishId = lookupRes.dishes[this.state.dishIndex];
-      alert("INDEX: " + this.state.dishIndex + ", " + dishId);
       var weight = this.state.weight;
       var serving = {
         dish_id: dishId,
@@ -4609,11 +4607,11 @@ var SpeechRecognitionDishesPage = function (_React$Component) {
             i++;
             return React.createElement(
               "li",
-              { key: "dish-choose-" + dishId, className: "stt-list-item" },
+              { key: "dish-choose-" + dishId, className: "stt-list-item", onClick: _this3.onDishClick.bind(_this3, i) },
               React.createElement(
                 "label",
                 { className: "label-radio item-content" },
-                React.createElement("input", { type: "radio", name: "stt-dish-choose", onChange: _this3.onDishClick.bind(_this3, i), value: dishId, checked: i === _this3.state.dishIndex }),
+                React.createElement("input", { type: "radio", name: "stt-dish-choose", value: dishId, defaultChecked: i === _this3.state.dishIndex }),
                 React.createElement(
                   "div",
                   { className: "item-inner" },
@@ -4690,8 +4688,6 @@ var SpeechRecognitionDishesPage = function (_React$Component) {
             React.createElement(
               "div",
               { className: "list-block stt-pick-dish-list" },
-              "What is: ",
-              this.state.dishIndex,
               React.createElement(
                 "ul",
                 null,

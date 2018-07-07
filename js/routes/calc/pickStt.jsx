@@ -61,7 +61,6 @@ class SpeechRecognitionDishesPage extends React.Component {
     changeWeight(value)
   }
   onDishClick(dishIndex) {
-    alert("CLICK: " + dishIndex)
     this.setState({dishIndex})
   }
   cancel() {
@@ -74,7 +73,6 @@ class SpeechRecognitionDishesPage extends React.Component {
   add() {
     let lookupRes = this.state.keywordsToDishes[this.state.sttResult.dishName]
     let dishId = lookupRes.dishes[this.state.dishIndex]
-    alert("INDEX: " + this.state.dishIndex + ", " + dishId)
     let weight = this.state.weight
     let serving = {
       dish_id: dishId,
@@ -102,9 +100,9 @@ class SpeechRecognitionDishesPage extends React.Component {
       readyItems = lookupRes.dishes.map(dishId => {
         let dish = DishStore.getById(dishId)
         i++
-        return <li key={"dish-choose-" + dishId} className="stt-list-item">
+        return <li key={"dish-choose-" + dishId} className="stt-list-item" onClick={this.onDishClick.bind(this, i)}>
           <label className="label-radio item-content">
-            <input type="radio" name="stt-dish-choose" onChange={this.onDishClick.bind(this, i)} value={dishId} checked={i === this.state.dishIndex}/>
+            <input type="radio" name="stt-dish-choose" value={dishId} defaultChecked={i === this.state.dishIndex}/>
             <div className="item-inner">
               <div className="item-title">{dish.title}</div>
               <div className="item-after">
@@ -146,7 +144,6 @@ class SpeechRecognitionDishesPage extends React.Component {
             Произнесите название блюда и количество грамм, например: "Котлета киевская 39".
           </div>
           <div className="list-block stt-pick-dish-list">
-            What is: {this.state.dishIndex}
             <ul>
               {listItems}
             </ul>
