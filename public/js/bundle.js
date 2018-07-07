@@ -4613,7 +4613,7 @@ var SpeechRecognitionDishesPage = function (_React$Component) {
               React.createElement(
                 "label",
                 { className: "label-radio item-content" },
-                React.createElement("input", { type: "radio", name: "stt-dish-choose", value: dishId, onClick: _this3.onDishClick.bind(_this3, i), checked: i === _this3.state.dishIndex }),
+                React.createElement("input", { type: "radio", name: "stt-dish-choose", onChange: _this3.onDishClick.bind(_this3, i), value: dishId, checked: i === _this3.state.dishIndex }),
                 React.createElement(
                   "div",
                   { className: "item-inner" },
