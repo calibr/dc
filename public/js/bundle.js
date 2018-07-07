@@ -4507,6 +4507,8 @@ var SpeechRecognitionDishesPage = function (_React$Component) {
     _this.cancel = _this.cancel.bind(_this);
     _this.add = _this.add.bind(_this);
     _this.again = _this.again.bind(_this);
+
+    alert('RENDER!');
     return _this;
   }
 
