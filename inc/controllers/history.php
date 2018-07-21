@@ -51,8 +51,10 @@ class HistoryController extends Controller {
     if(empty($_GET['carbsPerBu'])) {
       throw new ValidationError('carbsPerBu is required');
     }
-    $periodStartDate = date('Y-m-d', $_GET['periodStart']);
-    $periodEndDate = date('Y-m-d', $_GET['periodEnd']);
+
+    $periodStartDate = date('Y-m-d H:i:s', $_GET['periodStart']);
+    $periodEndDate = date('Y-m-d H:i:s', $_GET['periodEnd']);
+
     $meals = $this->mealModel()->getInPeriod($periodStartDate, $periodEndDate);
     if(!$meals) {
       throw new NotFoundError('No meals found in the specified period', 'meals_not_found');
