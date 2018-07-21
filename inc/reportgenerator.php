@@ -37,6 +37,7 @@ class ReportGenerator {
     'Flat' => '→',
     'DoubleUp' => '⇈',
     'SingleDown' => '↓',
+    'DoubleDown' => '⇊',
     'SingleUp' => '↑'
   ];
 
@@ -287,6 +288,11 @@ class ReportGenerator {
       $this->spreadsheet->setActiveSheetIndex($this->spreadsheet->getSheetCount() - 1);
       $sheet = $dayWorkSheet;
       $this->currentRow = 1;
+
+      // columns sizing
+      $sheet->getColumnDimension('D')->setAutoSize(true);
+      $sheet->getColumnDimension('H')->setWidth(24);
+      $sheet->getColumnDimension('I')->setWidth(24);
 
       $this->outDateHeader($date);
       $this->outHeader();
