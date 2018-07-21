@@ -142,8 +142,8 @@ class NightScout extends Model {
     }
     $query = array_merge($query, [
       // created_at must be in UTC
-      'find[created_at][$gte]' => date('Y-m-d', $startDayTimestamp).'T00:00:00',
-      'find[created_at][$lte]' => date('Y-m-d', $endDayTimestamp).'T23:59:59'
+      'find[created_at][$gte]' => date('Y-m-dTH:i:s', $startDayTimestamp),
+      'find[created_at][$lte]' => date('Y-m-dTH:i:s', $endDayTimestamp)
     ]);
     $ch = curl_init();
     curl_setopt_array($ch, [
