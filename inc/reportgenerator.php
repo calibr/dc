@@ -4,6 +4,7 @@ namespace Diab;
 
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class ReportGenerator {
   private $currentRow = 1;
@@ -14,6 +15,21 @@ class ReportGenerator {
   private $timeZoneOffset;
   private $spreadsheet;
   private $carbsPerBu;
+
+  private $mealsTimes = [
+    'breakfast' => [
+      'title' => 'Завтрак',
+      'interval' => ['07:00', '12:00']
+    ],
+    'lunch' => [
+      'title' => 'Обед',
+      'interval' => ['12:00', '18:00']
+    ],
+    'dinner' => [
+      'title' => 'Ужин',
+      'interval' => ['18:00', '23:59']
+    ]
+  ];
 
   private $arrows = [
     'FortyFiveDown' => '↘',
@@ -71,6 +87,14 @@ class ReportGenerator {
     $parts = explode(':', $time);
     array_pop($parts);
     return implode(':', $parts);
+  }
+  private function getMealByTime($time) {
+    foreach($this->mealsTimes as $meal => $mealInfo) {
+      if($time >= $mealInfo['interval'][0] && $time <= $mealInfo['interval'][1]) {
+        return $meal;
+      }
+    }
+    return null;
   }
   public function setCarbsPerBu($carbs) {
     $this->carbsPerBu = $carbs;
@@ -165,7 +189,7 @@ class ReportGenerator {
       foreach($items as $item) {
         $time = $this->getHourMinutes($item['time']);
         if(isset($byTime[$time])) {
-          $byTime['value'] += $item['value'];
+          $byTime[$time]['value'] += $item['value'];
         }
         else {
           $byTime[$time] = $item;
@@ -189,6 +213,19 @@ class ReportGenerator {
       \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER
     );
     $sheet->getStyle('A'.$this->currentRow)->getFont()->setBold(true);
+    $this->currentRow++;
+  }
+
+  private function outMealTitle($mealCode) {
+    $mealInfo = $this->mealsTimes[$mealCode];
+    $sheet = $this->spreadsheet->getActiveSheet();
+    $sheet->setCellValue('A'.$this->currentRow, $mealInfo['title']);
+    $sheet->mergeCells('A'.$this->currentRow.':I'.$this->currentRow);
+    $sheet->getStyle('A'.$this->currentRow)->getAlignment()->setHorizontal(
+      \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER
+    );
+    $sheet->getStyle('A'.$this->currentRow)->getFont()->setBold(true);
+    $sheet->getStyle('A'.$this->currentRow)->getFont()->getColor()->setARGB(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_RED);
     $this->currentRow++;
   }
 
@@ -219,6 +256,9 @@ class ReportGenerator {
   }
 
   private function getBloodSugar($date, $time) {
+    if(!isset($this->bloodSugars[$date])) {
+      return null;
+    }
     $byDate = $this->bloodSugars[$date];
     $times = array_keys($byDate);
     $closestTime = Util::binarySearchClosest($times, $time);
@@ -234,9 +274,7 @@ class ReportGenerator {
 
   public function generate($file) {
     $this->spreadsheet = new Spreadsheet();
-    $sheet = $this->spreadsheet->getActiveSheet();
-    $sheet->setCellValue('A1', 'Экспорт данных приема пищи');
-    $this->currentRow++;
+    $this->spreadsheet->removeSheetByIndex(0);
     $date = null;
     do {
       $date = $this->getNextDate();
@@ -244,6 +282,12 @@ class ReportGenerator {
       if(!$date) {
         break;
       }
+      $dayWorkSheet = new Worksheet($this->spreadsheet, $date);
+      $this->spreadsheet->addSheet($dayWorkSheet);
+      $this->spreadsheet->setActiveSheetIndex($this->spreadsheet->getSheetCount() - 1);
+      $sheet = $dayWorkSheet;
+      $this->currentRow = 1;
+
       $this->outDateHeader($date);
       $this->outHeader();
       $servings = @$this->servings[$date];
@@ -257,12 +301,24 @@ class ReportGenerator {
       $this->log("Count servings: ".count($servings));
       $this->log("Count insulin: ".count($insulinTreatments));
 
+      $mealCode = null;
       do {
         $time = $this->nextTime($servings, $insulinTreatments);
         if(!$time) {
           break;
         }
         $this->log("Processing time: $time");
+        $actualMealCode = $this->getMealByTime($time);
+
+        if($actualMealCode !== $mealCode) {
+          if(!$actualMealCode) {
+            var_dump($actualMealCode, $mealCode, $time);
+            var_dump($servings, $insulinTreatments);
+            die;
+          }
+          $this->outMealTitle($actualMealCode);
+          $mealCode = $actualMealCode;
+        }
 
         $timeServings = @$servings[$time];
         if(!$timeServings) {
