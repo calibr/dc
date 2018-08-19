@@ -28,7 +28,7 @@ class Dish extends Model {
   }
 
   public function getAll() {
-    $rows = DB::inst()->to_array("select * from dishes where user_id = #d", [$this->userId]);
+    $rows = DB::inst()->to_array("select * from dishes where user_id = #d and `deleted` = 0", [$this->userId]);
     $res = [];
     foreach($rows as $row) {
       $dish = new Dish();
