@@ -4603,6 +4603,10 @@ var SpeechRecognitionDishesPage = function (_React$Component) {
           // show only first 10 items
           readyItems = lookupRes.dishes.map(function (dishId) {
             var dish = _Dish2.default.getById(dishId);
+            if (!dish) {
+              console.error('Fail to find dish with id', dishId, 'skipping');
+              return null;
+            }
             i++;
             return React.createElement(
               "li",

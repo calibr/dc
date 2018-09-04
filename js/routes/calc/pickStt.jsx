@@ -98,6 +98,10 @@ class SpeechRecognitionDishesPage extends React.Component {
       // show only first 10 items
       readyItems = lookupRes.dishes.map(dishId => {
         let dish = DishStore.getById(dishId)
+        if(!dish) {
+          console.error('Fail to find dish with id', dishId, 'skipping')
+          return null
+        }
         i++
         return <li key={"dish-choose-" + dishId} className="stt-list-item" onClick={this.onDishClick.bind(this, i)}>
           <label className="label-radio item-content">
