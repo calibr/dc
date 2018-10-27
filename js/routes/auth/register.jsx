@@ -5,6 +5,7 @@ import LoadingBox from "../../components/LoadingBox.jsx";
 import navigator from "../../navigator.jsx";
 import _ from 'lodash'
 import AuthStore from '../../stores/Auth.jsx'
+import UserStore from '../../stores/User.jsx'
 import {register, setRegisterError, clearErrors} from '../../actions/auth.jsx'
 
 function getState() {
@@ -24,12 +25,19 @@ class RegisterPage extends React.Component {
   componentDidMount() {
     this.onAuthStoreChange = this.onAuthStoreChange.bind(this)
     AuthStore.on('change', this.onAuthStoreChange)
+    UserStore.on('change', this.onUserStoreChange)
   }
   componentWillUnmount() {
     AuthStore.removeListener('change', this.onAuthStoreChange)
+    UserStore.removeListener('change', this.onUserStoreChange)
   }
   onAuthStoreChange() {
     this.setState(getState())
+  }
+  onUserStoreChange() {
+    if(UserStore.auth) {
+      navigator.navigate('/calc')
+    }
   }
   onFieldChange(field, event) {
     let obj = {}
@@ -141,7 +149,7 @@ class RegisterPage extends React.Component {
             <li><a onClick={this.onRegister} href="#" className="item-link list-button">Зарегистрироваться</a></li>
           </ul>
           <div className="list-block-label">
-            <p>Приложение является крайне экспериментальным, используйте его на свой страх и риск. Перед использованием проконсультируйтесь с врачем. Автор не несет отвественности за последствия, вызванные использованием данного приложения.</p>
+            <p>Приложение является экспериментальным, используйте его на свой страх и риск. Перед использованием проконсультируйтесь с врачем. Автор не несет отвественности за последствия, вызванные использованием данного приложения.</p>
             <p><a href="#" onClick={navigator.navigate.bind(navigator, '/auth')} className="close-login-screen">Войти в существующий аккаунт</a></p>
           </div>
         </div>
