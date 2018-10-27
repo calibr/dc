@@ -106,4 +106,11 @@ class Dish extends Model {
       ]
     );
   }
+
+  public function addDefaultDishes() {
+    $default = json_decode(file_get_contents(Util::dataFilePath('default.json')), true);
+    foreach($default['dishes'] as $dish) {
+      $this->add($dish);
+    }
+  }
 }

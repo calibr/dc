@@ -64,6 +64,11 @@ class AuthController extends Controller {
       'login' => $_POST['login'],
       'password' => $password
     ]);
+    if(!empty($user) && !empty($user['id'])) {
+      // fill the dishes db with the default dishes for just created user
+      $model = new Dish($user['id']);
+      $model->addDefaultDishes();
+    }
     $this->context->session->set('userId', $user['id']);
     return [
       'user' => $user

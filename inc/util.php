@@ -67,4 +67,7 @@ class Util {
   public static function carbsToBu($carbsPerBu, $carbs) {
     return round($carbs/$carbsPerBu, 2);
   }
+  public static function dataFilePath($file) {
+    return dirname(__DIR__).'/data/'.$file;
+  }
 }
