@@ -26,3 +26,5 @@
     </div>
   </div>
 </div>
+
+<div id="global-loader"></div>

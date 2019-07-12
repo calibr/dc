@@ -195,3 +195,38 @@ ul.list-bottom-margin li:last-child {
 .padding-5 {
   padding: 5px;
 }
+
+#global-loader {
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  z-index: 9999;
+  margin-left: -40px;
+}
+
+#global-loader .inner {
+  width: 80px;
+  height: 80px;
+  background: url(../images/loading.gif);
+  background-size: 80px 80px;
+  background-color: rgba(255,255,255,0.7);
+  border-radius: 5px;
+}
+
+#global-loader .inner.loader-enter {
+  opacity: 0;
+}
+
+#global-loader .inner.loader-enter-active {
+  transition: 200ms ease opacity;
+  opacity: 1;
+}
+
+#global-loader .inner.loader-leave {
+  opacity: 1;
+}
+
+#global-loader .inner.loader-leave-active {
+  transition: 200ms ease opacity;
+  opacity: 0;
+}

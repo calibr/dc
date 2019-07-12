@@ -31,6 +31,11 @@ export var addDish = function(data, opts = {}) {
   for(let k in data) {
     formData.append(k, data[k]);
   }
+  Dispatcher.dispatch({
+    eventName: "dishes.request_add",
+    dish: responseData,
+    tag: opts.tag
+  });
   apiFetch("/api/dish/add", {
     method: "POST",
     body: formData
@@ -168,6 +173,10 @@ export var addServing = function(data) {
   for(let k in data) {
     formData.append(k, data[k]);
   }
+  Dispatcher.dispatch({
+    eventName: "servings.request_add",
+    data
+  });
   apiFetch("/api/serving/add", {
     method: "POST",
     body: formData

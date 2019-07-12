@@ -4,6 +4,7 @@ var React = require("react");
 var f7app = require("./f7app");
 var UrlPattern = require("url-pattern");
 const EventEmitter = require("events")
+import GlobalLoader from './components/GlobalLoader.jsx'
 
 var routes = {
   "/calc": require("./routes/calc/main.jsx"),
@@ -114,6 +115,8 @@ class Renderer extends EventEmitter {
 
       prevPage = pageInfo
     });
+
+    ReactDom.render(<GlobalLoader/>, document.querySelector('#global-loader'));
   }
   getRouteByUrl(url) {
     let route;

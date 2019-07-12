@@ -27,6 +27,7 @@
     "escape-string-regexp": "^1.0.5",
     "js-search": "^1.4.2",
     "moment": "^2.18.1",
+    "react-addons-css-transition-group": "^15.6.2",
     "react-list": "^0.8.7",
     "url-pattern": "^1.0.3",
     "uuid": "^3.0.1",
