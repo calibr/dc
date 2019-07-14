@@ -33,8 +33,7 @@ export var addDish = function(data, opts = {}) {
   }
   Dispatcher.dispatch({
     eventName: "dishes.request_add",
-    dish: responseData,
-    tag: opts.tag
+    data
   });
   apiFetch("/api/dish/add", {
     method: "POST",
