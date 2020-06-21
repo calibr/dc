@@ -40,6 +40,7 @@ class DB {
     } else {
       $this->handle = new \mysqli($this->host, $this->login, $this->pass, $this->db);
     }
+    $this->handle->set_charset("utf8");
     $elapsedTime = microtime(true) - $startTime;
     if(defined("EVER_DB_PROFILE")) {
       print "\n--------\n";
