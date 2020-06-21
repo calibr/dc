@@ -15,8 +15,8 @@ class Settings extends Model {
   public function setMass($data) {
     foreach($data as $k => $v) {
       $set = "
-        `name` = '".mysql_escape_string($k)."',
-        `value` = '".mysql_escape_string($v)."',
+        `name` = '".DB::inst()->escape_str($k)."',
+        `value` = '".DB::inst()->escape_str($v)."',
         `user_id` = ".intval($this->userId)."
       ";
       $query = "
@@ -32,8 +32,8 @@ class Settings extends Model {
 
   public function set($k, $v) {
     $set = "
-      `name` = '".mysql_escape_string($k)."',
-      `value` = '".mysql_escape_string($v)."',
+      `name` = '".DB::inst()->escape_str($k)."',
+      `value` = '".DB::inst()->escape_str($v)."',
       `user_id` = ".intval($this->userId)."
     ";
     $query = "
@@ -65,7 +65,7 @@ class Settings extends Model {
       DELETE FROM
         `settings`
       WHERE
-        `name` IN ('".implode("','", array_map('mysql_escape_string', $k))."') AND user_id = #d
+        `name` IN ('".implode("','", array_map([DB::inst(), 'escape_str'], $k))."') AND user_id = #d
     ";
     DB::inst()->q($query, [$this->userId]);
   }

@@ -4,6 +4,7 @@ var app = require("../../f7app");
 import navigator from "../../navigator.jsx";
 import {addDish, updateDish} from "../../actions/actions.jsx";
 import DishStore from "../../stores/Dish.jsx";
+import {calories} from '../../util/calc.jsx'
 
 function prepareNutritionValue(value) {
   if(!value) {
@@ -83,6 +84,8 @@ class AddDishPage extends React.Component {
     });
   }
   render() {
+    const clr = calories(this.state.carbs, this.state.proteins, this.state.fats)
+
     return <div className="page-content">
       <div className="list-block" id="add-contact-form">
         <ul>
@@ -143,6 +146,16 @@ class AddDishPage extends React.Component {
                   <input type="text" name="gi"
                     value={this.state.gi}
                     onChange={this.onGiFieldChange} placeholder="Введите гликемический индекс продукта"/>
+                </div>
+              </div>
+            </div>
+          </li>
+          <li>
+            <div className="item-content">
+              <div className="item-inner">
+                <div className="item-title label">Калорийность</div>
+                <div className="item-input">
+                  {clr ? clr + ' ккал' : '-'}
                 </div>
               </div>
             </div>

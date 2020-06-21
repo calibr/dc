@@ -9,6 +9,7 @@
     ],
     "require": {
         "ramsey/uuid": "^3.7",
-        "phpoffice/phpspreadsheet": "^1.2"
+        "phpoffice/phpspreadsheet": "^1.2",
+        "robmorgan/phinx": "^0.12.1"
     }
 }

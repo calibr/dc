@@ -4,6 +4,7 @@ var React = require("react");
 import moment from 'moment'
 import Meal from "../../stores/Meal.jsx";
 import Dish from "../../stores/Dish.jsx";
+import Coef from "../../stores/Coef.jsx";
 import Settings from "../../stores/Settings.jsx";
 import Serving from "../../stores/Serving.jsx";
 import {
@@ -11,6 +12,7 @@ import {
   endMeal, fetchSettings, setMealCoef, updateServing
 } from "../../actions/actions.jsx";
 import {display as displayAddServing} from "../../actions/addServing.jsx";
+import {loadCoeffs} from "../../actions/coeffs.jsx";
 import {addTreatment} from "../../actions/nightscout.jsx";
 import {display as displayStt} from "../../actions/stt.jsx";
 import {addServingFromSTT} from "../../actions/servings.jsx";
@@ -278,21 +280,32 @@ class SelectCoefPopover extends React.Component {
   componentWillMount() {
     this.state = {
       settings: Settings.getSettings(),
+      coeffs: Coef.getCoeffs(),
       activeMeal: Meal.getActive()
     };
     if(!this.state.settings) {
       fetchSettings();
     }
+    if(!this.state.coeffs) {
+      loadCoeffs();
+    }
     Settings.on("change", this.onSettingsChange);
+    Coef.on("change", this.onCoeffsChange);
     Meal.on("change", this.onMealChange);
   }
   componentWillUnmount() {
     Settings.removeListener("change", this.onSettingsChange);
+    Coef.removeListener("change", this.onCoeffsChange);
     Meal.removeListener("change", this.onMealChange);
   }
   onMealChange = () => {
     this.setState({
       activeMeal: Meal.getActive()
+    });
+  }
+  onCoeffsChange = () => {
+    this.setState({
+      coeffs: Coef.getCoeffs()
     });
   }
   onSelectCoef = (coef) => {
@@ -309,20 +322,23 @@ class SelectCoefPopover extends React.Component {
     navigator.navigate('/settings/coeffs')
   }
   render() {
-    if(!this.state.settings) {
+    if(!this.state.settings || !this.state.coeffs) {
       return null;
     }
+    const { activeCoefId } = this.state.settings
     var coefs = []
-    for(let setting in this.state.settings) {
-      let coef = unpackCoef(setting)
-      if(coef) {
-        coef.k = this.state.settings[setting]
-        coefs.push(coef)
+    if (this.state.coeffs.length) {
+      var coefSet = null
+      if (activeCoefId) {
+        coefSet = this.state.coeffs.find(coef => coef.id == activeCoefId)
+      } else {
+        coefSet = this.state.coeffs[0]
       }
+      coefs = JSON.parse(coefSet.values)
+      coefs.sort((c1, c2) => {
+        return c1.from - c2.from
+      })
     }
-    coefs.sort((c1, c2) => {
-      return c1.from - c2.from
-    })
 
     let coefElems = coefs.map(coef => <li key={packCoef(coef.from, coef.to)}><a href="#"
         className="list-button item-link"
@@ -330,7 +346,7 @@ class SelectCoefPopover extends React.Component {
         С {hour2(coef.from)} по {hour2(coef.to)} ({coef.k})
       </a></li>)
 
-    if(!coefElems.length) {
+    if(!this.state.coeffs.length) {
       return <div className="text-center padding-5">
         Коэффициенты не заданы, <a href="" onClick={this.onGoSetupCoeffs}>задать</a>
       </div>

@@ -5,12 +5,13 @@ namespace Diab;
 class DB {
   var $handle = null;
 
+  private static $_inst = null;
+
   public $last_query = "";
   private $table_prefix = "";
 
   private $cache = array();
 
-  private static $_inst;
   public static function inst() {
     if(!self::$_inst) {
       $dbConfig = Config::get("db");
@@ -21,7 +22,8 @@ class DB {
     return self::$_inst;
   }
 
-  function __construct($host, $login, $pass, $db, $table_prefix = "") {
+  function __construct($host, $login, $pass, $db, $table_prefix = "")
+  {
     $this->host = $host;
     $this->login = $login;
     $this->pass = $pass;
@@ -31,15 +33,19 @@ class DB {
     $this->init();
   }
 
-  function escKey($key) {
-    return str_replace("`", "", $key);
-  }
-
   function init() {
     $startTime = microtime(true);
-    $this->handle = \mysql_connect($this->host, $this->login, $this->pass, true);
-    \mysql_select_db($this->db, $this->handle);
-    $this->q("SET NAMES UTF8MB4");
+    if ($this->host[0] === ':') {
+      $this->handle = new \mysqli('localhost', $this->login, $this->pass, $this->db, 0, substr($this->host, 1));
+    } else {
+      $this->handle = new \mysqli($this->host, $this->login, $this->pass, $this->db);
+    }
+    $elapsedTime = microtime(true) - $startTime;
+    if(defined("EVER_DB_PROFILE")) {
+      print "\n--------\n";
+      print "Connect time: {$elapsedTime}s\n";
+      print "\n--------\n";
+    }
   }
 
   function qr($q, $params = array()) {
@@ -64,7 +70,7 @@ class DB {
         switch($match){
           case "s":
             if(!get_magic_quotes_gpc()){
-              $value = "'".mysql_real_escape_string( str_replace("\\", "\\\\", $value), $this->handle )."'";
+              $value = "'".$this->handle->escape_string( str_replace("\\", "\\\\", $value) )."'";
             }
             else{
               $value = "'$value'";
@@ -90,7 +96,7 @@ class DB {
     $this->last_query = $q;
 
     $startTime = microtime(true);
-    $qr = \mysql_query($q, $this->handle);
+    $qr = $this->handle->query($q);
     $elapsedTime = microtime(true) - $startTime;
     if(defined("EVER_DB_PROFILE")) {
       print "\n--------\n";
@@ -100,18 +106,18 @@ class DB {
     }
     if(!$qr) {
       if(defined("EVER_MYSQL_ERRORS")) {
-        trigger_error(\mysql_error($this->handle)." in $q");
+        trigger_error($this->handle->error." in $q");
       }
       //mysql_close($this->handle);
       //$this->init();
-      $qr = \mysql_query($q, $this->handle);
+      $qr = $this->handle->query($q);
     }
     return $qr;
   }
 
   function assoc($q, $params = array())
   {
-    $data = \mysql_fetch_assoc($this->q($q, $params));
+    $data = $this->q($q, $params)->fetch_assoc();
 
     return $data;
   }
@@ -121,22 +127,132 @@ class DB {
     $qr = $this->q($q, $params);
     if(!$qr)
       return false;
-    $r = @\mysql_result($qr ,0);
+    $r = $qr->fetch_array()[0];
 
     return $r;
   }
 
-  function to_array($q, $params = array()) {
+  function to_array($q, $params = array())
+  {
 
     $qr = $this->q($q, $params);
-    $data = array();
-    while($d = \mysql_fetch_assoc($qr))
-      $data[] = $d;
+    return $qr->fetch_all(MYSQLI_ASSOC);
+  }
+
+  function id()
+  {
+    return $this->handle->insert_id;
+  }
+
+  function close()
+  {
+    $this->handle->close();
+  }
+
+  // Parametrized methods
+
+  private function _make_set_data( $data, $separator ){
+    $result = array();
+    foreach($data as $k=>$v){
+      $result[] = "`$k` = '".$this->handle->escape_string($v)."'";
+    }
+    return implode($separator, $result);
+  }
+
+  public function escape_str($str) {
+    return $this->handle->escape_string($str);
+  }
+
+  private function _make_fields_data( $data, $separator ){
+    $result = array();
+    foreach($data as $v){
+      $result[] = "`$v`";
+    }
+    return implode($separator, $result);
+  }
+
+  private function _p_filter_fields( $table, $data ){
+    $query = "SHOW COLUMNS FROM `$table`";
+    $fields = array();
+    foreach( $this->to_array($query) as $field ){
+      $fields[] = strtolower( $field["Field"] );
+    }
+
+    foreach( $data as $k => $v ){
+
+      if( !in_array(strtolower($k), $fields) ){
+        unset( $data[$k] );
+      }
+
+    }
 
     return $data;
   }
 
-  function id() {
-    return \mysql_insert_id($this->handle);
+  public function p_update( $table, $data, $where ){
+
+    $data = $this->_p_filter_fields( $table, $data );
+
+    $data_str = $this->_make_set_data($data, ", ");
+    $where_str = $this->_make_set_data($where, " AND ");
+
+    $query = "
+      UPDATE
+        `$table`
+      SET
+        $data_str
+      WHERE
+        $where_str
+    ";
+
+
+    return $this->q($query);
+
+  }
+
+
+  public function p_get($table, $fields, $where){
+
+
+
+    $fields_str = $this->_make_fields_data($fields, ", ");
+    $where = $this->_make_set_data($where, " AND ");
+
+    if(empty($where)){
+      $where = "1=1";
+    }
+
+
+    $query = "
+      SELECT
+        $fields_str
+      FROM
+        `$table`
+      WHERE
+        $where
+    ";
+
+
+    return $this->to_array($query);
+
+  }
+
+  public function p_insert($table, $data){
+
+    $data = $this->_p_filter_fields( $table, $data );
+
+    $data_str = $this->_make_set_data($data, ", ");
+
+    $query = "
+      INSERT IGNORE INTO
+        `$table`
+        SET $data_str
+    ";
+
+    if($this->q($query)){
+      return $this->id();
+    }
+
+    return false;
   }
 }

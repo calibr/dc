@@ -64,7 +64,10 @@ if(window.PREPOPULATE) {
 }
 
 // initial navigation
-navigator.navigate("/calc");
+//const initialPage = document.location.hash ? document.location.hash.replace(/^\#\!/, '') :  "/calc"
+//navigator.navigate(initialPage);
+
+navigator.navigate('/calc');
 
 $(document).on("tab:show", (event) => {
   var viewName = event.target.getAttribute("id").replace("-view", "");

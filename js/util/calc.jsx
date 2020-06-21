@@ -9,3 +9,7 @@ export function calc(carbs, k) {
 export function round(value) {
   return Math.round(value * 100)/100;
 }
+
+export function calories(carbs, proteins, fats) {
+  return 4 * carbs + 4 * proteins + 9 * fats
+}

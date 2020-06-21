@@ -10,7 +10,6 @@ class SettingsCoef extends AbstractSwipeOut {
   }
   componentWillMount() {
     this.state = {
-      value: this.props.coef.k
     }
   }
   onSwipeOutDelete = () => {
@@ -21,9 +20,6 @@ class SettingsCoef extends AbstractSwipeOut {
   onValueChange = (event) => {
     var v = event.target.value
     v = v.replace(/[^0-9\.]/g, '')
-    this.setState({
-      value: v
-    })
     if(v && this.props.onValueChange) {
       this.props.onValueChange(v)
     }
@@ -36,7 +32,12 @@ class SettingsCoef extends AbstractSwipeOut {
           <div className="item-title label">С {hour2(coef.from)} до {hour2(coef.to)}</div>
           <div className="item-input">
             <input
-              onChange={this.onValueChange} value={this.state.value} type="text" placeholder="Введите значение"/>
+              onChange={this.onValueChange}
+              value={coef.k}
+              type="text"
+              placeholder="Введите значение"
+              name={this.props.name}
+            />
           </div>
         </div>
       </div>

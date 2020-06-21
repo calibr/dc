@@ -24,6 +24,16 @@ class GlobalLoader extends React.Component {
         visible: false
       })
     }
+    if(event.eventName === "coeffs.request_add" || event.eventName === "coeffs.request_update") {
+      this.setState({
+        visible: true
+      })
+    }
+    if(event.eventName === "coeffs.added" || event.eventName === "coeffs.updated") {
+      this.setState({
+        visible: false
+      })
+    }
   }
   render() {
     const content = this.state.visible ? <div className="inner"></div> : null

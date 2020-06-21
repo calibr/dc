@@ -25,6 +25,7 @@ include __DIR__."/controllers/settings.php";
 include __DIR__."/controllers/stt.php";
 include __DIR__."/controllers/auth.php";
 include __DIR__."/controllers/history.php";
+include __DIR__."/controllers/coef.php";
 
 include __DIR__."/models/dish.php";
 include __DIR__."/models/meal.php";
@@ -33,6 +34,7 @@ include __DIR__."/models/serving.php";
 include __DIR__."/models/settings.php";
 include __DIR__."/models/stt.php";
 include __DIR__."/models/user.php";
+include __DIR__."/models/coef.php";
 
 include __DIR__."/errors/error.php";
 include __DIR__."/errors/validation.php";
